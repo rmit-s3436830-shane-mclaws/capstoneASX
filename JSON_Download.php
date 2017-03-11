@@ -81,11 +81,11 @@
 	foreach($Companies as $company)
 	{
 		$tries++;
-		echo $company.": data point#".$tries;
+		//echo $company.": data point#".$tries;
 		if(get_http_response_code('http://data.asx.com.au/data/1/share/'.$company.'/prices?interval=daily&count=1') == "200")
 		{
 			$success++;
-			echo " success#".$success;
+			//echo " success#".$success;
 			$entry = file_get_contents('http://data.asx.com.au/data/1/share/'.$company.'/prices?interval=daily&count=1');
 			$fileName = $company."/".$date."-".$time.".json"; //Filename exists within folder 'ASX trading code', formatted as YYYYMMDD-HHMM.json, example: CBA/20170313-17:40.json would be CBA on the 13th of March 2017 at 5:40PM
 			try
@@ -101,11 +101,7 @@
 				echo $e->getMessage();
 			}
 		}
-		echo "\n";
-		if($tries == 1)
-		{
-			break;
-		}
+		//echo "\n";
 	}
 	echo $success."/".$tries." trading codes were successful.\n";
 	/*****************************************************/
