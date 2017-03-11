@@ -21,8 +21,12 @@
 	/*****************************************************/
 	
 	//Access keys and defaults associated with S3 bucket
-	$AWS_Access_Key = 'AKIAJDET76NI7DK4SJMQ';
-	$AWS_Secret_Key = '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';
+	//Keys saved in file so as to not be in plain text -HI GITHUB!!!!!-
+	$keyFile = fopen('rootkey.csv','r');
+	$line = fgets($keyFile);
+	$keys = explode(',',$line);
+	$AWS_Access_Key = $keys[0];
+	$AWS_Secret_Key = $keys[1];
 	$AWS_Bucket_ID = 'asx-json-host';
 	/*****************************************************/
 	
@@ -98,6 +102,10 @@
 			}
 		}
 		echo "\n";
+		if($tries == 1)
+		{
+			break;
+		}
 	}
 	echo $success."/".$tries." trading codes were successful.\n";
 	/*****************************************************/
