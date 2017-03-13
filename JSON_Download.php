@@ -22,7 +22,7 @@
 	
 	//Access keys and defaults associated with S3 bucket
 	//Keys saved in file so as to not be in plain text -HI GITHUB!!!!!-
-	$keyFile = fopen('rootkey.csv','r');
+	$keyFile = fopen("/home/ec2-user/ASX_JSON/rootkey.csv","r");
 	$line = fgets($keyFile);
 	$keys = explode(',',$line);
 	$AWS_Access_Key = $keys[0];
