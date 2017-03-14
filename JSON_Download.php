@@ -46,7 +46,7 @@
 	/*****************************************************/
 	
 	//Create an array of company trading codes
-	$ASX_Company_List = fopen("http://www.asx.com.au/asx/research/ASXListedCompanies.csv", "r"); //Perma link to most up to date CSV from ASX
+	$ASX_Company_List = fopen("http://www.asx.com.au/asx/research/ASXListedCompanies.csv", "r"); //Perma-link to most up to date CSV from ASX
 	if(!$ASX_Company_List)
 	{
 		//Exit if failed to retrieve csv from ASX
@@ -75,34 +75,37 @@
 	/*****************************************************/
 	
 	//Grabs the latest JSON for each company listed and saves it to the S3 bucket
-	//Also counts how many successes there were vs attempts
-	$success = 0;
+	//Also counts how many company entries were searched for
 	$tries = 0;
 	foreach($Companies as $company)
 	{
 		$tries++;
-		//echo $company.": data point#".$tries;
-		if(get_http_response_code('http://data.asx.com.au/data/1/share/'.$company.'/prices?interval=daily&count=1') == "200")
+			//echo $company.": data point#".$tries; //Used for debugging
+		$tags = "nt1l1c1p2ohg"; //The different tags correspond to different attributes of the stock entry. Explanation can be found at: http://www.marketindex.com.au/yahoo-finance-api
+		$dataURL = "http://finance.yahoo.com/d/quotes.csv?s=".$company.".AX&f=".$tags;
+		$data = file_get_contents($dataURL);
+		$fileName = $company."/".$date."-".$time.".json"; //Filename exists within folder 'ASX trading code', formatted as YYYYMMDD-HHMM.json, example: CBA/20170313-17:40.json would be CBA on the 13th of March 2017 at 5:40PM
+		$entry = explode(',', $data);
+		$entry = '{"Name":'.$entry[0].',"Last Trade Time":'.$entry[1].',"Last Trade Price":"'.$entry[2].'","Change":"'.$entry[3].'","Change(%)":'.$entry[4].',"Opening Value":"'.$entry[5].'","Day High":"'.$entry[6].'","Day Low":"'.substr($entry[7],0,-1).'"}'; //Formats raw CSV into a readable format
+			//echo " Entry: ".$entry; //Used for debugging
+		try
 		{
-			$success++;
-			//echo " success#".$success;
-			$entry = file_get_contents('http://data.asx.com.au/data/1/share/'.$company.'/prices?interval=daily&count=1');
-			$fileName = $company."/".$date."-".$time.".json"; //Filename exists within folder 'ASX trading code', formatted as YYYYMMDD-HHMM.json, example: CBA/20170313-17:40.json would be CBA on the 13th of March 2017 at 5:40PM
-			try
-			{
-				$s3Client->putObject(array(
-					'Bucket' => $AWS_Bucket_ID,
-					'Key' => $fileName,
-					'Body' => $entry
-				));
-			}
-			catch (S3Exception $e)
-			{
-				echo $e->getMessage();
-			}
+			$s3Client->putObject(array(
+				'Bucket' => $AWS_Bucket_ID,
+				'Key' => $fileName,
+				'Body' => $entry
+			));
 		}
-		//echo "\n";
+		catch (S3Exception $e)
+		{
+			echo $e->getMessage();
+		}
+		if($tries == 150) //This if will trigger once the first 150 entries have been grabbed, and then break out of the loop
+		{ //Delete/comment this if block once debugging is complete and sprint is ready for presentation/review
+			break; //Deleting/commenting this block will allow all ~2000 entries to be computed
+		}
+			echo "\n"; //Used for debugging
 	}
-	echo $success."/".$tries." trading codes were successful.\n";
+		//echo "\n".$tries." trading codes attempted.\n"; // Used for debugging
 	/*****************************************************/
 ?>
