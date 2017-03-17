@@ -1,2 +1,9 @@
 GitHub Repository:
   https://github.com/rmit-s3436830-shane-mclaws/capstoneASX/
+
+Trello Board (Current Sprint Backlog)
+  https://trello.com/b/gHRBQ18v/asx-capstone-project
+  
+AWS Bucket Info:
+  ID: asx-json-host
+  Access & Secret Keys in Discord Channel. Do Not Share!
