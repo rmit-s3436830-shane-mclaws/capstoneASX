@@ -1,11 +1,13 @@
 <?php
-	/***********************************************************************
-	* This script will grab a list of trading shares from the ASX website. *
-	* It will then grab the latest JSON file for each share and upload the *
-	* JSON to the S3 bucket for later use. This script will be run every   *
-	* 20 minutes during ASX trading hours (10AM - 5PM), as automated by    *
-	* the EC2 OS the script will be hosted on.                             *
-	***********************************************************************/
+	/************************************************************************
+	* This script will grab the list of trading shares stored locally by   	*
+	* ASX_List_Download.php	to use as a reference for the current trading 	*
+	* shares																*
+	* It will then grab the latest JSON file for each share and upload the 	*
+	* JSON to the S3 bucket for later use. This script will be run every   	*
+	* 20 minutes during ASX trading hours (10AM - 5PM), as automated by    	*
+	* the EC2 OS the script will be hosted on.                             	*
+	************************************************************************/
 	
 	//import library used to interface with S3
 	require 'vendor/autoload.php';
@@ -37,48 +39,7 @@
 	$time = date('H:i');
 	/*****************************************************/
 	
-	//Download an array of company trading codes to a local file at start of day
-	if($time == "10:00")
-	{
-		$ASX_Company_List = fopen("http://www.asx.com.au/asx/research/ASXListedCompanies.csv", "r"); //Perma-link to most up to date CSV from ASX
-		if($ASX_Company_List) //If remote file fails to open, skip this code block and proceed to using the current local file
-		{
-			$Codes = array();
-			while(($line = fgets($ASX_Company_List)) != false)
-			{
-				$elements = explode(',', $line);
-				//Check validity of line from file, if it contains a valid company entry
-				if(count($elements) >= 3)
-				{
-					for($i=0; $i<count($elements); $i++)
-					{
-						if(strlen($elements[$i]) == 3) //Check if section of line contains the company trading code
-						{
-							array_push($Codes, $elements[$i]);
-							break;
-						}
-					}
-				}
-			}
-			fclose($ASX_Company_List);
-			$Local_Company_List = fopen("/home/ec2-user/ASX_JSON/companies.csv","w");
-			foreach($Codes as $code)
-			{
-				if($code == reset($Codes)) //First iteration
-				{
-					fwrite($Local_Company_List, $code);
-				}
-				else
-				{
-					fwrite($Local_Company_List, ",".$code);
-				}
-			}
-			fclose($Local_Company_List);
-		}
-	}
-	/*****************************************************/
-	
-	//Grab the array of company codes from the local file
+	//Generate an array of company codes from the local file
 	$Local_Company_List = fopen("/home/ec2-user/ASX_JSON/companies.csv", "r");
 	if(!$Local_Company_List)
 	{
@@ -108,7 +69,7 @@
 		
 		//Formats raw CSV into a readable format for alter use
 		$entry = explode(',', $data);
-		$entry = '{"Time":"'.$time.'","Name":'.$entry[0].',"ASX Code":"'.$company.'","Ask Price":"'.$entry[1].'","Bid Price":"'.$entry[2].'","Last Trade Price":"'.$entry[3].'","Last Trade Time":'.$entry[4].',"Change":"'.$entry[5].'","Change(%)":'.$entry[6].',"Opening Value":"'.$entry[7].'","Day High":"'.$entry[8].'","Day Low":"'.$entry[9].'","Previous Close":"'.$entry[10].'","52 Week Range":'.$entry[11].',"52 Week High":"'.$entry[12].'","52 Week Low":"'.$entry[13].'","Dividend/Share":"'.$entry[14].'","Ex-Dividend Date":"'.$entry[15].'","Dividende Pay Date":"'.$entry[16].'","Dividend Yield":"'.substr($entry[17],0,-1).'"}';
+		$entry = '{"Time":"'.$time.'","Name":'.$entry[0].',"ASX Code":"'.$company.'","Ask Price":"'.$entry[1].'","Bid Price":"'.$entry[2].'","Last Trade Price":"'.$entry[3].'","Last Trade Time":'.$entry[4].',"Change":"'.$entry[5].'","Change(%)":'.$entry[6].',"Opening Value":"'.$entry[7].'","Day High":"'.$entry[8].'","Day Low":"'.$entry[9].'","Previous Close":"'.$entry[10].'","52 Week Range":'.$entry[11].',"52 Week High":"'.$entry[12].'","52 Week Low":"'.$entry[13].'","Dividend/Share":"'.$entry[14].'","Ex-Dividend Date":"'.$entry[15].'","Dividende Pay Date":"'.$entry[16].'","Dividend Yield":"'.substr($entry[17],0,-1).'"}\n';
 		
 		if($time == "10:00") //If it's the first post of the day, create a new file and put the data in it
 		{
