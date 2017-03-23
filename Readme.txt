@@ -6,3 +6,8 @@ This script downloads a list of ASX Trading codes from the ASX directly, and sav
 
 JSON_Download.php is run every 20 minutes between 10AM and 5PM on weekdays (ASX Trading hours).
 This script facilitates the download and management of ASX share data, which is hosted on an AWS S3 instance for future utilisiation by the user fornt-end application.
+
+UserServer.java is a server program that will always be running on the EC2 instance.
+The user application will connect to it when a user is trying to login, or when registering a new account.
+The server handles the validation of user login, and if successful, provides the user info file to the application so the suer can see their account details.
+The server app will also handle new user registration.
