@@ -8,6 +8,8 @@ package com.amazonaws.samples;
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.util.zip.InflaterInputStream;
+import java.util.zip.DeflaterOutputStream;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
@@ -17,9 +19,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
-import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
@@ -31,7 +31,7 @@ public class UserServer
 		Enumeration<NetworkInterface> iNets = NetworkInterface.getNetworkInterfaces();
         for(NetworkInterface iNet : Collections.list(iNets))
         {
-        	System.out.printf("Dispaly Name: %s\n",iNet.getDisplayName());
+        	System.out.printf("Display Name: %s\n",iNet.getDisplayName());
 			Enumeration<InetAddress> addrs = iNet.getInetAddresses();
 			for(InetAddress addr : Collections.list(addrs))
 			{
@@ -42,25 +42,23 @@ public class UserServer
 		
 		ServerSocket serverSock = null;
 		Socket userConnection = null;
-		
+		BufferedReader connectionRead = null;
+		DeflaterOutputStream deflStream = null;
+		String line = null;
+		byte[] bytes = null;
 		try
 		{
-			serverSock = new ServerSocket(38543);
+			serverSock = new ServerSocket(28543);
 			serverSock.setReuseAddress(true);
-			while(serverSock != null)
+			while(true)
 			{
 				userConnection = serverSock.accept();
-				System.out.printf("Client Socket Address: %s\n", userConnection.getRemoteSocketAddress());
-				
-				//Inputs
-				BufferedReader connectionRead = new BufferedReader(new InputStreamReader(userConnection.getInputStream()));
-				String line = null;
-				//Outputs
-				PrintWriter responseStream = new PrintWriter(userConnection.getOutputStream(), true);
-				
-				while((line = connectionRead.readLine()) != null)
+				connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(userConnection.getInputStream())));
+				line = connectionRead.readLine();
+				if(line != null)
 				{
-					System.out.println(line + "\n");
+					deflStream = new DeflaterOutputStream(userConnection.getOutputStream(), true);
+					System.out.println(line);
 					if(line.equals("login"))
 					{
 						String userID = connectionRead.readLine();
@@ -68,11 +66,11 @@ public class UserServer
 						String details = null;
 						if((details = login(userID,passwdHash)) != null)
 						{
-							responseStream.println(details);
+							bytes = details.getBytes("UTF-8");
 						}
 						else
 						{
-							responseStream.println("401");
+							bytes = "401".getBytes("UTF-8");
 						}
 					}
 					else if(line.equals("register"))
@@ -83,17 +81,21 @@ public class UserServer
 						String newUEmail = connectionRead.readLine();
 						if(register(newPasswdHash, newFName, newSName, newUEmail))
 						{
-							responseStream.println("200");
+							bytes = "200".getBytes("UTF-8");
 						}
 						else
 						{
-							responseStream.println("500");
+							bytes = "500".getBytes("UTF-8");
 						}
 					}
 					else
 					{
-						responseStream.println("400: BAD REQUEST!");
+						bytes = "400: BAD REQUEST!".getBytes("UTF-8");
 					}
+					deflStream.write(bytes);
+					deflStream.finish();
+					deflStream.flush();
+					userConnection.close();
 				}
 			}
 		}
@@ -125,7 +127,7 @@ public class UserServer
 		String bucket = "asx-user-store";
 		String userCreds = "creds/"+emailHash+".rec";
 		//Connect to S3
-		AWSCredentials credentials = new BasicAWSCredentials(AWS KEY AND SECRET KEY);
+		AWSCredentials credentials = new BasicAWSCredentials(ASX ACCESS KEYS);
 		AmazonS3 s3Client = new AmazonS3Client(credentials);
 		//Grab user record into Buffered Reader Stream
 		if(!s3Client.doesObjectExist(bucket, userCreds))
@@ -187,7 +189,7 @@ public class UserServer
 		String bucket = "asx-user-store";
 		String userCreds = "creds/"+emailHash+".rec";
 		
-		AWSCredentials credentials = new BasicAWSCredentials(AWS KEY AND SECRET KEY);
+		AWSCredentials credentials = new BasicAWSCredentials(ASX ACCESS KEYS);
 		AmazonS3 s3Client = new AmazonS3Client(credentials);
 		
 		if(!s3Client.doesObjectExist(bucket, userCreds))
