@@ -22,10 +22,10 @@ public class Menus {
 				menuRegisterDialogue();
 				return;
 			case "3":
-				Utilities.loadTempStockList();
-				//Game.getAsxJson("ABP", "20170329");
-				//AsxGame.stockArray.get(0).printStock();
-				//AsxGame.stockArray.remove(0);
+				//Utilities.loadTempStockList();
+				Game.getAsxJson("ABP", "20170329");
+				AsxGame.stockArray.get(0).printStock();
+				AsxGame.stockArray.remove(0);
 				return;
 		}
 	}
