@@ -22,19 +22,11 @@ public class Game {
 	protected static boolean buyStocks(String asxCode, int number){
 		int index;
 		float price, totalPrice;
-													System.out.println(asxCode.length());
-													System.out.println(asxCode + " " + number);
 		for (index = 0; index < AsxGame.stockArray.size(); index++){
-													System.out.println("For loop entered");
-													System.out.println(AsxGame.stockArray.get(index).code);
-													System.out.println(AsxGame.stockArray.get(index).code.length());								
 			if (asxCode.equals(AsxGame.stockArray.get(index).code)){
-													System.out.println("asxCode = AsxGame.stockArray.get(index).code");
 				price = AsxGame.stockArray.get(index).askPrice;
 				totalPrice = price * number;
-													System.out.println(totalPrice);
 				if (totalPrice <= AsxGame.activePlayer.balance){
-													System.out.println("totalPrice < balance");
 					if (AsxGame.activePlayer.addShares(asxCode, number)){
 						AsxGame.activePlayer.removeBalance(totalPrice);
 						return true;
