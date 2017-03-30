@@ -1,22 +1,31 @@
-import java.io.*;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
+package com.amazonaws.samples;
+
+import java.util.*;
 
 public class Player {
-	int id;
 	String name;
-	float cash;
+	String surname;
+	String email;
+	float balance;
+	ArrayList<String> shares = new ArrayList<String>();	//formatted: "asxCode:Number"
+	boolean adminRights = false;
 	
-	public Player(int id, String name, float cash) {
-		this.id = id;
+	public Player(String name, String surname, String email, float balance, String rights) {
 		this.name = name;
-		this.cash= cash;
+		this.surname = surname;
+		this.email = email;
+		this.balance= balance;
+		if (rights.equals("admin")){
+			adminRights = true;
+		}
 	}
 
 	void printPlayer(){
-		System.out.println(this.id);
-		System.out.println(this.name);
-		System.out.println(this.cash);
+		System.out.println(this.name + " " + this.surname);
+		System.out.println(this.email);
+		System.out.println(this.balance);
+		printShares();
+		System.out.println("admin: " + adminRights);
 		return;
 	}
 	
@@ -24,23 +33,80 @@ public class Player {
 		return this;
 	}
 	
-	boolean addCash(int amount){
-		cash += amount;
+	boolean addBalance(float amount){
+		balance += amount;
 		return true;
 	}
 	
-	boolean removeCash(int amount){
-		cash -= amount;
+	boolean removeBalance(float amount){
+		balance -= amount;
 		return true;
 	}
 	
-	public boolean savePlayerToFile(){
+	boolean setBalance(float amount){
+		balance = amount;
+		return true;
+	}
+	
+	void printShares(){
+		for (int i = 0; i < shares.size(); i++){
+			System.out.println(shares.get(i));
+		}
+		return;
+	}
+	
+	boolean addShares(String asxCode, int number){
+		boolean newShare = true;
+		String[] shareSplit = null;
+		for (int i = 0; i < shares.size(); i++){
+			shareSplit = shares.get(i).split(":");
+			if (shareSplit[0].equals(asxCode)){
+				newShare = false;
+				shares.remove(i);					//share is remove if existing and added back later
+				break;
+			}
+		}
+		if (newShare == true){						//if player doesn't already have shares of type
+			String stringToAdd = asxCode + ":" + Integer.toString(number);
+			shares.add(stringToAdd);
+			return true;
+		} else {
+			if (shareSplit != null){				//if player already has shares of type
+				int existingNumber = Integer.parseInt(shareSplit[1]);
+				int newNumber = existingNumber + number;
+				String stringToAdd = asxCode + ":" + Integer.toString(newNumber);
+				shares.add(stringToAdd);
+				return true;
+			}
+			return false;
+		}
+	}
+	
+	boolean removeShares(String asxCode, int number){
+		String[] shareSplit;
+		for (int i = 0; i < shares.size(); i++){
+			shareSplit = shares.get(i).split(":");
+			if (shareSplit[0].equals(asxCode)){
+				shares.remove(i);	
+				int oldNumber = Integer.parseInt(shareSplit[1]);	//remove shares to add back later
+				if (number < oldNumber){							//not added back if all are sold
+					int newNumber = oldNumber - number;
+					String stringToAdd = asxCode + ":" + newNumber;
+					shares.add(stringToAdd);
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	/*public boolean savePlayerToFile(){
 		try{
-			FileOutputStream fos = new FileOutputStream(this.id +".sav");
+			FileOutputStream fos = new FileOutputStream(this.email +".sav");
 			ObjectOutputStream oos = new ObjectOutputStream(fos);
-			oos.writeObject(this.id);
+			oos.writeObject(this.email);
 			oos.writeObject(this.name);
-			oos.writeObject(this.cash);
+			oos.writeObject(this.balance);
 			oos.close();
 			fos.close();
 			return true;
@@ -48,22 +114,22 @@ public class Player {
 			e.printStackTrace();			
 			return false;
 		}
-	}
+	}*/
 	
-	public void loadPlayerFromFile(String filename) throws ClassNotFoundException{
+	/*public void loadPlayerFromFile(String filename) throws ClassNotFoundException{
 		try{
 			FileInputStream fis = new FileInputStream(filename + ".sav");
 			ObjectInputStream ois = new ObjectInputStream(fis);
 			this.id = (int) ois.readObject();
 			this.name = (String) ois.readObject();
-			this.cash = (float) ois.readObject();
+			this.balance = (float) ois.readObject();
 			ois.close();
 			fis.close();
 			//return true;
 		} catch (IOException e) {
 			//return false;
 		}
-	}
+	}*/
 	
 //	public boolean createPlayer(){
 		
