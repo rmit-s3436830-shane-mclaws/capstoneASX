@@ -1,4 +1,5 @@
 package com.amazonaws.samples;
+//Prototype implements acknowledgments on messages and implements a user save function/call
 
 /************************************************************************
 * This script will manage user accounts for the ASX trading game.      	*
@@ -28,7 +29,9 @@ public class UserServer
 {
 	public static void main(String args[]) throws SocketException
 	{
+		System.out.println("========================STARTING SERVER========================");
 		Enumeration<NetworkInterface> iNets = NetworkInterface.getNetworkInterfaces();
+		System.out.println("________________________Network Information________________________");
         for(NetworkInterface iNet : Collections.list(iNets))
         {
         	System.out.printf("Display Name: %s\n",iNet.getDisplayName());
@@ -39,6 +42,8 @@ public class UserServer
 			}
 			
         }
+		System.out.println("----------------------End Network Information----------------------\n\n");
+		
 		
 		ServerSocket serverSock = null;
 		Socket userConnection = null;
@@ -53,23 +58,26 @@ public class UserServer
 			while(true)
 			{
 				userConnection = serverSock.accept();
+				System.out.println("===New incoming connection===");
 				connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(userConnection.getInputStream())));
 				line = connectionRead.readLine();
 				if(line != null)
 				{
 					deflStream = new DeflaterOutputStream(userConnection.getOutputStream(), true);
-					System.out.println(line);
+					System.out.println("Requesting: " + line);
 					if(line.equals("login"))
 					{
-						String userID = connectionRead.readLine();
+						String userEmail = connectionRead.readLine();
 						String passwdHash = connectionRead.readLine();
 						String details = null;
-						if((details = login(userID,passwdHash)) != null)
+						if((details = login(userEmail,passwdHash)) != null)
 						{
+							System.out.println("Returning: Valid Login Data");
 							bytes = details.getBytes("UTF-8");
 						}
 						else
 						{
+							System.out.println("Returning: 401");
 							bytes = "401".getBytes("UTF-8");
 						}
 					}
@@ -81,21 +89,56 @@ public class UserServer
 						String newUEmail = connectionRead.readLine();
 						if(register(newPasswdHash, newFName, newSName, newUEmail))
 						{
+							System.out.println("Returning: 200");
 							bytes = "200".getBytes("UTF-8");
 						}
 						else
 						{
+							System.out.println("Returning: 500");
+							bytes = "500".getBytes("UTF-8");
+						}
+					}
+					else if(line.equals("save"))
+					{
+						String userEmail = connectionRead.readLine();
+						String userJson = connectionRead.readLine();
+						if(save(userEmail, userJson))
+						{
+							System.out.println("Returning: 200");
+							bytes = "200".getBytes("UTF-8");
+						}
+						else
+						{
+							System.out.println("Returning: 500");
+							bytes = "500".getBytes("UTF-8");
+						}
+					}
+					else if(line.equals("leaders"))
+					{
+						int topPos = Integer.parseInt(connectionRead.readLine());
+						int count = Integer.parseInt(connectionRead.readLine());
+						String leaders = "";
+						if((leaders = leaderboard(topPos, count)) != null)
+						{
+							System.out.println("Returning: Leaderboard Data");
+							bytes = leaders.getBytes("UTF-8");
+						}
+						else
+						{
+							System.out.println("Returning: 500");
 							bytes = "500".getBytes("UTF-8");
 						}
 					}
 					else
 					{
+						System.out.println("Returning: 400: BAD REQUEST!");
 						bytes = "400: BAD REQUEST!".getBytes("UTF-8");
 					}
 					deflStream.write(bytes);
 					deflStream.finish();
 					deflStream.flush();
 					userConnection.close();
+					System.out.println("===End connection===\n");
 				}
 			}
 		}
@@ -118,16 +161,17 @@ public class UserServer
 	
 	private static String login(String emailHash, String passwdHash)
 	{
-		//Search list of users for file called userID.rec
-		//Check if hash inside userID.rec == passwdHash
-		//If match, find file called userID.json and return contents
-		//else return null;
+		//Search list of users for file called emailHash.rec
+		//Check if hash inside emailHash.rec == passwdHash
+		//If match, grab unique ID number from file
+		//find file called uniqueIDNo.json and return contents
+		//else return null
 		
 		//Define known variables
 		String bucket = "asx-user-store";
 		String userCreds = "creds/"+emailHash+".rec";
 		//Connect to S3
-		AWSCredentials credentials = new BasicAWSCredentials(ASX ACCESS KEYS);
+		AWSCredentials credentials = new BasicAWSCredentials([REDACTED]);
 		AmazonS3 s3Client = new AmazonS3Client(credentials);
 		//Grab user record into Buffered Reader Stream
 		if(!s3Client.doesObjectExist(bucket, userCreds))
@@ -185,11 +229,12 @@ public class UserServer
 	private static boolean register(String passwdHash, String fname, String sName, String uEmail)
 	{
 		//Creates a new instance of userID.json and userID.rec for future use
+		//Adds user to leader board with score 0
 		String emailHash = Integer.toString(uEmail.hashCode());
 		String bucket = "asx-user-store";
 		String userCreds = "creds/"+emailHash+".rec";
 		
-		AWSCredentials credentials = new BasicAWSCredentials(ASX ACCESS KEYS);
+		AWSCredentials credentials = new BasicAWSCredentials([REDACTED]);
 		AmazonS3 s3Client = new AmazonS3Client(credentials);
 		
 		if(!s3Client.doesObjectExist(bucket, userCreds))
@@ -198,8 +243,9 @@ public class UserServer
 			{
 				//Get list of existing .json files
 				//create int uID = highest number.obj +1
-				int uID = 0;
-				int comp = 0;
+				//all user IDs will be  digits minimum
+				int uID = 9999;
+				int comp = 9999;
 				ObjectListing objectList = s3Client.listObjects(bucket, "data/");
 				List<S3ObjectSummary> summaries = objectList.getObjectSummaries();
 				summaries.remove(0);
@@ -250,12 +296,36 @@ public class UserServer
 				
 				//Create user data file
 				String userData = "data/"+userID+".obj";
-				String dataString = "{"+"'Name':'"+fname+"','Surname':'"+sName+"','Email':'"+uEmail+"','Balance':'1000000','Shares':[],'Rights':'trader'}";
+				String dataString = "{"+"'Name':'"+fname+"','Surname':'"+sName+"','Email':'"+uEmail+"','Balance':'1000000','Shares':{},'Score':'0','Rights':'trader'}";
 				contentAsBytes = dataString.getBytes("UTF-8");
 				contentAsStream = new ByteArrayInputStream(contentAsBytes);
 				md = new ObjectMetadata();
 				md.setContentLength(contentAsBytes.length);
 				s3Client.putObject(new PutObjectRequest(bucket, userData, contentAsStream, md));
+				contentAsStream.close();
+				
+				//Add user to leader board
+				String leaderboard = "leaderboard.csv";
+				String userEntry = userID + ":0\n";
+				//Read Current leaderboard into \n seperated String
+				S3Object object = s3Client.getObject(new GetObjectRequest(bucket, leaderboard));
+				InputStream objectData = object.getObjectContent();
+				BufferedReader reader = new BufferedReader(new InputStreamReader(objectData));
+				String line = "";
+				String fileContents = "";
+				while((line = reader.readLine()) != null)
+				{
+					fileContents = fileContents + line + "\n";
+				}
+				reader.close();
+				objectData.close();
+				//Append new user entry to end of file and reupload
+				fileContents = fileContents + userEntry;
+				contentAsBytes = fileContents.getBytes("UTF-8");
+				contentAsStream = new ByteArrayInputStream(contentAsBytes);
+				md = new ObjectMetadata();
+				md.setContentLength(contentAsBytes.length);
+				s3Client.putObject(new PutObjectRequest(bucket, leaderboard, contentAsStream, md));
 				contentAsStream.close();
 				
 				return true;
@@ -285,5 +355,191 @@ public class UserServer
 			return false;
 		}
 		return false;
+	}
+	
+	private static boolean save(String emailHash, String newJSON)
+	{
+		//Search list of users for file called emailHash.rec
+		//Grab unique ID number from record
+		//Overwrite old ID.json with newJSON
+		//Update leader board
+		
+		//Define known variables
+		String bucket = "asx-user-store";
+		String userCreds = "creds/"+emailHash+".rec";
+		//Connect to S3
+		AWSCredentials credentials = new BasicAWSCredentials([REDACTED]);
+		AmazonS3 s3Client = new AmazonS3Client(credentials);
+		//Grab user record into Buffered Reader Stream
+		S3Object object = s3Client.getObject(new GetObjectRequest(bucket, userCreds));
+		InputStream objectData = object.getObjectContent();
+		BufferedReader reader = new BufferedReader(new InputStreamReader(objectData));
+		try
+		{
+			reader.readLine();
+			String userID = reader.readLine(); //Get userID number
+			reader.close();
+			objectData.close();
+			String userData = "data/"+userID+".obj";
+			
+			//Overwrite old file with newJSON
+			byte[] contentAsBytes = newJSON.getBytes("UTF-8");
+			ByteArrayInputStream contentAsStream = new ByteArrayInputStream(contentAsBytes);
+			ObjectMetadata md = new ObjectMetadata();
+			md.setContentLength(contentAsBytes.length);
+			s3Client.putObject(new PutObjectRequest(bucket, userData, contentAsStream, md));
+			contentAsStream.close();
+			
+			//Update leaderboard
+			String leaderboard = "leaderboard.csv";
+			String[] data = newJSON.split(",");
+			String scorePos = data[data.length - 2];
+			String sScore = scorePos.split(":")[1].replaceAll("'", "");
+			int iScore = Integer.parseInt(sScore);
+			String userEntry = userID + ":" + sScore + "\n";
+			
+			object = s3Client.getObject(new GetObjectRequest(bucket, leaderboard));
+			objectData = object.getObjectContent();
+			reader = new BufferedReader(new InputStreamReader(objectData));
+			String line = "";
+			String fileContents = "";
+			boolean written = false;
+			while(true)
+			{
+				line = reader.readLine();
+				if(line != null)
+				{
+					String[] compData = line.split(":");
+					String compUserID = compData[0];
+					String compScoreString = compData[1];
+					int compScore = Integer.parseInt(compScoreString);
+					if(!compUserID.equals(userID)) //If the current line does not belong to the updating user
+					{
+						System.out.println("Comparing two different users");
+						if(written)
+						{
+							System.out.println("Copying existing line");
+							fileContents = fileContents + line + "\n";
+						}
+						else if(iScore > compScore) //If users score is more than the current line being read
+						{
+							System.out.println("Placing user in new spot in leaderbaord");
+							written = true;
+							fileContents = fileContents + userEntry + line + "\n";
+						}
+						else
+						{
+							System.out.println("Copying existing line");
+							fileContents = fileContents + line + "\n";
+						}
+					}
+				}
+				else if(!written) //reached end of file and player score is the lowest
+				{
+					System.out.println("Placing user in last spot");
+					fileContents = fileContents + userEntry;
+					break;
+				}
+				else
+				{
+					break;
+				}
+				
+			}
+			reader.close();
+			objectData.close();
+			//Write updated leaderboard to S3
+			contentAsBytes = fileContents.getBytes("UTF-8");
+			contentAsStream = new ByteArrayInputStream(contentAsBytes);
+			md = new ObjectMetadata();
+			md.setContentLength(contentAsBytes.length);
+			s3Client.putObject(new PutObjectRequest(bucket, leaderboard, contentAsStream, md));
+			contentAsStream.close();
+			
+			return true;
+		}
+		catch (IOException e)
+		{
+			System.out.println("Exception when overwriting S3 file: " + e);
+		}
+		finally
+		{
+			try
+			{
+				reader.close();
+				objectData.close();
+			}
+			catch (IOException e)
+			{
+				System.out.println("Exception when closing streams: " + e);
+			}
+		}
+		return false;
+	}
+	
+	private static String leaderboard(int topN, int count)
+	{
+		//Take the first topN entries from leaderboards.csv
+		//If bottomN == 0, return entire leaderboard
+		//Create a string to send back formatted as {'Name':'Name','sName':'sName','Score':'Score'},{},{},{} etc.
+		//Return said string
+		
+		//Read leaderboard file line by line
+		//Connect to S3
+		AWSCredentials credentials = new BasicAWSCredentials([REDACTED]);
+		AmazonS3 s3Client = new AmazonS3Client(credentials);
+		String bucket = "asx-user-store";
+		String leaderboard = "leaderboard.csv";
+		S3Object object = s3Client.getObject(new GetObjectRequest(bucket, leaderboard));
+		InputStream objectData = object.getObjectContent();
+		BufferedReader reader = new BufferedReader(new InputStreamReader(objectData));
+		try
+		{
+			String leaders = "";
+			String line = "";
+			int pos = 0;
+			while(count > 0 && (line = reader.readLine()) != null)
+			{
+				if(pos >= topN)
+				{
+					count--;
+					//grab user ID from line
+					//grab user name, surname, and score from file
+					String userID = line.split(":")[0].replaceAll("'", "");
+					String score = line.split(":")[1].replaceAll("'", "");
+					String userDataFile = "data/"+userID+".obj";
+					S3Object userObject = s3Client.getObject(new GetObjectRequest(bucket, userDataFile));
+					InputStream userObjectData = userObject.getObjectContent();
+					BufferedReader userReader = new BufferedReader(new InputStreamReader(userObjectData));
+					String userData = userReader.readLine();
+					userReader.close();
+					userObjectData.close();
+					//Grab name and sName for leaders String
+					String name = userData.split(",")[0].replace("{","");
+					String sName = userData.split(",")[1];
+					leaders = leaders + "{" + name + "," + sName + ",'Score':'" + score + "'}";
+					leaders = leaders + ",";
+				}
+				pos++;
+			}
+			return leaders;
+		}
+		catch (IOException e)
+		{
+			System.out.println("Exception when returning leaderboard: " + e);
+		}
+		finally
+		{
+			try
+			{
+				reader.close();
+				objectData.close();
+			}
+			catch (IOException e)
+			{
+				System.out.println("Exception when closing streams: " + e);
+			}
+		}
+		return null;
 	}
 }
