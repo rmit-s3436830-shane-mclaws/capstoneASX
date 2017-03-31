@@ -42,9 +42,8 @@ public class UserServer
 			}
 			
         }
-		System.out.println("----------------------End Network Information----------------------\n\n");
-		
-		
+        System.out.println("----------------------End Network Information----------------------\n\n");
+        
 		ServerSocket serverSock = null;
 		Socket userConnection = null;
 		BufferedReader connectionRead = null;
@@ -142,9 +141,17 @@ public class UserServer
 				}
 			}
 		}
+		catch (SocketException se)
+		{
+			System.out.println("Exception while performing socket operation: " + se);
+		}
 		catch(IOException e)
 		{
 			System.out.println("Exception while opening server socket: " + e);
+		}
+		catch (NumberFormatException ex)
+		{
+			System.out.println("Exception when converting String to Int: " + ex);
 		}
 		finally
 		{
@@ -296,7 +303,7 @@ public class UserServer
 				
 				//Create user data file
 				String userData = "data/"+userID+".obj";
-				String dataString = "{"+"'Name':'"+fname+"','Surname':'"+sName+"','Email':'"+uEmail+"','Balance':'1000000','Shares':{},'Score':'0','Rights':'trader'}";
+				String dataString = "{"+"'Name':'"+fname+"','Surname':'"+sName+"','Email':'"+uEmail+"','Balance':'1000000.00','Shares':'','Score':'0.00','Rights':'trader'}";
 				contentAsBytes = dataString.getBytes("UTF-8");
 				contentAsStream = new ByteArrayInputStream(contentAsBytes);
 				md = new ObjectMetadata();
@@ -345,12 +352,18 @@ public class UserServer
 	            System.out.println("Caught an AmazonClientException");
 	            System.out.println("This means the client encountered an internal error while trying to communicate with S3.");
 	            System.out.println("Error Message: " + ace.getMessage());
-			} catch (UnsupportedEncodingException e)
+			}
+			catch (UnsupportedEncodingException e)
 			{
 				System.out.println("Caught an UnsupportedEncodingException");
-			} catch (IOException e)
+			}
+			catch (IOException e)
 			{
 				System.out.println("Exception whe trying to close stream");
+			}
+			catch (NumberFormatException ex)
+			{
+				System.out.println("Exception when converting String to Int: " + ex);
 			}
 			return false;
 		}
@@ -395,7 +408,7 @@ public class UserServer
 			String[] data = newJSON.split(",");
 			String scorePos = data[data.length - 2];
 			String sScore = scorePos.split(":")[1].replaceAll("'", "");
-			int iScore = Integer.parseInt(sScore);
+			float iScore = Float.valueOf(sScore);
 			String userEntry = userID + ":" + sScore + "\n";
 			
 			object = s3Client.getObject(new GetObjectRequest(bucket, leaderboard));
@@ -412,7 +425,7 @@ public class UserServer
 					String[] compData = line.split(":");
 					String compUserID = compData[0];
 					String compScoreString = compData[1];
-					int compScore = Integer.parseInt(compScoreString);
+					float compScore = Float.valueOf(compScoreString);
 					if(!compUserID.equals(userID)) //If the current line does not belong to the updating user
 					{
 						System.out.println("Comparing two different users");
@@ -461,6 +474,10 @@ public class UserServer
 		catch (IOException e)
 		{
 			System.out.println("Exception when overwriting S3 file: " + e);
+		}
+		catch (NumberFormatException ex)
+		{
+			System.out.println("Exception when converting String to Int: " + ex);
 		}
 		finally
 		{
