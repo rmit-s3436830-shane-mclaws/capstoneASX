@@ -65,11 +65,14 @@
 		$data = file_get_contents($dataURL);
 		
 		//Filename exists within folder 'ASX trading code', formatted as YYYYMMDD.json, example: CBA/20170313.json would be CBA on the 13th of March 2017
-		$fileName = $company."/".$date.".json";	
+		$fileName = $company."/".$date.".json";
 		
 		//Formats raw CSV into a readable format for alter use
+		$illegalChars = array('"','\'',);
 		$entry = explode(',', $data);
-		$entry = '{"Time":"'.$time.'","Name":'.$entry[0].',"ASX Code":"'.$company.'","Ask Price":"'.$entry[1].'","Bid Price":"'.$entry[2].'","Last Trade Price":"'.$entry[3].'","Last Trade Time":'.$entry[4].',"Change":"'.$entry[5].'","Change(%)":'.$entry[6].',"Opening Value":"'.$entry[7].'","Day High":"'.$entry[8].'","Day Low":"'.$entry[9].'","Previous Close":"'.$entry[10].'","52 Week Range":'.$entry[11].',"52 Week High":"'.$entry[12].'","52 Week Low":"'.$entry[13].'","Dividend/Share":"'.$entry[14].'","Ex-Dividend Date":"'.$entry[15].'","Dividende Pay Date":"'.$entry[16].'","Dividend Yield":"'.substr($entry[17],0,-1).'"}\n';
+		$entry = str_replace($illegalChars, "", $entry);
+		$entry = '{"Time":"'.$time.'","Name":"'.$entry[0].'","ASX Code":"'.$company.'","Ask Price":"'.$entry[1].'","Bid Price":"'.$entry[2].'","Last Trade Price":"'.$entry[3].'","Last Trade Time":"'.$entry[4].'","Change":"'.$entry[5].'","Change(%)":"'.$entry[6].'","Opening Value":"'.$entry[7].'","Day High":"'.$entry[8].'","Day Low":"'.$entry[9].'","Previous Close":"'.$entry[10].'","52 Week Range":"'.$entry[11].'","52 Week High":"'.$entry[12].'","52 Week Low":"'.$entry[13].'","Dividend/Share":"'.$entry[14].'","Ex-Dividend Date":"'.$entry[15].'","Dividende Pay Date":"'.$entry[16].'","Dividend Yield":"'.substr($entry[17],0,-1).'"}';
+		
 		
 		if($time == "10:00") //If it's the first post of the day, create a new file and put the data in it
 		{
@@ -119,10 +122,10 @@
 				break;
 			}
 		}
-		/*if($tries == 150) //This if will trigger once the first 150 entries have been grabbed, and then break out of the loop
+		if($tries == 150) //This if will trigger once the first 150 entries have been grabbed, and then break out of the loop
 		{ //Delete/comment this if block once debugging is complete and sprint is ready for presentation/review
 			break; //Deleting/commenting this block will allow all ~2000 entries to be computed
-		}*/
+		}
 	}
 	/*****************************************************/
 ?>
