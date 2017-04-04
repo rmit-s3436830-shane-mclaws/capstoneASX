@@ -92,7 +92,8 @@ public class threadedConnection implements Runnable
 				{
 					String userEmail = connectionRead.readLine();
 					String userJson = connectionRead.readLine();
-					if(save(userEmail, userJson))
+					String userTransaction = connectionRead.readLine();
+					if(save(userEmail, userJson, userTransaction))
 					{
 						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 200");
 						bytes = "200".getBytes("UTF-8");
@@ -357,7 +358,7 @@ public class threadedConnection implements Runnable
 		return false;
 	}
 	
-	private static boolean save(String emailHash, String newJSON)
+	private static boolean save(String emailHash, String newJSON, String transaction)
 	{
 		//Search list of users for file called emailHash.rec
 		//Grab unique ID number from record
@@ -366,6 +367,7 @@ public class threadedConnection implements Runnable
 		
 		//Define known variables
 		String userCreds = "creds/"+emailHash+".rec";
+		String line = "";
 		
 		//Grab user record into Buffered Reader Stream
 		S3Object object = s3Client.getObject(new GetObjectRequest(bucket, userCreds));
@@ -378,9 +380,24 @@ public class threadedConnection implements Runnable
 			reader.close();
 			objectData.close();
 			String userData = "data/"+userID+".obj";
+			String dataString = newJSON + "\n";
 			
-			//Overwrite old file with newJSON
-			byte[] contentAsBytes = newJSON.getBytes("UTF-8");
+			//Read user file and generate new data String
+			object = s3Client.getObject(new GetObjectRequest(bucket, userData));
+			objectData = object.getObjectContent();
+			reader = new BufferedReader(new InputStreamReader(objectData));
+			reader.readLine(); //ignore first line
+			while((line = reader.readLine()) != null)
+			{
+				dataString = dataString + line + "\n";
+			}
+			if(transaction != null)
+			{
+				dataString = dataString + transaction + "\n";
+			}
+			
+			//Overwrite old JSON with newJSON and add transaction to end of file
+			byte[] contentAsBytes = dataString.getBytes("UTF-8");
 			ByteArrayInputStream contentAsStream = new ByteArrayInputStream(contentAsBytes);
 			ObjectMetadata md = new ObjectMetadata();
 			md.setContentLength(contentAsBytes.length);
@@ -398,7 +415,6 @@ public class threadedConnection implements Runnable
 			object = s3Client.getObject(new GetObjectRequest(bucket, leaderboard));
 			objectData = object.getObjectContent();
 			reader = new BufferedReader(new InputStreamReader(objectData));
-			String line = "";
 			String fileContents = "";
 			boolean written = false;
 			while(true)
@@ -440,6 +456,7 @@ public class threadedConnection implements Runnable
 			}
 			reader.close();
 			objectData.close();
+			
 			//Write updated leaderboard to S3
 			contentAsBytes = fileContents.getBytes("UTF-8");
 			contentAsStream = new ByteArrayInputStream(contentAsBytes);
@@ -515,6 +532,7 @@ public class threadedConnection implements Runnable
 				}
 				pos++;
 			}
+			leaders = leaders.substring(0, leaders.length() - 1);
 			return leaders;
 		}
 		catch (IOException e)
