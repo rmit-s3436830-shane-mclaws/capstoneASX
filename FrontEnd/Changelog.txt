@@ -1,0 +1,15 @@
+Version 0.2
+ - All ASX entries being returned from server 
+ - ASX data for current date being returned.
+ - Leaderboard working for total value
+ - Brokers fee implemented
+
+Version 0.11
+ - ASX data being pulled from server in seperate threads
+ - Player can now be saved to the server
+ 
+Version 0.1
+ - First version of program
+ - Pulling data from ASX on set date, for set stocks
+ - Buying/selling stocks
+ - Player registration and login

@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.time.*;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -122,9 +123,23 @@ public class AsxPull {
 	
 	public static boolean loadStocks(){					//currently only working for single day, set in this method
 		deadCompanies = 0;
+		LocalDateTime timePoint = LocalDateTime.now();
+		LocalDate date = timePoint.toLocalDate();
+		String day = Integer.toString(date.getDayOfMonth());
+		if (day.length() == 1){
+			day = "0"+day;
+		}
+		String month = Integer.toString(date.getMonthValue());
+		if (month.length() == 1){
+			month = "0"+month;
+		}
+		String year = Integer.toString(date.getYear());
+		String fileString = year + month + day;
+		System.out.println(fileString);
+		
 		if (AsxGame.stockList != null){
 			for (int i = 0; i < AsxGame.stockList.length; i++){
-				AsxPull.getAsxJson(AsxGame.stockList[i], "20170401");
+				AsxPull.getAsxJson(AsxGame.stockList[i], fileString);
 				if (AsxGame.stockArray.size() + deadCompanies == 150){				//stop after pulling 150 stock (the only stocks
 					break;											//currently available on S3)
 				}
