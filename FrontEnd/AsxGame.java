@@ -5,8 +5,8 @@ import java.io.*;
 public class AsxGame {
 
 	//Make these not plain text somehow, even just remove them from the version that gets uploaded to github
-	public static String accessKey = "Removed for upload to github";
-	public static String secretAccessKey = "removed for upload to github";
+	public static String accessKey = "REMOVED FOR UPLOAD TO GITHUB";
+	public static String secretAccessKey = "REMOVED FOR UPLOAD TO GITHUB";
 	public static String connectionName = "ec2-13-54-16-160.ap-southeast-2.compute.amazonaws.com";
 	public static int portNumber = 28543;
 	
@@ -15,6 +15,7 @@ public class AsxGame {
 	public static ArrayList<Stock> stockArray = new ArrayList<Stock>();
 	public static Player activePlayer;
 	public static boolean activePlayerLoaded = false;
+	public static ArrayList<String> leaderboard = new ArrayList<String>();
 			
 	public static void main(String[] args){
 		System.out.println(

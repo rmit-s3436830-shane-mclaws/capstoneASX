@@ -149,6 +149,7 @@ public class Menus {
 			System.out.println("	3. Buy stocks");
 			System.out.println("	4. Sell stocks");
 			System.out.println("	5. Save player to server");
+			System.out.println("	6. Get Leaderboard");
 	//		System.out.println("	L. Load stock list (only a select few stocks available currently");
 			System.out.println("	9. Logout (NOTE: THIS DOES NOT SAVE YOUR PLAYER CURRENTLY!");
 			System.out.println("	0. Exit");
@@ -173,6 +174,12 @@ public class Menus {
 				case "5":		//Save player to server
 					//System.out.println(AsxGame.activePlayer.generateSaveString());
 					Game.saveActivePlayer();
+					break;
+				case "6":
+					Game.getValueLeaderboard();
+					for (int i = 0; i < AsxGame.leaderboard.size(); i++){
+						System.out.println(AsxGame.leaderboard.get(i));
+					}
 					break;
 	//			case "L":
 	//				Utilities.loadTempStockList();

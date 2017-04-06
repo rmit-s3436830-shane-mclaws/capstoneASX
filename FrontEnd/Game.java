@@ -18,6 +18,7 @@ import com.amazonaws.services.s3.model.GetObjectRequest;
 */
 
 public class Game {
+	float buyersFee = 50;
 	
 	protected static boolean buyStocks(String asxCode, int number){
 		int index;
@@ -28,7 +29,8 @@ public class Game {
 				totalPrice = price * number;
 				if (totalPrice <= AsxGame.activePlayer.balance){
 					if (AsxGame.activePlayer.addShares(asxCode, number)){
-						AsxGame.activePlayer.removeBalance(totalPrice);
+						AsxGame.activePlayer.removeBalance(totalPrice + calcBrokersFeePurch(totalPrice));
+						AsxGame.activePlayer.calcValue();
 						return true;
 					} else {
 						return false;
@@ -54,7 +56,8 @@ public class Game {
 				}
 				totalPrice = price * number;
 				if (AsxGame.activePlayer.removeShares(asxCode, number)){
-					AsxGame.activePlayer.addBalance(totalPrice);
+					AsxGame.activePlayer.addBalance(totalPrice - calcBrokersFeeSale(totalPrice));
+					AsxGame.activePlayer.calcValue();
 					return true;
 				} else {
 					return false;
@@ -327,4 +330,111 @@ public class Game {
 		
 		return true;
 	}
+	
+	protected static boolean getValueLeaderboard(){
+		AsxGame.leaderboard.clear();
+		Socket connection = null;
+		boolean successState = false;
+		long startTime = System.currentTimeMillis();
+		long currentTime, elapsedTime;
+		try {
+			connection = new Socket(AsxGame.connectionName, AsxGame.portNumber);
+			System.out.println("Local Address: " + connection.getLocalAddress());
+			System.out.println("Local Port: " + connection.getLocalPort());
+			
+			//Input Streams
+			BufferedReader connectionRead = null;
+			String response = null;
+			
+    		//Output Streams
+			DeflaterOutputStream deflStream = null;
+			
+			try {				
+				//leaderboard call
+				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
+				String leaderString = "leaders\n" + "0" + "\n" + "10"; //'0' is top position returned, '10' is number of places returned
+				byte[] leaderBytes = leaderString.getBytes("UTF-8");
+				deflStream.write(leaderBytes);
+				deflStream.finish();
+				deflStream.flush();
+				
+				while(true)
+				{
+					connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(connection.getInputStream())));
+					response = connectionRead.readLine();
+					if(response != null)
+					{
+						if(!response.equals("500"))
+						{
+							System.out.println("Leaderboard download successful!");
+							System.out.println(response);	
+							try {
+								String[] leadersJSON = response.split(";");
+								for (int i = 0; i < leadersJSON.length; i++){
+									JSONObject json = new JSONObject(leadersJSON[i]);
+									String name = json.getString("Name");
+									String sName = json.getString("Surname");
+									String score = json.getString("Score");
+									String foo = name + " " + sName + ":\t" + score;
+									AsxGame.leaderboard.add(foo);
+								}
+								successState = true;
+								break;
+							} catch (JSONException e){
+								e.printStackTrace();
+								successState = false;
+								break;
+							}
+						}
+						else
+						{
+							System.out.println("500: INTERNAL SERVER ERROR!");
+							break;
+						}
+					}
+					currentTime = System.currentTimeMillis();
+					elapsedTime = currentTime - startTime;
+					if (elapsedTime > 10000){
+						System.out.println("Timeout Error!");
+						successState = false;
+						break;
+					}
+				}
+			} catch (IOException e){
+				System.out.println("Exception while reading input: " + e);
+				successState = false;
+			} finally {
+				try{
+					connectionRead.close();
+    			} catch (IOException e) {
+    				System.out.println("Exception while closing streams: " +e);
+    			}
+			}
+		} catch (IOException e) {
+			System.out.println("Exception while opening connection: " + e);
+			successState = false;
+		} finally {
+			try	{
+        		connection.close();
+        	} catch (IOException e)	{
+        		System.out.println("Exception while closing connection: " + e);
+        	}
+		}
+		return successState;
+	}
+	
+	private static float calcBrokersFeePurch(float transactionAmount){ 	//$50 + %1
+		float output = 50;
+		float fee = (float) (transactionAmount * 0.01);
+		output += fee;
+		return output;
+	}
+	
+	private static float calcBrokersFeeSale(float transactionAmount){ 	//$50 + %1
+		float output = 50;
+		float fee = (float) (transactionAmount * 0.0025);
+		output += fee;
+		return output;
+	}
 }
+

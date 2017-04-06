@@ -10,6 +10,7 @@ public class Player {
 	ArrayList<String> shares = new ArrayList<String>();	//formatted: "asxCode:Number"
 	float score;
 	boolean adminRights = false;
+	float shareVal;
 	
 	public Player(String name, String surname, String email, float balance,
 					String shareString, String score, String rights) {
@@ -28,12 +29,15 @@ public class Player {
 		if (rights.equals("admin")){
 			adminRights = true;
 		}
+		shareVal = 0;
+		calcValue();
 	}
 
 	void printPlayer(){
 		System.out.println(this.name + " " + this.surname);
 		System.out.println(this.email);
 		System.out.println(this.balance);
+		System.out.println("Worth: " + score);
 		printShares();
 		System.out.println("admin: " + adminRights);
 		return;
@@ -41,6 +45,20 @@ public class Player {
 	
 	Player getPlayer(){
 		return this;
+	}
+	
+	void calcValue(){
+		shareVal = 0;						//reset when starting calculation
+		for (int i = 0; i < shares.size(); i++){
+			String[] shareSplit = shares.get(i).split(":");
+			for (int j = 0; j < AsxGame.stockArray.size(); j++){
+				if (AsxGame.stockArray.get(j).code.equals(shareSplit[0])){
+					shareVal += AsxGame.stockArray.get(j).askPrice
+									* Integer.parseInt(shareSplit[1]);
+				}
+			}
+		}
+		score = shareVal + balance;
 	}
 	
 	boolean addBalance(float amount){
