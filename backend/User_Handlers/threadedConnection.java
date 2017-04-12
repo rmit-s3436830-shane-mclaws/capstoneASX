@@ -8,6 +8,10 @@ package com.amazonaws.samples;
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
 import java.util.zip.InflaterInputStream;
 import java.util.zip.DeflaterOutputStream;
 
@@ -36,7 +40,7 @@ public class threadedConnection implements Runnable
 	public threadedConnection(Socket cSocket)
 	{
 		this.client = cSocket;
-		this.credentials = new BasicAWSCredentials([REDACTED]);
+		this.credentials = new BasicAWSCredentials(REDACTED,REDACTED);
 		threadedConnection.s3Client  = AmazonS3ClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(credentials)).withRegion(Regions.AP_SOUTHEAST_2).build();
 	}
 	
@@ -59,16 +63,30 @@ public class threadedConnection implements Runnable
 				{
 					String userEmail = connectionRead.readLine();
 					String passwdHash = connectionRead.readLine();
-					String details = null;
-					if((details = login(userEmail,passwdHash)) != null)
+					if((line = login(userEmail,passwdHash)) != null)
 					{
 						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: Valid Login Data");
-						bytes = details.getBytes("UTF-8");
+						bytes = line.getBytes("UTF-8");
 					}
 					else
 					{
 						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 401");
 						bytes = "401".getBytes("UTF-8");
+					}
+				}
+				else if(line.equals("history"))
+				{
+					String emailHash = connectionRead.readLine();
+					String type = connectionRead.readLine();
+					if((line = getHistory(emailHash,type)) != null)
+					{
+						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: Valid History Data");
+						bytes = line.getBytes("UTF-8");
+					}
+					else
+					{
+						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 500");
+						bytes = "500".getBytes("UTF-8");
 					}
 				}
 				else if(line.equals("register"))
@@ -162,13 +180,7 @@ public class threadedConnection implements Runnable
 	}
 	
 	private static String login(String emailHash, String passwdHash)
-	{
-		//Search list of users for file called emailHash.rec
-		//Check if hash inside emailHash.rec == passwdHash
-		//If match, grab unique ID number from file
-		//find file called uniqueIDNo.json and return contents
-		//else return null
-		
+	{	
 		//Define known variables
 		String userCreds = "creds/"+emailHash+".rec";
 		
@@ -188,15 +200,17 @@ public class threadedConnection implements Runnable
 			objectData.close();
 			if(hash.equals(passwdHash))
 			{
-				String userData = "data/"+userID+".obj";
+				String userData = "data/"+userID+"/data.json";
 				if(!s3Client.doesObjectExist(bucket, userCreds))
 				{
 					return null;
 				}
+				String data;
+				//Get User Data
 				object = s3Client.getObject(new GetObjectRequest(bucket, userData));
 				objectData = object.getObjectContent();
 				reader = new BufferedReader(new InputStreamReader(objectData));
-				String data = reader.readLine();
+				data = reader.readLine();
 				reader.close();
 				objectData.close();
 				return data;
@@ -225,6 +239,70 @@ public class threadedConnection implements Runnable
 		return null;
 	}
 	
+	private static String getHistory(String emailHash, String type)
+	{
+		//Define known variables
+		String userCreds = "creds/"+emailHash+".rec";
+		String line = "";
+		String data = "";
+		String file = "";
+		
+		//Grab user record into Buffered Reader Stream
+		if(!s3Client.doesObjectExist(bucket, userCreds))
+		{
+			return null;
+		}
+		S3Object object = s3Client.getObject(new GetObjectRequest(bucket, userCreds));
+		InputStream objectData = object.getObjectContent();
+		BufferedReader reader = new BufferedReader(new InputStreamReader(objectData));
+		try
+		{
+			reader.readLine();
+			String userID = reader.readLine();
+			reader.close();
+			objectData.close();
+			if(type.equals("transaction"))
+			{
+				//Get user purchase history
+				file = "data/"+userID+"/purchaseHistory.json";
+			}
+			else if(type.equals("value"))
+			{
+				//Get user value history
+				file = "data/"+userID+"/valueHistory.json";
+			}
+			object = s3Client.getObject(new GetObjectRequest(bucket, file));
+			objectData = object.getObjectContent();
+			reader = new BufferedReader(new InputStreamReader(objectData));
+			while((line = reader.readLine()) != null)
+			{
+				data = line + "\n";
+			}
+			reader.close();
+			objectData.close();
+			return data;
+		}
+		catch (IOException e)
+		{
+			System.out.println("Exception when reading S3 file: " + e);
+		}
+		finally
+		{
+			try
+			{
+				reader.close();
+				objectData.close();
+				object.close();
+			}
+			catch (IOException e)
+			{
+				System.out.println("Exception when closing streams: " + e);
+			}
+		}
+		return null;
+	}
+	
+	@SuppressWarnings("unchecked")
 	private static boolean register(String passwdHash, String fname, String sName, String uEmail)
 	{
 		//Creates a new instance of userID.json and userID.rec for future use
@@ -290,13 +368,43 @@ public class threadedConnection implements Runnable
 				contentAsStream.close();
 				
 				//Create user data file
-				String userData = "data/"+userID+".obj";
-				String dataString = "{"+"'Name':'"+fname+"','Surname':'"+sName+"','Email':'"+uEmail+"','Balance':'1000000.00','Shares':'','Score':'0.00','Rights':'trader'}";
+				String userData = "data/"+userID+"/data.json";
+				String purchaseHistory = "data/"+userID+"/purchaseHistory.json";
+				String valueHistory = "data/"+userID+"/valueHistory.json";
+				//Create User JSON String
+				JSONObject dataJSON = new JSONObject();
+				dataJSON.put("Name", fname);
+				dataJSON.put("Surname", sName);
+				dataJSON.put("Email", uEmail);
+				dataJSON.put("Balance", "1000000000.00");
+				dataJSON.put("Shares","");
+				dataJSON.put("Score","0.00");
+				dataJSON.put("Rights","trader");
+				String dataString = dataJSON.toString();
+				//Create History Strings
+				String pHisString = "";
+				String vHisString = "";
+				
+				//Write Data file
 				contentAsBytes = dataString.getBytes("UTF-8");
 				contentAsStream = new ByteArrayInputStream(contentAsBytes);
 				md = new ObjectMetadata();
 				md.setContentLength(contentAsBytes.length);
 				s3Client.putObject(new PutObjectRequest(bucket, userData, contentAsStream, md));
+				contentAsStream.close();
+				//Write purchaseHistory File
+				contentAsBytes = pHisString.getBytes("UTF-8");
+				contentAsStream = new ByteArrayInputStream(contentAsBytes);
+				md = new ObjectMetadata();
+				md.setContentLength(contentAsBytes.length);
+				s3Client.putObject(new PutObjectRequest(bucket, purchaseHistory, contentAsStream, md));
+				contentAsStream.close();
+				//Write valueHistory File
+				contentAsBytes = vHisString.getBytes("UTF-8");
+				contentAsStream = new ByteArrayInputStream(contentAsBytes);
+				md = new ObjectMetadata();
+				md.setContentLength(contentAsBytes.length);
+				s3Client.putObject(new PutObjectRequest(bucket, valueHistory, contentAsStream, md));
 				contentAsStream.close();
 				
 				//Add user to leader board
@@ -360,11 +468,6 @@ public class threadedConnection implements Runnable
 	
 	private static boolean save(String emailHash, String newJSON, String transaction)
 	{
-		//Search list of users for file called emailHash.rec
-		//Grab unique ID number from record
-		//Overwrite old ID.json with newJSON
-		//Update leader board
-		
 		//Define known variables
 		String userCreds = "creds/"+emailHash+".rec";
 		String line = "";
@@ -379,37 +482,44 @@ public class threadedConnection implements Runnable
 			String userID = reader.readLine(); //Get userID number
 			reader.close();
 			objectData.close();
-			String userData = "data/"+userID+".obj";
+			String userData = "data/"+userID+"/data.json";
 			String dataString = newJSON + "\n";
 			
-			//Read user file and generate new data String
-			object = s3Client.getObject(new GetObjectRequest(bucket, userData));
-			objectData = object.getObjectContent();
-			reader = new BufferedReader(new InputStreamReader(objectData));
-			reader.readLine(); //ignore first line
-			while((line = reader.readLine()) != null)
-			{
-				dataString = dataString + line + "\n";
-			}
-			if(transaction != null)
-			{
-				dataString = dataString + transaction + "\n";
-			}
-			
-			//Overwrite old JSON with newJSON and add transaction to end of file
+			//Update Data file
 			byte[] contentAsBytes = dataString.getBytes("UTF-8");
 			ByteArrayInputStream contentAsStream = new ByteArrayInputStream(contentAsBytes);
 			ObjectMetadata md = new ObjectMetadata();
 			md.setContentLength(contentAsBytes.length);
 			s3Client.putObject(new PutObjectRequest(bucket, userData, contentAsStream, md));
-			contentAsStream.close();
+			
+			//Read transaction history file append new data to the end of it
+			if(transaction != null)
+			{
+				String transactionHistory = "data/"+userID+"/purchaseHistory.json";
+				object = s3Client.getObject(new GetObjectRequest(bucket, transactionHistory));
+				objectData = object.getObjectContent();
+				reader = new BufferedReader(new InputStreamReader(objectData));
+				dataString = "";
+				while((line = reader.readLine()) != null)
+				{
+					dataString += line + "\n";
+				}
+				dataString += transaction + "\n";
+				
+				contentAsBytes = dataString.getBytes("UTF-8");
+				contentAsStream = new ByteArrayInputStream(contentAsBytes);
+				md = new ObjectMetadata();
+				md.setContentLength(contentAsBytes.length);
+				s3Client.putObject(new PutObjectRequest(bucket, transactionHistory, contentAsStream, md));
+				contentAsStream.close();
+			}
 			
 			//Update leaderboard
 			String leaderboard = "leaderboard.csv";
-			String[] data = newJSON.split(",");
-			String scorePos = data[data.length - 2];
-			String sScore = scorePos.split(":")[1].replaceAll("'", "");
-			float iScore = Float.valueOf(sScore);
+			JSONParser parser = new JSONParser();
+			JSONObject data = (JSONObject) parser.parse(newJSON);
+			String sScore = data.get("Score").toString();
+			float fScore = Float.valueOf(sScore);
 			String userEntry = userID + ":" + sScore + "\n";
 			
 			object = s3Client.getObject(new GetObjectRequest(bucket, leaderboard));
@@ -432,7 +542,7 @@ public class threadedConnection implements Runnable
 						{
 							fileContents = fileContents + line + "\n";
 						}
-						else if(iScore > compScore) //If users score is more than the current line being read
+						else if(fScore > compScore) //If users score is more than the current line being read
 						{
 							written = true;
 							fileContents = fileContents + userEntry + line + "\n";
@@ -474,6 +584,10 @@ public class threadedConnection implements Runnable
 		catch (NumberFormatException ex)
 		{
 			System.out.println("Exception when converting String to Int: " + ex);
+		}
+		catch (ParseException pe)
+		{
+			System.out.println("Exception when parsing JSON string: " + pe);
 		}
 		finally
 		{
@@ -528,7 +642,7 @@ public class threadedConnection implements Runnable
 					String name = userData.split(",")[0].replace("{","");
 					String sName = userData.split(",")[1];
 					leaders = leaders + "{" + name + "," + sName + ",'Score':'" + score + "'}";
-					leaders = leaders + ",";
+					leaders = leaders + ";";
 				}
 				pos++;
 			}
