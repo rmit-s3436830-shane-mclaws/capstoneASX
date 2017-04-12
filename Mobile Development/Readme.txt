@@ -4,3 +4,4 @@ Changelist:
 12Apr:
     Working Register Funcitonality
     Working Login Functionality
+    Display Account Info (Name, Surname, Shares, Score)
