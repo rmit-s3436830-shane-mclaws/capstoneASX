@@ -34,11 +34,13 @@ public class downloader implements Runnable
 	private static final String bucket = "asx-json-host";
 	private static String date;
 	private static String time;
+	private static String AccessKey = REDACTED;
+	private static String SecretKey = REDACTED;
 	
 	public downloader(String[] companies)
 	{
 		this.companyList = companies;
-		this.credentials = new BasicAWSCredentials(REDACTED);
+		this.credentials = new BasicAWSCredentials(downloader.AccessKey,downloader.SecretKey);
 		downloader.s3Client  = AmazonS3ClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(credentials)).withRegion(Regions.AP_SOUTHEAST_2).build();
 		DateFormat df = new SimpleDateFormat("yyyyMMdd");
 		DateFormat tf = new SimpleDateFormat("HH:mm");
