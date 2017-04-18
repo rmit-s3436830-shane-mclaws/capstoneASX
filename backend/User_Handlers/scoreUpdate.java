@@ -196,7 +196,7 @@ public class scoreUpdate
 			AmazonS3 s3Client;
 			String bucket = "asx-json-host";
 			
-			credentials = new BasicAWSCredentials("AKIAJCT2NZ4EY44FKQMQ","NSUeEIkeThVVsRBEn4/cg/fV9h9pDgdpFgTMzf17");
+			credentials = new BasicAWSCredentials(REDACTED);
 			s3Client  = AmazonS3ClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(credentials)).withRegion(Regions.AP_SOUTHEAST_2).build();
 			ObjectListing objectList = s3Client.listObjects(bucket, ASXCode+"/");
 			List<S3ObjectSummary> summaries = objectList.getObjectSummaries();
