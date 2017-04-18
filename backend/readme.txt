@@ -4,8 +4,8 @@ They're scheduled, and run utilising the cron service.
 JSON_Scripts/ASX_List_Download.php is run every weekday at 10:05 AM.
 This script downloads a list of ASX Trading codes from the ASX directly, and saves the list as a CSV on the EC2 instance, so it can be used in the JSON_Download.php script.
 
-JSON_Scripts/JSON_Download.php is run every 20 minutes between 10AM and 5PM on weekdays (ASX Trading hours).
-This script facilitates the download and management of ASX share data, which is hosted on an AWS S3 instance for future utilisiation by the user fornt-end application.
+JSON_Scripts/manager.java is run every 20 minutes between 10AM and 5PM on weekdays (ASX Trading hours).
+This script facilitates the download and management of ASX share data, which is hosted on an AWS S3 instance for future utilisiation by the user front-end application. It uses threading, and download.java is the thread class that enables this.
 
 User_Handlers/UserServer.java is a server program that will always be running on the EC2 instance.
 The user application will connect to it when a user is trying to login, register, save, or display leaderboard.
