@@ -76,7 +76,7 @@ public class scoreUpdate
 		Socket connection = null;
 		try
 		{
-			AWSCredentials credentials = new BasicAWSCredentials("AKIAJCT2NZ4EY44FKQMQ","NSUeEIkeThVVsRBEn4/cg/fV9h9pDgdpFgTMzf17");
+			AWSCredentials credentials = new BasicAWSCredentials(REDACTED);
 			AmazonS3 s3Client  = AmazonS3ClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(credentials)).withRegion(Regions.AP_SOUTHEAST_2).build();
 			
 			String bucket = "asx-user-store";
