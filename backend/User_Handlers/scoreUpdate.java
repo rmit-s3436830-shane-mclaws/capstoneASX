@@ -127,8 +127,12 @@ public class scoreUpdate
 				float bal = Float.parseFloat(sBal);
 				newScore += bal;
 				
-				//Subtract 1000000 from newScore
+				//Subtract 1000000 from newScore and if newScore < 0, set it to 0
 				newScore -= startingCash;
+				if(newScore < 0)
+				{
+					newScore = 0;
+				}
 				String stringScoreUpdated = Float.toString(newScore);
 				connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(connection.getInputStream())));
 				
