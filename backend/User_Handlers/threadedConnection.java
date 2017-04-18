@@ -8,9 +8,7 @@ package com.amazonaws.samples;
 import java.io.*;
 import java.net.*;
 import java.util.*;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import org.json.*;
 
 import java.util.zip.InflaterInputStream;
 import java.util.zip.DeflaterOutputStream;
@@ -36,11 +34,13 @@ public class threadedConnection implements Runnable
 	private AWSCredentials credentials;
 	private static AmazonS3 s3Client;
 	private static final String bucket = "asx-user-store";
+	private static String AccessKey = REDACTED;
+	private static String SecretKey = REDACTED;
 	
 	public threadedConnection(Socket cSocket)
 	{
 		this.client = cSocket;
-		this.credentials = new BasicAWSCredentials(REDACTED,REDACTED);
+		this.credentials = new BasicAWSCredentials(threadedConnection.AccessKey,threadedConnection.SecretKey);
 		threadedConnection.s3Client  = AmazonS3ClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(credentials)).withRegion(Regions.AP_SOUTHEAST_2).build();
 	}
 	
@@ -302,7 +302,6 @@ public class threadedConnection implements Runnable
 		return null;
 	}
 	
-	@SuppressWarnings("unchecked")
 	private static boolean register(String passwdHash, String fname, String sName, String uEmail)
 	{
 		//Creates a new instance of userID.json and userID.rec for future use
@@ -332,7 +331,7 @@ public class threadedConnection implements Runnable
 							{
 								String key = summary.getKey();
 								String[] keyArray = key.split("/");
-								comp = Integer.parseInt(keyArray[1].substring(0, keyArray[1].length()-4));
+								comp = Integer.parseInt(keyArray[1].split(".")[0]);
 								if(comp > uID)
 								{
 									uID = comp;
@@ -347,7 +346,7 @@ public class threadedConnection implements Runnable
 						{
 							String key = summary.getKey();
 							String[] keyArray = key.split("/");
-							comp = Integer.parseInt(keyArray[1].substring(0, keyArray[1].length()-4));
+							comp = Integer.parseInt(keyArray[1]);
 							if(comp > uID)
 							{
 								uID = comp;
@@ -376,7 +375,7 @@ public class threadedConnection implements Runnable
 				dataJSON.put("Name", fname);
 				dataJSON.put("Surname", sName);
 				dataJSON.put("Email", uEmail);
-				dataJSON.put("Balance", "1000000000.00");
+				dataJSON.put("Balance", "1000000.00");
 				dataJSON.put("Shares","");
 				dataJSON.put("Score","0.00");
 				dataJSON.put("Rights","trader");
@@ -516,8 +515,7 @@ public class threadedConnection implements Runnable
 			
 			//Update leaderboard
 			String leaderboard = "leaderboard.csv";
-			JSONParser parser = new JSONParser();
-			JSONObject data = (JSONObject) parser.parse(newJSON);
+			JSONObject data = new JSONObject(newJSON);
 			String sScore = data.get("Score").toString();
 			float fScore = Float.valueOf(sScore);
 			String userEntry = userID + ":" + sScore + "\n";
@@ -585,10 +583,6 @@ public class threadedConnection implements Runnable
 		{
 			System.out.println("Exception when converting String to Int: " + ex);
 		}
-		catch (ParseException pe)
-		{
-			System.out.println("Exception when parsing JSON string: " + pe);
-		}
 		finally
 		{
 			try
@@ -631,7 +625,7 @@ public class threadedConnection implements Runnable
 					//grab user name, surname, and score from file
 					String userID = line.split(":")[0].replaceAll("'", "");
 					String score = line.split(":")[1].replaceAll("'", "");
-					String userDataFile = "data/"+userID+".obj";
+					String userDataFile = "data/"+userID+"/data.json";
 					S3Object userObject = s3Client.getObject(new GetObjectRequest(bucket, userDataFile));
 					InputStream userObjectData = userObject.getObjectContent();
 					BufferedReader userReader = new BufferedReader(new InputStreamReader(userObjectData));

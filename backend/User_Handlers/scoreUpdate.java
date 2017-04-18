@@ -20,6 +20,9 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 public class scoreUpdate
 {
+	private static String AccessKey = REDACTED;
+	private static String SecretKey = REDACTED;
+	
 	public static void main(String args[])
 	{
 		AWSCredentials credentials;
@@ -28,7 +31,7 @@ public class scoreUpdate
 		List<Integer> users = new ArrayList<Integer>();
 		int count = 0;
 		
-		credentials = new BasicAWSCredentials(REDACTED);
+		credentials = new BasicAWSCredentials(scoreUpdate.AccessKey,scoreUpdate.SecretKey);
 		s3Client  = AmazonS3ClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(credentials)).withRegion(Regions.AP_SOUTHEAST_2).build();
 		ObjectListing objectList = s3Client.listObjects(bucket, "data/");
 		List<S3ObjectSummary> summaries = objectList.getObjectSummaries();
@@ -76,7 +79,7 @@ public class scoreUpdate
 		Socket connection = null;
 		try
 		{
-			AWSCredentials credentials = new BasicAWSCredentials(REDACTED);
+			AWSCredentials credentials = new BasicAWSCredentials(scoreUpdate.AccessKey,scoreUpdate.SecretKey);
 			AmazonS3 s3Client  = AmazonS3ClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(credentials)).withRegion(Regions.AP_SOUTHEAST_2).build();
 			
 			String bucket = "asx-user-store";
@@ -196,7 +199,7 @@ public class scoreUpdate
 			AmazonS3 s3Client;
 			String bucket = "asx-json-host";
 			
-			credentials = new BasicAWSCredentials(REDACTED);
+			credentials = new BasicAWSCredentials(scoreUpdate.AccessKey,scoreUpdate.SecretKey);
 			s3Client  = AmazonS3ClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(credentials)).withRegion(Regions.AP_SOUTHEAST_2).build();
 			ObjectListing objectList = s3Client.listObjects(bucket, ASXCode+"/");
 			List<S3ObjectSummary> summaries = objectList.getObjectSummaries();
