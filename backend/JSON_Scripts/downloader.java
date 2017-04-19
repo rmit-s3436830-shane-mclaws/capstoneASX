@@ -87,6 +87,7 @@ public class downloader implements Runnable
 					}
 					else
 					{
+						fullData = "";
 						//Append data to end of existing file
 						object = s3Client.getObject(new GetObjectRequest(bucket, fileName));
 						objectData = object.getObjectContent();
