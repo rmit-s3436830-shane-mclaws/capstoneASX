@@ -1,3 +1,11 @@
+Version 0.3 (11:20PM 20/4/2017)
+ - Transaction tracking implemented (Still needs work though)
+ - Work started on admin functionality (not functional)
+ - Changes made to multithreading of asx data download
+	- now reports of whether or not the program has finished downloading the data
+ - Fixed issue with saving stock info to server
+ 
+
 Version 0.2
  - All ASX entries being returned from server 
  - ASX data for current date being returned.

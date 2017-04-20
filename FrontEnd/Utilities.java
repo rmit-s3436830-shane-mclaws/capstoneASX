@@ -12,12 +12,12 @@ public class Utilities {
 		return;
 	}	
 	
-	public static void createTempOfflinePlayer(){
+	/*public static void createTempOfflinePlayer(){
 		AsxGame.activePlayer = new Player("Offline", "Player", "OP@email.com", 1000000,
 									"", "5", "trader");
 		AsxGame.activePlayerLoaded = true;
 		return;
-	}
+	}*/
 	
 	public static void errorToLogFile(String error){
 		try{

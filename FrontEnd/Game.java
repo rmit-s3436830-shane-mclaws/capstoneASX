@@ -31,6 +31,7 @@ public class Game {
 					if (AsxGame.activePlayer.addShares(asxCode, number)){
 						AsxGame.activePlayer.removeBalance(totalPrice + calcBrokersFeePurch(totalPrice));
 						AsxGame.activePlayer.calcValue();
+						AsxGame.activePlayer.updateTransHist("-1", "-1", asxCode, "Buy", number, price);
 						return true;
 					} else {
 						return false;
@@ -58,6 +59,7 @@ public class Game {
 				if (AsxGame.activePlayer.removeShares(asxCode, number)){
 					AsxGame.activePlayer.addBalance(totalPrice - calcBrokersFeeSale(totalPrice));
 					AsxGame.activePlayer.calcValue();
+					AsxGame.activePlayer.updateTransHist("-1", "-1", asxCode, "Sell", number, price);
 					return true;
 				} else {
 					return false;
@@ -315,7 +317,7 @@ public class Game {
 	protected static boolean loadPlayer(String response){
 		//gets response from login function, gets values for each variable
 		//and creates active player
-		
+		String transHist;
 		JSONObject json = new JSONObject(response);
 		String name = json.getString("Name");
 		String surname = json.getString("Surname");
@@ -324,12 +326,22 @@ public class Game {
 		String shareString = json.getString("Shares");
 		String score = json.getString("Score");
 		String rights = json.getString("Rights");
-
-		AsxGame.activePlayer = new Player(name,surname,email,balance,shareString,score,rights);
-		AsxGame.activePlayerLoaded = true;
-		
-		return true;
+		try{
+			transHist = json.getString("History");
+		} catch (JSONException e) {
+			transHist = "";
+		}
+		if (rights.equals("admin")){
+			AsxGame.activeAdmin = new Player(name,surname,email,balance,shareString,score,rights,transHist);
+			AsxGame.activeAdminLoaded = true;
+			return true;
+		} else {
+			AsxGame.activePlayer = new Player(name,surname,email,balance,shareString,score,rights,transHist);
+			AsxGame.activePlayerLoaded = true;
+			return true;
+		}
 	}
+
 	
 	protected static boolean getValueLeaderboard(){
 		AsxGame.leaderboard.clear();

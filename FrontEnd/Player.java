@@ -1,6 +1,11 @@
 package com.amazonaws.samples;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
+
+import org.json.JSONObject;
 
 public class Player {
 	String name;
@@ -8,12 +13,13 @@ public class Player {
 	String email;
 	float balance;
 	ArrayList<String> shares = new ArrayList<String>();	//formatted: "asxCode:Number"
-	float score;
+	ArrayList<JSONObject> transHistory = new ArrayList<JSONObject>(); 	//formatted as JSON; keys:date,time,buy/sell,stock code,number,price
+	float score;												
 	boolean adminRights = false;
 	float shareVal;
 	
 	public Player(String name, String surname, String email, float balance,
-					String shareString, String score, String rights) {
+					String shareString, String score, String rights, String transHist) {
 		this.name = name;
 		this.surname = surname;
 		this.email = email;
@@ -29,6 +35,13 @@ public class Player {
 		if (rights.equals("admin")){
 			adminRights = true;
 		}
+		String[] transSplit = transHist.split("\n");
+		if (!transHist.equals("")){
+			for (int i = 0; i < transSplit.length; i++){
+				JSONObject json = new JSONObject(transSplit[i]);
+				transHistory.add(json);
+			}
+		}
 		shareVal = 0;
 		calcValue();
 	}
@@ -40,13 +53,13 @@ public class Player {
 		System.out.println("Worth: " + score);
 		printShares();
 		System.out.println("admin: " + adminRights);
+		for (int i = 0; i < transHistory.size(); i++){
+			System.out.println(transHistory.get(i).toString());
+		}
+		generateSaveString();
 		return;
 	}
-	
-	Player getPlayer(){
-		return this;
-	}
-	
+		
 	void calcValue(){
 		shareVal = 0;						//reset when starting calculation
 		for (int i = 0; i < shares.size(); i++){
@@ -139,17 +152,60 @@ public class Player {
 		return false;
 	}
 	
+	boolean updateTransHist(String dateIn, String timeIn, String asxCodeIn, String transTypeIn, int numberIn, float priceIn){
+		JSONObject json = new JSONObject();
+		if (Integer.parseInt(dateIn) == -1 || Integer.parseInt(timeIn) == -1){	
+			LocalDateTime timePoint = LocalDateTime.now();
+			LocalDate date = timePoint.toLocalDate();
+			LocalTime time = timePoint.toLocalTime();
+			String day = Integer.toString(date.getDayOfMonth());
+			if (day.length() == 1){
+				day = "0"+day;
+			}
+			String month = Integer.toString(date.getMonthValue());
+			if (month.length() == 1){
+				month = "0"+month;
+			}
+			String year = Integer.toString(date.getYear());
+			String dateString = year + month + day;
+			String timeString = time.toString();
+			json.put("Date", dateString);
+			json.put("Time", timeString);
+		} else {
+			json.put("Date", dateIn);
+			json.put("Time", timeIn);
+		}
+		json.put("TransType", transTypeIn);
+		json.put("ASXCode", asxCodeIn);
+		json.put("Number", numberIn);
+		json.put("Price", priceIn);
+		transHistory.add(json);
+		return false;
+	}
+	
 	String generateSaveString(){
-		String sharesString = null;
+		String sharesString = "";
+		String histString = "";
 		for (int i = 0; i < shares.size(); i++){
 			if (i == 0){
 				sharesString = shares.get(i);
 			}
 			if (i != 0){
-				sharesString.concat(shares.get(i));
+				sharesString += shares.get(i);
 			}
 			if (i != shares.size() -1){
-				sharesString.concat(",");
+				sharesString += ",";
+			}
+		}
+		for (int i = 0; i < transHistory.size(); i++){
+			if (i == 0){
+				histString = transHistory.get(i).toString();
+			}
+			if (i != 0){
+				histString += transHistory.get(i).toString();
+			}
+			if (i != transHistory.size() -1){
+				histString += "\n";
 			}
 		}
 		String rightsString;
@@ -158,50 +214,17 @@ public class Player {
 		} else {
 			rightsString = "trader";
 		}
-		String output = "{" + 
-						"'Name':'" + name +
-						"','Surname':'" + surname +
-						"','Email':'" + email + 
-						"','Balance':'" + Float.toString(balance) +
-						"','Shares':'" + sharesString +
-						"','Score':'" + Float.toString(score) + 
-						"','Rights':'" + rightsString + "'}";
-		System.out.println("Save String for player: " + output);
+		JSONObject json = new JSONObject();
+		json.put("Name", name);
+		json.put("Surname", surname);
+		json.put("Email", email);
+		json.put("Balance", Float.toString(balance));
+		json.put("Shares", sharesString);
+		json.put("Score", Float.toString(score));
+		json.put("Rights", rightsString);
+		json.put("History", histString);
+		String output = json.toString();
+		System.out.println("SaveString: " + output);
 		return output;
 	}
-	
-	/*public boolean savePlayerToFile(){
-		try{
-			FileOutputStream fos = new FileOutputStream(this.email +".sav");
-			ObjectOutputStream oos = new ObjectOutputStream(fos);
-			oos.writeObject(this.email);
-			oos.writeObject(this.name);
-			oos.writeObject(this.balance);
-			oos.close();
-			fos.close();
-			return true;
-		} catch (IOException e){
-			e.printStackTrace();			
-			return false;
-		}
-	}*/
-	
-	/*public void loadPlayerFromFile(String filename) throws ClassNotFoundException{
-		try{
-			FileInputStream fis = new FileInputStream(filename + ".sav");
-			ObjectInputStream ois = new ObjectInputStream(fis);
-			this.id = (int) ois.readObject();
-			this.name = (String) ois.readObject();
-			this.balance = (float) ois.readObject();
-			ois.close();
-			fis.close();
-			//return true;
-		} catch (IOException e) {
-			//return false;
-		}
-	}*/
-	
-//	public boolean createPlayer(){
-		
-//	}
 }

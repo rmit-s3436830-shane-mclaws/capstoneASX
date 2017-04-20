@@ -13,7 +13,6 @@ public class Menus {
 		System.out.println("	1. Login with existing account");
 		System.out.println("	2. Register new player");
 		System.out.println("	3. Get temp asx data + print");
-		System.out.println("	9. Load Offline Temp Player");
 		System.out.println("	0. Exit");
 		input = consoleRead.next();
 		switch (input){
@@ -28,9 +27,6 @@ public class Menus {
 				AsxPull.getAsxJson("ABP", "20170329");
 				AsxGame.stockArray.get(0).printStock();
 				AsxGame.stockArray.remove(0);
-				return;
-			case "9":
-				Utilities.createTempOfflinePlayer();
 				return;
 			case "0": 		//exit
 				System.exit(0);
@@ -185,6 +181,61 @@ public class Menus {
 	//				Utilities.loadTempStockList();
 	//				break;
 				case "9": 		//logout
+					AsxGame.activePlayer = null;
+					AsxGame.activePlayerLoaded = false;
+					return;
+				case "0": 		//exit
+					System.exit(0);
+					break;
+				default: System.out.println("Invalid Choice!");
+			}
+		}
+	}
+
+	protected static void adminMenu(){
+		while (true){		
+			System.out.println("\nPlease select on of the following options: \n");
+			System.out.println("	1. View admin account details");
+			System.out.println("	2. Load a player to modify");
+			System.out.println("	3. View loaded player account details");
+			System.out.println("	4. Add stocks to loaded player");
+			System.out.println("	5. Remove stocks from loaded player");
+			System.out.println("	6. Set loaded players balance");
+			System.out.println("	7. Save + unload loaded player");
+			System.out.println("	9. Logout (NOTE: THIS DOES NOT SAVE YOUR PLAYER CURRENTLY!");
+			System.out.println("	0. Exit");
+			
+			input = consoleRead.next();
+			switch (input) {
+				case "1":		//Print Active Admin Details
+					AsxGame.activeAdmin.printPlayer();
+					break;
+				case "2": 		//load player for admin to modify
+					break;			
+								//to be implemented
+							
+				case "3":		//View loaded player account details
+					AsxGame.activePlayer.printPlayer();
+					break;
+				case "4":		//Add stocks to loaded player
+							
+								//to be implemented
+					break;
+				case "5":		//Remove stocks from loaded player
+					
+								//to be implemented
+					break;
+				case "6":		//Set loaded players balance
+					AsxGame.activePlayer.setBalance(0);	//to be implemented
+					break;
+				case "7":		//Save + unload loaded player
+					Game.saveActivePlayer();
+					AsxGame.activePlayerLoaded = false;
+					AsxGame.activePlayer = null;
+					break;
+				case "9": 		//logout
+					AsxGame.activeAdminLoaded = false;
+					AsxGame.activeAdmin = null;
 					AsxGame.activePlayer = null;
 					AsxGame.activePlayerLoaded = false;
 					return;

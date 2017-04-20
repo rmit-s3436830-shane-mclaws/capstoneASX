@@ -6,6 +6,14 @@ import java.io.PrintWriter;
 //import java.io.File;
 
 public class AsxPullThread implements Runnable{
+	
+	int startPoint, endPoint;
+	
+	AsxPullThread(int startPoint, int endPoint){
+		this.startPoint = startPoint;
+		this.endPoint = endPoint;			//set to -1 for end of list
+	}
+	
 	public void run(){
 		PrintWriter writer;
 		try {
@@ -14,7 +22,7 @@ public class AsxPullThread implements Runnable{
 			writer.close();
 		} catch (FileNotFoundException e) {
 		}		
-		AsxPull.loadStocks();
+		AsxPull.loadStocks(startPoint, endPoint);
 		System.out.println(AsxGame.stockArray.size());
 		
 		//Utilities.loadTempStockList();

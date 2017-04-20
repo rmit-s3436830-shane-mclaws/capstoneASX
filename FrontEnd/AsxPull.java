@@ -36,7 +36,7 @@ public class AsxPull {
 		String filePath = asxCode + "/" + fileName + ".json";
 		
 		//Establish connection to S3
-		System.out.println(filePath);	
+		//System.out.println(filePath);	
 		
 		//Get object into stream
 		try {
@@ -88,12 +88,11 @@ public class AsxPull {
 						return false;
 					}				
 				} catch (JSONException e){
-					String error = e.toString();
-					Utilities.asxErrorToLogFile(filePath,error);
+					Utilities.asxErrorToLogFile(filePath, e.toString());
 					return false;
 				}
 			} catch (IOException e){
-				e.getStackTrace();
+				Utilities.asxErrorToLogFile(filePath, e.toString());
 			}
 		} catch (AmazonS3Exception e){
 			Utilities.asxErrorToLogFile(filePath, e.toString());
@@ -121,7 +120,7 @@ public class AsxPull {
 		return output;
 	}
 	
-	public static boolean loadStocks(){					//currently only working for single day, set in this method
+	public static boolean loadStocks(int startPoint, int endPoint){					//currently only working for single day, set in this method
 		deadCompanies = 0;
 		LocalDateTime timePoint = LocalDateTime.now();
 		LocalDate date = timePoint.toLocalDate();
@@ -135,10 +134,13 @@ public class AsxPull {
 		}
 		String year = Integer.toString(date.getYear());
 		String fileString = year + month + day;
-		System.out.println(fileString);
+		//System.out.println(fileString);
 		
 		if (AsxGame.stockList != null){
-			for (int i = 0; i < AsxGame.stockList.length; i++){
+			if (endPoint == -1){
+				endPoint = AsxGame.stockList.length;
+			}
+			for (int i = startPoint; i < AsxGame.stockList.length && i < endPoint; i++){
 				AsxPull.getAsxJson(AsxGame.stockList[i], fileString);
 				if (AsxGame.stockArray.size() + deadCompanies == 150){				//stop after pulling 150 stock (the only stocks
 					break;											//currently available on S3)
