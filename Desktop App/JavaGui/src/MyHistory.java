@@ -64,7 +64,7 @@ public class MyHistory {
 		comboBox.setToolTipText("My Hub");
 		comboBox.setModel(new DefaultComboBoxModel(new String[] {"My Hub", "Account Settings", "Log Out"}));
 		comboBox.setSelectedIndex(1);
-		comboBox.setBounds(501, 14, 158, 27);
+		comboBox.setBounds(538, 14, 163, 27);
 		frmMyHistory.getContentPane().add(comboBox);
 		
 		txtSearch = new JTextField();
@@ -75,18 +75,22 @@ public class MyHistory {
 		txtSearch.setColumns(10);
 		
 		JLabel lblHello = new JLabel("Title");
+		lblHello.setFont(new Font("Lucida Grande", Font.BOLD, 13));
 		lblHello.setBounds(132, 128, 355, 16);
 		frmMyHistory.getContentPane().add(lblHello);
 		
 		JLabel lblAmount = new JLabel("Amount");
+		lblAmount.setFont(new Font("Lucida Grande", Font.BOLD, 13));
 		lblAmount.setBounds(501, 128, 65, 16);
 		frmMyHistory.getContentPane().add(lblAmount);
 		
 		JLabel lblDate = new JLabel("Date");
+		lblDate.setFont(new Font("Lucida Grande", Font.BOLD, 13));
 		lblDate.setBounds(26, 123, 65, 27);
 		frmMyHistory.getContentPane().add(lblDate);
 		
 		JLabel lblAccountBalance = new JLabel("Balance");
+		lblAccountBalance.setFont(new Font("Lucida Grande", Font.BOLD, 13));
 		lblAccountBalance.setBounds(607, 128, 103, 16);
 		frmMyHistory.getContentPane().add(lblAccountBalance);
 		

@@ -6,7 +6,6 @@ import java.awt.Font;
 import javax.swing.JTextField;
 import java.awt.Color;
 import javax.swing.SwingConstants;
-import javax.swing.DropMode;
 import javax.swing.JButton;
 import javax.swing.JPasswordField;
 import javax.swing.JTextPane;
@@ -16,7 +15,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
 
-public class CapstoneGUI {
+public class LogIn {
 
 	private JFrame frmLogin;
 	private JTextField txtUsername;
@@ -29,7 +28,7 @@ public class CapstoneGUI {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					CapstoneGUI window = new CapstoneGUI();
+					LogIn window = new LogIn();
 					window.frmLogin.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -41,7 +40,7 @@ public class CapstoneGUI {
 	/**
 	 * Create the application.
 	 */
-	public CapstoneGUI() {
+	public LogIn() {
 		initialize();
 	}
 

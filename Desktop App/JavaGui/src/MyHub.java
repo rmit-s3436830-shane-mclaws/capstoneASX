@@ -2,10 +2,14 @@ import java.awt.EventQueue;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+
 import java.awt.Font;
+
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.SwingConstants;
 import javax.swing.JComboBox;
 import javax.swing.JTextField;
+
 import java.awt.Color;
 
 
@@ -56,9 +60,10 @@ public class MyHub {
 		frmMyHub_1.getContentPane().add(label);
 		
 		JComboBox comboBox = new JComboBox();
-		comboBox.setToolTipText("My Hub");
+		comboBox.setToolTipText("My Hub");		
+		comboBox.setModel(new DefaultComboBoxModel(new String[] {"My Hub", "Account Settings", "Log Out"}));
 		comboBox.setSelectedIndex(1);
-		comboBox.setBounds(607, 14, 52, 27);
+		comboBox.setBounds(538, 14, 163, 27);
 		frmMyHub_1.getContentPane().add(comboBox);
 		
 		textField = new JTextField();
