@@ -50,11 +50,6 @@ public class LogOut {
 		frmLogOut.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmLogOut.getContentPane().setLayout(null);
 		
-		JPopupMenu popupMenu = new JPopupMenu();
-		popupMenu.setPopupSize(new Dimension(100, 100));
-		popupMenu.setBounds(263, 0, -62, -117);
-		addPopup(frmLogOut.getContentPane(), popupMenu);
-		
 		JLabel label = new JLabel("ASX Trading Wheels");
 		label.setHorizontalAlignment(SwingConstants.CENTER);
 		label.setFont(new Font("Arial", Font.PLAIN, 20));
