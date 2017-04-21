@@ -138,6 +138,21 @@ public class threadedConnection implements Runnable
 						bytes = "500".getBytes("UTF-8");
 					}
 				}
+				else if(line.equals("getUser"))
+				{
+					String emailHash = connectionRead.readLine();
+					String response = "";
+					if((response = getUsers(emailHash)) != null)
+					{
+						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: User Data");
+						bytes = response.getBytes("UTF-8");
+					}
+					else
+					{
+						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 500");
+						bytes = "500".getBytes("UTF-8");
+					}
+				}
 				else
 				{
 					System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 400: BAD REQUEST!");
@@ -201,18 +216,48 @@ public class threadedConnection implements Runnable
 			if(hash.equals(passwdHash))
 			{
 				String userData = "data/"+userID+"/data.json";
-				if(!s3Client.doesObjectExist(bucket, userCreds))
+				String transHistory = "data/"+userID+"/purchaseHistory.json";
+				String valueHistory = "data/"+userID+"/valueHistory.json";
+				if(!s3Client.doesObjectExist(bucket, userData))
 				{
 					return null;
 				}
-				String data;
+				
 				//Get User Data
+				String data;
 				object = s3Client.getObject(new GetObjectRequest(bucket, userData));
 				objectData = object.getObjectContent();
 				reader = new BufferedReader(new InputStreamReader(objectData));
-				data = reader.readLine();
+				data = reader.readLine() + "\n";
 				reader.close();
 				objectData.close();
+				
+				//Get User Transaction History
+				data += "transaction\n";
+				object = s3Client.getObject(new GetObjectRequest(bucket, transHistory));
+				objectData = object.getObjectContent();
+				reader = new BufferedReader(new InputStreamReader(objectData));
+				String line = "";
+				while((line = reader.readLine()) != null)
+				{
+					data += line + "\n";
+				}
+				reader.close();
+				objectData.close();
+				
+				//Get User Value History
+				data += "value\n";
+				object = s3Client.getObject(new GetObjectRequest(bucket, valueHistory));
+				objectData = object.getObjectContent();
+				reader = new BufferedReader(new InputStreamReader(objectData));
+				line = "";
+				while((line = reader.readLine()) != null)
+				{
+					data += line + "\n";
+				}
+				reader.close();
+				objectData.close();
+				
 				return data;
 			}
 			else
@@ -503,7 +548,7 @@ public class threadedConnection implements Runnable
 				{
 					dataString += line + "\n";
 				}
-				dataString += transaction + "\n";
+				dataString += transaction;
 				
 				contentAsBytes = dataString.getBytes("UTF-8");
 				contentAsStream = new ByteArrayInputStream(contentAsBytes);
@@ -657,6 +702,143 @@ public class threadedConnection implements Runnable
 			catch (IOException e)
 			{
 				System.out.println("Exception when closing streams: " + e);
+			}
+		}
+		return null;
+	}
+	
+	private static String getUsers(String emailHash)
+	{
+		//returns a list of all users in format of {fName,sName,email}\n{fName,sName,email}\n etc
+		if(emailHash.equals("*"))
+		{
+			List<Integer> users = new ArrayList<Integer>();
+			int count = 0;
+			ObjectListing objectList = s3Client.listObjects(bucket, "data/");
+			List<S3ObjectSummary> summaries = objectList.getObjectSummaries();
+			summaries.remove(0);
+			
+			//Get list of all userID's and put it into Integer List 'Users'
+			if(summaries.size() != 0)
+			{
+				if(objectList.isTruncated())
+				{
+					do
+					{
+						for(S3ObjectSummary summary : summaries)
+						{
+							if(count % 3 == 0)
+							{
+								users.add(Integer.parseInt(summary.getKey().split("/")[1]));
+							}
+							count++;
+						}
+						objectList = s3Client.listNextBatchOfObjects(objectList);
+					}while (objectList.isTruncated());
+				}
+				else
+				{
+					for(S3ObjectSummary summary : summaries)
+					{
+						if(count % 3 == 0)
+						{
+							users.add(Integer.parseInt(summary.getKey().split("/")[1]));
+						}
+						count++;
+					}
+				}
+			}
+			
+			String userList = "";
+			for(int iUser : users)
+			{
+				//Grab users first name, last name, email, create JSON object, convert to string, append to end of return
+				try
+				{
+					//Grab user JSON data
+					String userData = "data/" + iUser + "/data.json";
+					S3Object object = s3Client.getObject(new GetObjectRequest(bucket, userData));
+					InputStream objectData = object.getObjectContent();
+					BufferedReader reader = new BufferedReader(new InputStreamReader(objectData));
+					object = s3Client.getObject(new GetObjectRequest(bucket, userData));
+					objectData = object.getObjectContent();
+					reader = new BufferedReader(new InputStreamReader(objectData));
+					String data = reader.readLine();
+					reader.close();
+					objectData.close();
+					JSONObject dataJSON = new JSONObject(data);
+					
+					//Generate new JSON Object
+					JSONObject userDetails = new JSONObject();
+					
+					//Grab first name, surname, email from data
+					userDetails.put("Name",dataJSON.get("Name"));
+					userDetails.put("Surname",dataJSON.get("Surname"));
+					userDetails.put("Email",dataJSON.get("Email"));
+					
+					//Convert to string and append to end of userList
+					userList += userDetails.toString() + "\n";
+				}
+				catch (IOException ie)
+				{
+					System.out.println("Exception when reading " + iUser + "'s user data: " + ie);
+				}
+			}
+			return userList;
+		}
+		else //return full data + transaction history string for a single user
+		{
+			try
+			{
+				//Define known variables
+				String userCreds = "creds/"+emailHash+".rec";
+				
+				//Get User ID Number from email
+				if(!s3Client.doesObjectExist(bucket, userCreds))
+				{
+					return null;
+				}
+				S3Object object = s3Client.getObject(new GetObjectRequest(bucket, userCreds));
+				InputStream objectData = object.getObjectContent();
+				BufferedReader reader = new BufferedReader(new InputStreamReader(objectData));
+				reader.readLine(); //Skip password hash
+				String userID = reader.readLine();
+				reader.close();
+				objectData.close();
+				
+				String userData = "data/"+userID+"/data.json";
+				String transHistory = "data/"+userID+"/purchaseHistory.json";
+				if(!s3Client.doesObjectExist(bucket, userData))
+				{
+					return null;
+				}
+				
+				//Get User Data
+				String data;
+				object = s3Client.getObject(new GetObjectRequest(bucket, userData));
+				objectData = object.getObjectContent();
+				reader = new BufferedReader(new InputStreamReader(objectData));
+				data = reader.readLine() + "\n"; //Read user data String
+				reader.close();
+				objectData.close();
+				
+				//Get User Transaction History
+				object = s3Client.getObject(new GetObjectRequest(bucket, transHistory));
+				objectData = object.getObjectContent();
+				reader = new BufferedReader(new InputStreamReader(objectData));
+				String line = "";
+				while((line = reader.readLine()) != null)
+				{
+					data += line + "\n"; //Append each line of transaction history into data String
+				}
+				reader.close();
+				objectData.close();
+				
+				return data;
+			}
+			catch (IOException ie)
+			{
+				System.out.println("Exception when reading user data: " + ie);
 			}
 		}
 		return null;
