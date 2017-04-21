@@ -9,6 +9,10 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import org.json.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
 
 import java.util.zip.InflaterInputStream;
 import java.util.zip.DeflaterOutputStream;
@@ -31,28 +35,44 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 public class threadedConnection implements Runnable
 {
 	private Socket client;
+	private static String date;
+	private static String time;
+	private static String  fileName;
 	private AWSCredentials credentials;
 	private static AmazonS3 s3Client;
 	private static final String bucket = "asx-user-store";
 	private static String AccessKey = REDACTED;
 	private static String SecretKey = REDACTED;
+	private static String fileData;
 	
 	public threadedConnection(Socket cSocket)
 	{
 		this.client = cSocket;
 		this.credentials = new BasicAWSCredentials(threadedConnection.AccessKey,threadedConnection.SecretKey);
 		threadedConnection.s3Client  = AmazonS3ClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(credentials)).withRegion(Regions.AP_SOUTHEAST_2).build();
+		DateFormat df = new SimpleDateFormat("yyyyMMdd");
+		DateFormat tf = new SimpleDateFormat("HHmmss");
+		df.setTimeZone(TimeZone.getTimeZone("Australia/Victoria"));
+		tf.setTimeZone(TimeZone.getTimeZone("Australia/Victoria"));
+		Date dateobj = new Date();
+		threadedConnection.date = df.format(dateobj);
+		threadedConnection.time = tf.format(dateobj);
+		threadedConnection.fileName = "serverLogs\\" + date + "-" + time + ".log";
 	}
 	
 	public void run()
 	{
 		BufferedReader connectionRead = null;
 		DeflaterOutputStream deflStream = null;
+		BufferedWriter fileWrite = null;
+		fileData = "";
 		String line = null;
 		byte[] bytes = null;
 		try
 		{
+			fileWrite = new BufferedWriter(new FileWriter(threadedConnection.fileName));
 			System.out.println("[" + this.client.getRemoteSocketAddress() + "] New incoming connection");
+			fileData += "New incoming connection [" + this.client.getRemoteSocketAddress() + "] \n";
 			connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(this.client.getInputStream())));
 			line = connectionRead.readLine();
 			if(line != null)
@@ -63,14 +83,18 @@ public class threadedConnection implements Runnable
 				{
 					String userEmail = connectionRead.readLine();
 					String passwdHash = connectionRead.readLine();
+					fileData += "Requesting: " + line + " : " + userEmail + " : " + passwdHash + "\n";
 					if((line = login(userEmail,passwdHash)) != null)
 					{
 						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: Valid Login Data");
+						fileData += "Returning: Valid Login Data\n";
+						fileData += line + "\n";
 						bytes = line.getBytes("UTF-8");
 					}
 					else
 					{
 						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 401");
+						fileData += "Returning: 401\n";
 						bytes = "401".getBytes("UTF-8");
 					}
 				}
@@ -78,14 +102,18 @@ public class threadedConnection implements Runnable
 				{
 					String emailHash = connectionRead.readLine();
 					String type = connectionRead.readLine();
+					fileData += "Requesting: " + line + " : " + emailHash + " : " + type + "\n";
 					if((line = getHistory(emailHash,type)) != null)
 					{
 						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: Valid History Data");
+						fileData += "Returning: Valid History Data\n";
+						fileData += line + "\n";
 						bytes = line.getBytes("UTF-8");
 					}
 					else
 					{
 						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 500");
+						fileData += "Returning: 500\n";
 						bytes = "500".getBytes("UTF-8");
 					}
 				}
@@ -95,14 +123,17 @@ public class threadedConnection implements Runnable
 					String newFName = connectionRead.readLine();
 					String newSName = connectionRead.readLine();
 					String newUEmail = connectionRead.readLine();
+					fileData += "Requesting: " + line + " : " + newPasswdHash + " : " + newFName + " : " + newSName + " : " + newUEmail +"\n";
 					if(register(newPasswdHash, newFName, newSName, newUEmail))
 					{
 						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 200");
+						fileData += "Returning: 200\n";
 						bytes = "200".getBytes("UTF-8");
 					}
 					else
 					{
 						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 500");
+						fileData += "Returning: 500\n";
 						bytes = "500".getBytes("UTF-8");
 					}
 				}
@@ -111,14 +142,17 @@ public class threadedConnection implements Runnable
 					String userEmail = connectionRead.readLine();
 					String userJson = connectionRead.readLine();
 					String userTransaction = connectionRead.readLine();
+					fileData += "Requesting: " + line + " : " + userEmail + " : " + userJson + " : " + userTransaction + "\n";
 					if(save(userEmail, userJson, userTransaction))
 					{
 						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 200");
+						fileData += "Returning: 200\n";
 						bytes = "200".getBytes("UTF-8");
 					}
 					else
 					{
 						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 500");
+						fileData += "Returning: 500\n";
 						bytes = "500".getBytes("UTF-8");
 					}
 				}
@@ -126,36 +160,45 @@ public class threadedConnection implements Runnable
 				{
 					int topPos = Integer.parseInt(connectionRead.readLine());
 					int count = Integer.parseInt(connectionRead.readLine());
+					fileData += "Requesting: " + line + " : " + topPos + " : " + count +  "\n";
 					String leaders = "";
 					if((leaders = leaderboard(topPos, count)) != null)
 					{
 						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: Leaderboard Data");
+						fileData += "Returning: Leaderboard Data\n";
+						fileData += leaders + "\n";
 						bytes = leaders.getBytes("UTF-8");
 					}
 					else
 					{
 						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 500");
+						fileData += "Returning: 500\n";
 						bytes = "500".getBytes("UTF-8");
 					}
 				}
 				else if(line.equals("getUser"))
 				{
 					String emailHash = connectionRead.readLine();
+					fileData += "Requesting: " + line + " : " + emailHash + "\n";
 					String response = "";
 					if((response = getUsers(emailHash)) != null)
 					{
 						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: User Data");
+						fileData += "Returning: User Data\n";
+						fileData += response + "\n";
 						bytes = response.getBytes("UTF-8");
 					}
 					else
 					{
 						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 500");
+						fileData += "Returning: 500\n";
 						bytes = "500".getBytes("UTF-8");
 					}
 				}
 				else
 				{
 					System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 400: BAD REQUEST!");
+					fileData  += "Returning: 400: BAD REQUEST!\n";
 					bytes = "400: BAD REQUEST!".getBytes("UTF-8");
 				}
 				deflStream.write(bytes);
@@ -164,20 +207,24 @@ public class threadedConnection implements Runnable
 				deflStream.close();
 				this.client.close();
 				System.out.println("[" + this.client.getRemoteSocketAddress() + "] End connection");
+				fileData += "End connection [" + this.client.getRemoteSocketAddress() + "] \n";
 				return;
 			}
 		}
 		catch (SocketException se)
 		{
 			System.out.println("[" + this.client.getRemoteSocketAddress() + "] Exception while performing socket operation: " + se);
+			fileData += "Exception while performing socket operation: " + se + "\n";
 		}
 		catch(IOException e)
 		{
 			System.out.println("[" + this.client.getRemoteSocketAddress() + "] Exception while opening server socket: " + e);
+			fileData += "Exception while opening server socket: " + e + "\n";
 		}
 		catch (NumberFormatException ex)
 		{
 			System.out.println("[" + this.client.getRemoteSocketAddress() + "] Exception when converting String to Int: " + ex);
+			fileData += "Exception when converting String to Int: " + ex + "\n";
 		}
 		finally
 		{
@@ -185,10 +232,13 @@ public class threadedConnection implements Runnable
 			{
 				deflStream.close();
 				this.client.close();
+				fileWrite.write(fileData);
+				fileWrite.close();
 			}
 			catch (IOException e)
 			{
 				System.out.println("[" + this.client.getRemoteSocketAddress() + "] Exception while closing sockets: " + e);
+				fileData += "Exception while closing sockets: " + e + "\n";
 			}
 		}
 		return;
@@ -268,6 +318,7 @@ public class threadedConnection implements Runnable
 		catch (IOException e)
 		{
 			System.out.println("Exception when reading S3 file: " + e);
+			fileData += "Login: Exception when reading S3 file: " + e + "\n";
 		}
 		finally
 		{
@@ -279,6 +330,7 @@ public class threadedConnection implements Runnable
 			catch (IOException e)
 			{
 				System.out.println("Exception when closing streams: " + e);
+				fileData += "Login: Exception when closing streams: " + e + "\n";
 			}
 		}
 		return null;
@@ -330,6 +382,7 @@ public class threadedConnection implements Runnable
 		catch (IOException e)
 		{
 			System.out.println("Exception when reading S3 file: " + e);
+			fileData += "getHistory: Exception when reading S3 file: " + e + "\n";
 		}
 		finally
 		{
@@ -342,6 +395,7 @@ public class threadedConnection implements Runnable
 			catch (IOException e)
 			{
 				System.out.println("Exception when closing streams: " + e);
+				fileData += "getHistory: Exception when closing streams: " + e + "\n";
 			}
 		}
 		return null;
@@ -480,30 +534,29 @@ public class threadedConnection implements Runnable
 			catch (AmazonServiceException ase)
 			{
 	            System.out.println("Caught an AmazonServiceException");
-	            System.out.println("This means your request made it to Amazon S3, but was rejected with an error response.");
-	            System.out.println("Error Message:    " + ase.getMessage());
-	            System.out.println("HTTP Status Code: " + ase.getStatusCode());
-	            System.out.println("AWS Error Code:   " + ase.getErrorCode());
-	            System.out.println("Error Type:       " + ase.getErrorType());
-	            System.out.println("Request ID:       " + ase.getRequestId());
+	            fileData += "register: Caught an AmazonServiceException: " + ase + "\n";
 			}
 			catch (AmazonClientException ace)
 			{
 	            System.out.println("Caught an AmazonClientException");
 	            System.out.println("This means the client encountered an internal error while trying to communicate with S3.");
 	            System.out.println("Error Message: " + ace.getMessage());
+	            fileData += "register: Caught an AmazonClientException: " + ace + "\n";
 			}
 			catch (UnsupportedEncodingException e)
 			{
 				System.out.println("Caught an UnsupportedEncodingException");
+				fileData += "register: Caught an UnsupportedEncodingException: " + e + "\n";
 			}
 			catch (IOException e)
 			{
 				System.out.println("Exception whe trying to close stream");
+				fileData += "register: Exception whe trying to close stream: " + e + "\n";
 			}
 			catch (NumberFormatException ex)
 			{
 				System.out.println("Exception when converting String to Int: " + ex);
+				fileData += "register: Exception when converting String to Int: " + ex + "\n";
 			}
 			return false;
 		}
@@ -623,10 +676,12 @@ public class threadedConnection implements Runnable
 		catch (IOException e)
 		{
 			System.out.println("Exception when overwriting S3 file: " + e);
+			fileData += "save: Exception when overwriting S3 file: " + e + "\n";
 		}
 		catch (NumberFormatException ex)
 		{
 			System.out.println("Exception when converting String to Int: " + ex);
+			fileData += "save: Exception when converting String to Int: " + ex + "\n";
 		}
 		finally
 		{
@@ -638,6 +693,7 @@ public class threadedConnection implements Runnable
 			catch (IOException e)
 			{
 				System.out.println("Exception when closing streams: " + e);
+				fileData += "save: Exception when closing streams: " + e + "\n";
 			}
 		}
 		return false;
@@ -691,6 +747,7 @@ public class threadedConnection implements Runnable
 		catch (IOException e)
 		{
 			System.out.println("Exception when returning leaderboard: " + e);
+			fileData += "leaderboard: Exception when returning leaderboard: " + e + "\n";
 		}
 		finally
 		{
@@ -702,6 +759,7 @@ public class threadedConnection implements Runnable
 			catch (IOException e)
 			{
 				System.out.println("Exception when closing streams: " + e);
+				fileData += "leaderboard: Exception when closing streams: " + e + "\n";
 			}
 		}
 		return null;
@@ -782,6 +840,7 @@ public class threadedConnection implements Runnable
 				catch (IOException ie)
 				{
 					System.out.println("Exception when reading " + iUser + "'s user data: " + ie);
+					fileData += "getUsers: Exception when reading " + iUser + "'s user data: " + ie + "\n";
 				}
 			}
 			return userList;
@@ -839,6 +898,7 @@ public class threadedConnection implements Runnable
 			catch (IOException ie)
 			{
 				System.out.println("Exception when reading user data: " + ie);
+				fileData += "getUsers: Exception when reading user data: " + ie + "\n";
 			}
 		}
 		return null;
