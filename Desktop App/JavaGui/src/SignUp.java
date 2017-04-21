@@ -22,6 +22,8 @@ public class SignUp {
 	private JPasswordField pwdPassword;
 	private JPasswordField pwdConfirmPassword;
 	private JTextField txtEmail;
+	private JTextField txtFirstName;
+	private JTextField txtLastName;
 
 	/**
 	 * Launch the application.
@@ -67,21 +69,21 @@ public class SignUp {
 		txtUsername.setHorizontalAlignment(SwingConstants.CENTER);
 		txtUsername.setForeground(Color.GRAY);
 		txtUsername.setColumns(10);
-		txtUsername.setBounds(285, 99, 153, 28);
+		txtUsername.setBounds(285, 85, 153, 28);
 		frmSignUp.getContentPane().add(txtUsername);
 		
 		pwdPassword = new JPasswordField();
 		pwdPassword.setText("Password");
 		pwdPassword.setHorizontalAlignment(SwingConstants.CENTER);
 		pwdPassword.setForeground(Color.GRAY);
-		pwdPassword.setBounds(285, 179, 153, 28);
+		pwdPassword.setBounds(285, 255, 153, 28);
 		frmSignUp.getContentPane().add(pwdPassword);
 		
 		pwdConfirmPassword = new JPasswordField();
 		pwdConfirmPassword.setText("Confirm Password");
 		pwdConfirmPassword.setHorizontalAlignment(SwingConstants.CENTER);
 		pwdConfirmPassword.setForeground(Color.GRAY);
-		pwdConfirmPassword.setBounds(285, 219, 153, 28);
+		pwdConfirmPassword.setBounds(285, 225, 153, 28);
 		frmSignUp.getContentPane().add(pwdConfirmPassword);
 		
 		txtEmail = new JTextField();
@@ -89,17 +91,17 @@ public class SignUp {
 		txtEmail.setHorizontalAlignment(SwingConstants.CENTER);
 		txtEmail.setForeground(Color.GRAY);
 		txtEmail.setColumns(10);
-		txtEmail.setBounds(285, 139, 153, 28);
+		txtEmail.setBounds(285, 115, 153, 28);
 		frmSignUp.getContentPane().add(txtEmail);
 		
 		JCheckBox chckbxRememberMe = new JCheckBox("Remember me");
 		chckbxRememberMe.setForeground(Color.GRAY);
-		chckbxRememberMe.setBounds(301, 275, 121, 23);
+		chckbxRememberMe.setBounds(302, 290, 121, 23);
 		frmSignUp.getContentPane().add(chckbxRememberMe);
 		
 		JCheckBox chckbxIAgreeTo = new JCheckBox("I agree to the user Terms & Conditions");
 		chckbxIAgreeTo.setForeground(Color.GRAY);
-		chckbxIAgreeTo.setBounds(231, 298, 275, 23);
+		chckbxIAgreeTo.setBounds(231, 314, 275, 23);
 		frmSignUp.getContentPane().add(chckbxIAgreeTo);
 		
 		JButton btnSignUp = new JButton("Sign Up");
@@ -116,6 +118,22 @@ public class SignUp {
 		txtpnAlreadyHaveAn.setBackground(SystemColor.window);
 		txtpnAlreadyHaveAn.setBounds(263, 389, 206, 16);
 		frmSignUp.getContentPane().add(txtpnAlreadyHaveAn);
+		
+		txtFirstName = new JTextField();
+		txtFirstName.setText("First Name");
+		txtFirstName.setHorizontalAlignment(SwingConstants.CENTER);
+		txtFirstName.setForeground(Color.GRAY);
+		txtFirstName.setColumns(10);
+		txtFirstName.setBounds(285, 145, 153, 28);
+		frmSignUp.getContentPane().add(txtFirstName);
+		
+		txtLastName = new JTextField();
+		txtLastName.setText("Last Name");
+		txtLastName.setHorizontalAlignment(SwingConstants.CENTER);
+		txtLastName.setForeground(Color.GRAY);
+		txtLastName.setColumns(10);
+		txtLastName.setBounds(285, 175, 153, 28);
+		frmSignUp.getContentPane().add(txtLastName);
 		
 		
 	}
