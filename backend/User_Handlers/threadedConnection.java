@@ -57,7 +57,7 @@ public class threadedConnection implements Runnable
 		Date dateobj = new Date();
 		threadedConnection.date = df.format(dateobj);
 		threadedConnection.time = tf.format(dateobj);
-		threadedConnection.fileName = "serverLogs\\" + date + "-" + time + ".log";
+		threadedConnection.fileName = "serverLogs/" + date + "-" + time + ".log";
 	}
 	
 	public void run()
@@ -71,14 +71,14 @@ public class threadedConnection implements Runnable
 		try
 		{
 			fileWrite = new BufferedWriter(new FileWriter(threadedConnection.fileName));
-			System.out.println("[" + this.client.getRemoteSocketAddress() + "] New incoming connection");
+			//System.out.println("[" + this.client.getRemoteSocketAddress() + "] New incoming connection");
 			fileData += "New incoming connection [" + this.client.getRemoteSocketAddress() + "] \n";
 			connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(this.client.getInputStream())));
 			line = connectionRead.readLine();
 			if(line != null)
 			{
 				deflStream = new DeflaterOutputStream(this.client.getOutputStream(), true);
-				System.out.println("[" + this.client.getRemoteSocketAddress() + "] Requesting: " + line);
+				//System.out.println("[" + this.client.getRemoteSocketAddress() + "] Requesting: " + line);
 				if(line.equals("login"))
 				{
 					String userEmail = connectionRead.readLine();
@@ -86,14 +86,14 @@ public class threadedConnection implements Runnable
 					fileData += "Requesting: " + line + " : " + userEmail + " : " + passwdHash + "\n";
 					if((line = login(userEmail,passwdHash)) != null)
 					{
-						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: Valid Login Data");
+						//System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: Valid Login Data");
 						fileData += "Returning: Valid Login Data\n";
 						fileData += line + "\n";
 						bytes = line.getBytes("UTF-8");
 					}
 					else
 					{
-						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 401");
+						//System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 401");
 						fileData += "Returning: 401\n";
 						bytes = "401".getBytes("UTF-8");
 					}
@@ -105,14 +105,14 @@ public class threadedConnection implements Runnable
 					fileData += "Requesting: " + line + " : " + emailHash + " : " + type + "\n";
 					if((line = getHistory(emailHash,type)) != null)
 					{
-						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: Valid History Data");
+						//System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: Valid History Data");
 						fileData += "Returning: Valid History Data\n";
 						fileData += line + "\n";
 						bytes = line.getBytes("UTF-8");
 					}
 					else
 					{
-						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 500");
+						//System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 500");
 						fileData += "Returning: 500\n";
 						bytes = "500".getBytes("UTF-8");
 					}
@@ -126,13 +126,13 @@ public class threadedConnection implements Runnable
 					fileData += "Requesting: " + line + " : " + newPasswdHash + " : " + newFName + " : " + newSName + " : " + newUEmail +"\n";
 					if(register(newPasswdHash, newFName, newSName, newUEmail))
 					{
-						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 200");
+						//System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 200");
 						fileData += "Returning: 200\n";
 						bytes = "200".getBytes("UTF-8");
 					}
 					else
 					{
-						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 500");
+						//System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 500");
 						fileData += "Returning: 500\n";
 						bytes = "500".getBytes("UTF-8");
 					}
@@ -145,13 +145,13 @@ public class threadedConnection implements Runnable
 					fileData += "Requesting: " + line + " : " + userEmail + " : " + userJson + " : " + userTransaction + "\n";
 					if(save(userEmail, userJson, userTransaction))
 					{
-						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 200");
+						//System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 200");
 						fileData += "Returning: 200\n";
 						bytes = "200".getBytes("UTF-8");
 					}
 					else
 					{
-						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 500");
+						//System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 500");
 						fileData += "Returning: 500\n";
 						bytes = "500".getBytes("UTF-8");
 					}
@@ -164,14 +164,14 @@ public class threadedConnection implements Runnable
 					String leaders = "";
 					if((leaders = leaderboard(topPos, count)) != null)
 					{
-						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: Leaderboard Data");
+						//System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: Leaderboard Data");
 						fileData += "Returning: Leaderboard Data\n";
 						fileData += leaders + "\n";
 						bytes = leaders.getBytes("UTF-8");
 					}
 					else
 					{
-						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 500");
+						//System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 500");
 						fileData += "Returning: 500\n";
 						bytes = "500".getBytes("UTF-8");
 					}
@@ -183,21 +183,21 @@ public class threadedConnection implements Runnable
 					String response = "";
 					if((response = getUsers(emailHash)) != null)
 					{
-						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: User Data");
+						//System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: User Data");
 						fileData += "Returning: User Data\n";
 						fileData += response + "\n";
 						bytes = response.getBytes("UTF-8");
 					}
 					else
 					{
-						System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 500");
+						//System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 500");
 						fileData += "Returning: 500\n";
 						bytes = "500".getBytes("UTF-8");
 					}
 				}
 				else
 				{
-					System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 400: BAD REQUEST!");
+					//System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 400: BAD REQUEST!");
 					fileData  += "Returning: 400: BAD REQUEST!\n";
 					bytes = "400: BAD REQUEST!".getBytes("UTF-8");
 				}
@@ -206,7 +206,7 @@ public class threadedConnection implements Runnable
 				deflStream.flush();
 				deflStream.close();
 				this.client.close();
-				System.out.println("[" + this.client.getRemoteSocketAddress() + "] End connection");
+				//System.out.println("[" + this.client.getRemoteSocketAddress() + "] End connection");
 				fileData += "End connection [" + this.client.getRemoteSocketAddress() + "] \n";
 				return;
 			}
@@ -538,9 +538,7 @@ public class threadedConnection implements Runnable
 			}
 			catch (AmazonClientException ace)
 			{
-	            System.out.println("Caught an AmazonClientException");
-	            System.out.println("This means the client encountered an internal error while trying to communicate with S3.");
-	            System.out.println("Error Message: " + ace.getMessage());
+	            System.out.println("Caught an AmazonClientException: " + ace);
 	            fileData += "register: Caught an AmazonClientException: " + ace + "\n";
 			}
 			catch (UnsupportedEncodingException e)
