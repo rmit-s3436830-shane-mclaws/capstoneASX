@@ -5,8 +5,8 @@ import java.io.*;
 public class AsxGame {
 
 	//Make these not plain text somehow, even just remove them from the version that gets uploaded to github
-	public static String accessKey = "AKIAJ6JQXISUKXWL5D2Q";
-	public static String secretAccessKey = "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";
+	public static String accessKey = "SORRY";
+	public static String secretAccessKey = "CALLUM";
 	public static String connectionName = "ec2-13-54-16-160.ap-southeast-2.compute.amazonaws.com"; //original code
 	public static int portNumber = 28543;
 	
