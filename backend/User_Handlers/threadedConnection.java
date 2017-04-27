@@ -41,8 +41,8 @@ public class threadedConnection implements Runnable
 	private AWSCredentials credentials;
 	private static AmazonS3 s3Client;
 	private static final String bucket = "asx-user-store";
-	private static String AccessKey = REDACTED;
-	private static String SecretKey = REDACTED;
+	private static String AccessKey = "REDACTED";
+	private static String SecretKey = "REDACTED";
 	private static String fileData;
 	
 	public threadedConnection(Socket cSocket)
@@ -732,9 +732,10 @@ public class threadedConnection implements Runnable
 					userReader.close();
 					userObjectData.close();
 					//Grab name and sName for leaders String
-					String name = userData.split(",")[0].replace("{","");
-					String sName = userData.split(",")[1];
-					leaders = leaders + "{" + name + "," + sName + ",'Score':'" + score + "'}";
+					JSONObject data = new JSONObject(userData);
+					String name = data.get("Name").toString();
+					String sName = data.get("Surname").toString();
+					leaders = leaders + "{'Name':'" + name + "','Surname':'" + sName + "','Score':'" + score + "'}";
 					leaders = leaders + ";";
 				}
 				pos++;
