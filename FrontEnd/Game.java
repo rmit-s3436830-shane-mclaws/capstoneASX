@@ -1,7 +1,10 @@
 package com.amazonaws.samples;
 
-import java.io.*;
-import java.net.*;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.Socket;
 import java.util.zip.InflaterInputStream;
 import java.util.zip.DeflaterOutputStream;
 
@@ -48,21 +51,23 @@ public class Game {
 	protected static boolean sellStocks(String asxCode, int number){
 		int index;
 		float price, totalPrice;
-		for (index = 0; index < AsxGame.stockArray.size(); index++){
-			if (asxCode.equals(AsxGame.stockArray.get(index).code)){
-				price = AsxGame.stockArray.get(index).askPrice;
-				int currentStocks = AsxGame.activePlayer.getShareCount(asxCode);
-				if (number > currentStocks){
-					number = currentStocks;
-				}
-				totalPrice = price * number;
-				if (AsxGame.activePlayer.removeShares(asxCode, number)){
-					AsxGame.activePlayer.addBalance(totalPrice - calcBrokersFeeSale(totalPrice));
-					AsxGame.activePlayer.calcValue();
-					AsxGame.activePlayer.updateTransHist("-1", "-1", asxCode, "Sell", number, price);
-					return true;
-				} else {
-					return false;
+		if (number <= AsxGame.activePlayer.getShareCount(asxCode)){
+			for (index = 0; index < AsxGame.stockArray.size(); index++){
+				if (asxCode.equals(AsxGame.stockArray.get(index).code)){
+					price = AsxGame.stockArray.get(index).askPrice;
+					int currentStocks = AsxGame.activePlayer.getShareCount(asxCode);
+					if (number > currentStocks){
+						number = currentStocks;
+					}
+					totalPrice = price * number;
+					if (AsxGame.activePlayer.removeShares(asxCode, number)){
+						AsxGame.activePlayer.addBalance(totalPrice - calcBrokersFeeSale(totalPrice));
+						AsxGame.activePlayer.calcValue();
+						AsxGame.activePlayer.updateTransHist("-1", "-1", asxCode, "Sell", number, price);
+						return true;
+					} else {
+						return false;
+					}
 				}
 			}
 		}
@@ -113,6 +118,14 @@ public class Game {
 							System.out.println("Login successful!");
 							System.out.println("Data received: " + response);
 							loadPlayer(response);
+							connectionRead.readLine();
+							while(!((response = connectionRead.readLine()).equals("value")))
+                            {
+								JSONObject histLine = new JSONObject(response);
+								AsxGame.activePlayer.transHistory.add(histLine);
+                               // transaction += line + '\n';
+                                //Handle individual lines of transaction history here
+                            }
 							successState = true;
 							break;
 						}
@@ -193,8 +206,9 @@ public class Game {
 						if(!response.equals("500"))
 						{
 							System.out.println("Registration successful!");
-							login(uEmail, password);
-							successState = true;
+							if (login(uEmail, password)){
+								successState = true;
+							} 							
 							break;
 						}
 						else
@@ -234,9 +248,10 @@ public class Game {
 		return successState;
 	}
 	
-	protected static boolean saveActivePlayer(){
+	protected static boolean saveActivePlayer(JSONObject transHist){
 		Socket connection = null;
 		boolean successState = false;
+		String saveString;
 		long startTime = System.currentTimeMillis();
 		long currentTime, elapsedTime;
 		try {
@@ -257,8 +272,12 @@ public class Game {
 				//register call
 				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
 				System.out.println("Attempt save...");
-				String playerSaveString = AsxGame.activePlayer.generateSaveString();
-				String saveString = "save\n" + emailHash + "\n" + playerSaveString;
+				String playerSaveString = AsxGame.activePlayer.generateDataSaveString();
+				if (transHist != null){
+					saveString = "save\n" + emailHash + "\n" + playerSaveString + "\n" + transHist.toString();
+				} else {
+					saveString = "save\n" + emailHash + "\n" + playerSaveString;
+				}
 				System.out.println("Using: " + saveString);
 				byte[] saveBytes = saveString.getBytes("UTF-8");
 				deflStream.write(saveBytes);
@@ -341,7 +360,6 @@ public class Game {
 			return true;
 		}
 	}
-
 	
 	protected static boolean getValueLeaderboard(){
 		AsxGame.leaderboard.clear();
@@ -384,11 +402,7 @@ public class Game {
 								String[] leadersJSON = response.split(";");
 								for (int i = 0; i < leadersJSON.length; i++){
 									JSONObject json = new JSONObject(leadersJSON[i]);
-									String name = json.getString("Name");
-									String sName = json.getString("Surname");
-									String score = json.getString("Score");
-									String foo = name + " " + sName + ":\t" + score;
-									AsxGame.leaderboard.add(foo);
+									AsxGame.leaderboard.add(json);
 								}
 								successState = true;
 								break;
@@ -435,18 +449,27 @@ public class Game {
 		return successState;
 	}
 	
-	private static float calcBrokersFeePurch(float transactionAmount){ 	//$50 + %1
+	public static float calcBrokersFeePurch(float transactionAmount){ 	//$50 + %1
 		float output = 50;
 		float fee = (float) (transactionAmount * 0.01);
 		output += fee;
 		return output;
 	}
 	
-	private static float calcBrokersFeeSale(float transactionAmount){ 	//$50 + %1
+	public static float calcBrokersFeeSale(float transactionAmount){ 	//$50 + %1
 		float output = 50;
 		float fee = (float) (transactionAmount * 0.0025);
 		output += fee;
 		return output;
+	}
+	
+	public static float getStockCurrentPrice(String asxCode){
+		for (int i = 0; i < AsxGame.stockArray.size(); i++){
+			if (AsxGame.stockArray.get(i).code.equals(asxCode)){
+				return AsxGame.stockArray.get(i).askPrice;
+			}
+		}
+		return -1;
 	}
 }
 

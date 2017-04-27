@@ -27,13 +27,14 @@ public class AsxPull {
 														.withRegion(Regions.AP_SOUTHEAST_2)
 														.build();
 	static int deadCompanies = 0;
+	static String dateString;
 //below is Cal's original code, AmazonS3Client is deprecated
 //AmazonS3 s3Client = new AmazonS3Client(new ProfileCredentialsProvider());
 	
 	protected static boolean getAsxJson(String asxCode, String fileName){
 		//Define variables
 		
-		String filePath = asxCode + "/" + fileName + ".json";
+		String filePath =  asxCode + "/" + fileName + ".json";
 		
 		//Establish connection to S3
 		//System.out.println(filePath);	
@@ -60,6 +61,7 @@ public class AsxPull {
 					String name = json.getString("Name");
 					if (name.equals("N/A")){
 						deadCompanies++;
+						System.out.println(filePath);
 						return false;
 					}
 					//String asxCode = json.getString("ASX Code");
@@ -121,33 +123,42 @@ public class AsxPull {
 	}
 	
 	public static boolean loadStocks(int startPoint, int endPoint){					//currently only working for single day, set in this method
-		deadCompanies = 0;
-		LocalDateTime timePoint = LocalDateTime.now();
-		LocalDate date = timePoint.toLocalDate();
-		String day = Integer.toString(date.getDayOfMonth());
-		if (day.length() == 1){
-			day = "0"+day;
-		}
-		String month = Integer.toString(date.getMonthValue());
-		if (month.length() == 1){
-			month = "0"+month;
-		}
-		String year = Integer.toString(date.getYear());
-		String fileString = year + month + day;
-		//System.out.println(fileString);
+	//	int totalCompaniesDownloaded = 0;
+		
+		getMostRecentDateString();
 		
 		if (AsxGame.stockList != null){
 			if (endPoint == -1){
 				endPoint = AsxGame.stockList.length;
 			}
 			for (int i = startPoint; i < AsxGame.stockList.length && i < endPoint; i++){
-				AsxPull.getAsxJson(AsxGame.stockList[i], fileString);
-				if (AsxGame.stockArray.size() + deadCompanies == 150){				//stop after pulling 150 stock (the only stocks
-					break;											//currently available on S3)
+				getAsxJson(AsxGame.stockList[i], dateString);
+				
+				//this calculates the load percentage and updates the main window title
+				Float percentage = 
+						((float)AsxGame.stockArray.size()/ (float)AsxGame.stockList.length) * 100;
+				AsxGame.loadCompletePercent = Math.round(percentage);
+				if (AsxGame.mainWindow != null){
+					AsxGame.mainWindow.updateTitle();
 				}
 			}
 		}
-		
 		return false;
+	}
+	
+	private static void getMostRecentDateString(){
+		LocalDateTime timePoint = LocalDateTime.now();
+		LocalDate date = timePoint.toLocalDate();
+		
+		String[] dateSplit = date.toString().split("-");
+		String fileString = dateSplit[0]+dateSplit[1]+dateSplit[2];
+
+		while (!s3Client.doesObjectExist(bucket, AsxGame.stockList[0]+"/"+fileString+".json")){
+			date = date.minusDays(1);
+			dateSplit = date.toString().split("-");
+		}		
+		System.out.println(fileString);
+		dateString = fileString;
+		return;
 	}
 }

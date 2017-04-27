@@ -3,7 +3,7 @@ package com.amazonaws.samples;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.*;
+import java.util.ArrayList;
 
 import org.json.JSONObject;
 
@@ -17,6 +17,7 @@ public class Player {
 	float score;												
 	boolean adminRights = false;
 	float shareVal;
+	float totalValue;
 	
 	public Player(String name, String surname, String email, float balance,
 					String shareString, String score, String rights, String transHist) {
@@ -43,7 +44,7 @@ public class Player {
 			}
 		}
 		shareVal = 0;
-		calcValue();
+	//	calcValue();
 	}
 
 	void printPlayer(){
@@ -56,12 +57,13 @@ public class Player {
 		for (int i = 0; i < transHistory.size(); i++){
 			System.out.println(transHistory.get(i).toString());
 		}
-		generateSaveString();
+		generateDataSaveString();
 		return;
 	}
 		
-	void calcValue(){
+	float calcValue(){
 		shareVal = 0;						//reset when starting calculation
+		
 		for (int i = 0; i < shares.size(); i++){
 			String[] shareSplit = shares.get(i).split(":");
 			for (int j = 0; j < AsxGame.stockArray.size(); j++){
@@ -71,7 +73,9 @@ public class Player {
 				}
 			}
 		}
-		score = shareVal + balance;
+		score = shareVal + balance - 1000000;
+		totalValue = shareVal + balance;
+		return totalValue;
 	}
 	
 	boolean addBalance(float amount){
@@ -180,12 +184,12 @@ public class Player {
 		json.put("Number", numberIn);
 		json.put("Price", priceIn);
 		transHistory.add(json);
-		return false;
+		Game.saveActivePlayer(json);
+		return true;
 	}
 	
-	String generateSaveString(){
+	String generateDataSaveString(){
 		String sharesString = "";
-		String histString = "";
 		for (int i = 0; i < shares.size(); i++){
 			if (i == 0){
 				sharesString = shares.get(i);
@@ -197,17 +201,7 @@ public class Player {
 				sharesString += ",";
 			}
 		}
-		for (int i = 0; i < transHistory.size(); i++){
-			if (i == 0){
-				histString = transHistory.get(i).toString();
-			}
-			if (i != 0){
-				histString += transHistory.get(i).toString();
-			}
-			if (i != transHistory.size() -1){
-				histString += "\n";
-			}
-		}
+		
 		String rightsString;
 		if(adminRights == true){
 			rightsString = "admin";
@@ -222,9 +216,12 @@ public class Player {
 		json.put("Shares", sharesString);
 		json.put("Score", Float.toString(score));
 		json.put("Rights", rightsString);
-		json.put("History", histString);
 		String output = json.toString();
 		System.out.println("SaveString: " + output);
 		return output;
+	}
+	
+	public String getBalanceToString(){
+		return Float.toString(balance);
 	}
 }
