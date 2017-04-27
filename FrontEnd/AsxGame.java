@@ -13,7 +13,7 @@ public class AsxGame {
 	//Make these not plain text somehow, even just remove them from the version that gets uploaded to github
 	public static String accessKey = creds.accessKey;
 	public static String secretAccessKey = creds.secretAccessKey;
-//	public static String connectionName = "49.177.117.115";
+
 	public static String connectionName = "ec2-13-54-16-160.ap-southeast-2.compute.amazonaws.com"; //original code
 	public static int portNumber = 28543;
 	
