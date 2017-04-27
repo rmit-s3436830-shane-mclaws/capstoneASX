@@ -5,3 +5,7 @@ Changelist:
     Working Register Funcitonality
     Working Login Functionality
     Display Account Info (Name, Surname, Shares, Score)
+27Apr:
+    Updated to comply with Front-End codebase (20th April Version)
+    Amazon S3 bucket connection and threading working
+    Pulling and Displaying Company Codes
