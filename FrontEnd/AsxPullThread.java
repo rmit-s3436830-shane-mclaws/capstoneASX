@@ -15,6 +15,7 @@ public class AsxPullThread implements Runnable{
 	}
 	
 	public void run(){
+		System.out.println("thread running");
 		PrintWriter writer;
 		try {
 			writer = new PrintWriter("asxErrorLog.log");

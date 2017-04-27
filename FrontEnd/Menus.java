@@ -169,7 +169,7 @@ public class Menus {
 					break;
 				case "5":		//Save player to server
 					//System.out.println(AsxGame.activePlayer.generateSaveString());
-					Game.saveActivePlayer();
+					Game.saveActivePlayer(null);
 					break;
 				case "6":
 					Game.getValueLeaderboard();
@@ -229,7 +229,7 @@ public class Menus {
 					AsxGame.activePlayer.setBalance(0);	//to be implemented
 					break;
 				case "7":		//Save + unload loaded player
-					Game.saveActivePlayer();
+					Game.saveActivePlayer(null);
 					AsxGame.activePlayerLoaded = false;
 					AsxGame.activePlayer = null;
 					break;
