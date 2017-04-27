@@ -102,10 +102,13 @@ public class valueUpdate
 			String shares = dataJSON.get("Shares").toString();
 			String[] sharesArray = shares.split("[,:]");//even values hold ASX code, odd values hold qty
 			
-			//for each ASX code, get value of shares owned
-			for(int i=0; i<sharesArray.length; i+=2)
+			if(!shares.equals("")) //If user owns shares
 			{
-				newValue += getASXValue(sharesArray[i].replaceAll("\"", ""), Integer.parseInt(sharesArray[i+1].replaceAll("\"", "")));
+				//for each ASX code, get value of shares owned
+				for(int i=0; i<sharesArray.length; i+=2)
+				{
+					newValue += getASXValue(sharesArray[i].replaceAll("\"", ""), Integer.parseInt(sharesArray[i+1].replaceAll("\"", "")));
+				}
 			}
 			
 			//Add user balance to newScore

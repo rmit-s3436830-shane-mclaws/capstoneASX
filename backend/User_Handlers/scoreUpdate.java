@@ -77,47 +77,45 @@ public class scoreUpdate
 	private static void updateScore(int user)
 	{
 		Socket connection = null;
+		AWSCredentials credentials = new BasicAWSCredentials(scoreUpdate.AccessKey,scoreUpdate.SecretKey);
+		AmazonS3 s3Client  = AmazonS3ClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(credentials)).withRegion(Regions.AP_SOUTHEAST_2).build();
+		
+		String bucket = "asx-user-store";
+		String userData = "data/" + user + "/data.json";
+		
 		try
 		{
-			AWSCredentials credentials = new BasicAWSCredentials(scoreUpdate.AccessKey,scoreUpdate.SecretKey);
-			AmazonS3 s3Client  = AmazonS3ClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(credentials)).withRegion(Regions.AP_SOUTHEAST_2).build();
+			float newScore = 0;
+			final float startingCash = 1000000;
+			//Get contents of user file
+			S3Object object = s3Client.getObject(new GetObjectRequest(bucket, userData));
+			InputStream objectData = object.getObjectContent();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(objectData));
+			object = s3Client.getObject(new GetObjectRequest(bucket, userData));
+			objectData = object.getObjectContent();
+			reader = new BufferedReader(new InputStreamReader(objectData));
+			String data = reader.readLine();
+			reader.close();
+			objectData.close();
+			JSONObject dataJSON = new JSONObject(data);
 			
-			String bucket = "asx-user-store";
-			String userData = "data/" + user + "/data.json";
+			//Get list of ASX codes
+			String shares = dataJSON.get("Shares").toString();
+			String userEmail = dataJSON.getString("Email").toString();
+			String emailHash = Integer.toString(userEmail.hashCode());
+			String[] sharesArray = shares.split("[,:]");//even values hold ASX code, odd values hold qty
 			
-			connection = new Socket("127.0.0.1", 28543);
-			/*System.out.println("Local Address: " + connection.getLocalAddress());
-			System.out.println("Local Port: " + connection.getLocalPort());*/
-
-			//Input Streams
-			BufferedReader connectionRead = null;
-			String response = null;
-			
-    		//Output Streams
-			DeflaterOutputStream deflStream = null;
-			deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
-			
-			try
-    		{
-				float newScore = 0;
-				final float startingCash = 1000000;
-				//Get contents of user file
-				S3Object object = s3Client.getObject(new GetObjectRequest(bucket, userData));
-				InputStream objectData = object.getObjectContent();
-				BufferedReader reader = new BufferedReader(new InputStreamReader(objectData));
-				object = s3Client.getObject(new GetObjectRequest(bucket, userData));
-				objectData = object.getObjectContent();
-				reader = new BufferedReader(new InputStreamReader(objectData));
-				String data = reader.readLine();
-				reader.close();
-				objectData.close();
-				JSONObject dataJSON = new JSONObject(data);
+			if(!shares.equals("")) //If user owns shares
+			{
+				//Establish connection to server service to update user details
+				connection = new Socket("127.0.0.1", 28543);
+				//Input Streams
+				BufferedReader connectionRead = null;
+				String response = null;
 				
-				//Get list of ASX codes
-				String shares = dataJSON.get("Shares").toString();
-				String userEmail = dataJSON.getString("Email").toString();
-				String emailHash = Integer.toString(userEmail.hashCode());
-				String[] sharesArray = shares.split("[,:]");//even values hold ASX code, odd values hold qty
+	    		//Output Streams
+				DeflaterOutputStream deflStream = null;
+				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
 				
 				//for each ASX code, get value of shares owned
 				for(int i=0; i<sharesArray.length; i+=2)
@@ -157,7 +155,7 @@ public class scoreUpdate
 					{
 						if(response.equals("200"))
 						{
-							System.out.println(userEmail + "Save successful!");
+							System.out.println(userEmail + ": Save successful!\n");
 							break;
 						}
 						else
@@ -167,27 +165,20 @@ public class scoreUpdate
 						}
 					}
 				}
-    		}
-    		catch (IOException e)
-    		{
-    			System.out.println("Exception while reading input: " + e);
+	        	try
+	        	{
+	        		connection.close();
+	        	}
+	        	catch (IOException e)
+	        	{
+	        		System.out.println("Exception while closing connection: " + e);
+	        	}
     		}
 		}
 		catch (IOException e)
-        {
-        	System.out.println("Exception while opening connection: " + e);
-        }
-        finally
-        {
-        	try
-        	{
-        		connection.close();
-        	}
-        	catch (IOException e)
-        	{
-        		System.out.println("Exception while closing connection: " + e);
-        	}
-        }
+		{
+			System.out.println("Exception while reading input: " + e);
+		}
 	}
 	
 	static float getASXValue(String ASXCode, int qty)
