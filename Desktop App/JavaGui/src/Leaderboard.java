@@ -171,5 +171,56 @@ public class Leaderboard {
 		scrollbar.setBounds(686, 163, 15, 211);
 		frmLeaderboard.getContentPane().add(scrollbar);
 		
+		JLabel lblScore = new JLabel("Score");
+		lblScore.setFont(new Font("Lucida Grande", Font.BOLD, 13));
+		lblScore.setBounds(636, 123, 65, 27);
+		frmLeaderboard.getContentPane().add(lblScore);
+		
+		JLabel label_18 = new JLabel("1");
+		label_18.setHorizontalAlignment(SwingConstants.RIGHT);
+		label_18.setBounds(595, 162, 85, 16);
+		frmLeaderboard.getContentPane().add(label_18);
+		
+		JLabel label_19 = new JLabel("1");
+		label_19.setHorizontalAlignment(SwingConstants.TRAILING);
+		label_19.setBounds(595, 190, 85, 16);
+		frmLeaderboard.getContentPane().add(label_19);
+		
+		JLabel label_20 = new JLabel("1");
+		label_20.setHorizontalAlignment(SwingConstants.TRAILING);
+		label_20.setBounds(595, 218, 85, 16);
+		frmLeaderboard.getContentPane().add(label_20);
+		
+		JLabel label_21 = new JLabel("1");
+		label_21.setHorizontalAlignment(SwingConstants.TRAILING);
+		label_21.setBounds(595, 246, 85, 16);
+		frmLeaderboard.getContentPane().add(label_21);
+		
+		JLabel label_22 = new JLabel("1");
+		label_22.setHorizontalAlignment(SwingConstants.TRAILING);
+		label_22.setBounds(595, 274, 85, 16);
+		frmLeaderboard.getContentPane().add(label_22);
+		
+		JLabel label_23 = new JLabel("1");
+		label_23.setHorizontalAlignment(SwingConstants.TRAILING);
+		label_23.setBounds(595, 302, 85, 16);
+		frmLeaderboard.getContentPane().add(label_23);
+		
+		JLabel label_24 = new JLabel("1");
+		label_24.setHorizontalAlignment(SwingConstants.TRAILING);
+		label_24.setBounds(595, 330, 85, 16);
+		frmLeaderboard.getContentPane().add(label_24);
+		
+		JLabel label_25 = new JLabel("1");
+		label_25.setHorizontalAlignment(SwingConstants.TRAILING);
+		label_25.setBounds(595, 358, 85, 16);
+		frmLeaderboard.getContentPane().add(label_25);
+		
+		JLabel label_26 = new JLabel("1");
+		label_26.setFont(new Font("Lucida Grande", Font.BOLD, 13));
+		label_26.setHorizontalAlignment(SwingConstants.TRAILING);
+		label_26.setBounds(595, 401, 85, 16);
+		frmLeaderboard.getContentPane().add(label_26);
+		
 	}
 }

@@ -23,6 +23,8 @@ public class Portfolio {
 	private JLabel label_1;
 	private JLabel label_2;
 	private JLabel lblWelcomePlayer_1;
+	private JLabel lblScore;
+	private JLabel label_3;
 
 	/**
 	 * Launch the application.
@@ -100,6 +102,15 @@ public class Portfolio {
 		lblWelcomePlayer_1.setFont(new Font("Lucida Grande", Font.BOLD, 13));
 		lblWelcomePlayer_1.setBounds(26, 94, 177, 16);
 		frmPortfolio.getContentPane().add(lblWelcomePlayer_1);
+		
+		lblScore = new JLabel("Score");
+		lblScore.setFont(new Font("Lucida Grande", Font.BOLD, 13));
+		lblScore.setBounds(338, 94, 76, 16);
+		frmPortfolio.getContentPane().add(lblScore);
+		
+		label_3 = new JLabel("540");
+		label_3.setBounds(338, 122, 67, 16);
+		frmPortfolio.getContentPane().add(label_3);
 	}
 
 }
