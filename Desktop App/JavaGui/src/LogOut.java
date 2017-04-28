@@ -47,6 +47,7 @@ public class LogOut {
 		frmLogOut = new JFrame();
 		frmLogOut.setTitle("ASX Trading Wheels - Log Out");
 		frmLogOut.setBounds(100, 100, 741, 480);
+		frmLogOut.setLocationRelativeTo(null);
 		frmLogOut.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmLogOut.getContentPane().setLayout(null);
 		

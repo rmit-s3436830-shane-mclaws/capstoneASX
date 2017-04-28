@@ -61,6 +61,7 @@ public class Leaderboard {
 		frmLeaderboard = new JFrame();
 		frmLeaderboard.setTitle("ASX Trading Wheels - Leaderboard");
 		frmLeaderboard.setBounds(100, 100, 741, 480);
+		frmLeaderboard.setLocationRelativeTo(null);
 		frmLeaderboard.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmLeaderboard.getContentPane().setLayout(null);
 		
@@ -72,17 +73,21 @@ public class Leaderboard {
 		
 		JComboBox comboBox = new JComboBox();
 		comboBox.setToolTipText("My Hub");
-		comboBox.setModel(new DefaultComboBoxModel(new String[] {"My Hub", "Account Settings", "Log Out"}));
+		comboBox.setModel(new DefaultComboBoxModel(new String[] {"My Portfolio", "Leaderboards", "My History", "Account Settings", "Log Out"}));
 		comboBox.setSelectedIndex(1);
-		comboBox.setBounds(538, 14, 163, 27);
+		comboBox.setBounds(563, 14, 163, 27);
 		frmLeaderboard.getContentPane().add(comboBox);
 		
 		JTextField textField = new JTextField();
 		textField.setText("Search");
 		textField.setForeground(Color.GRAY);
 		textField.setColumns(10);
-		textField.setBounds(26, 54, 686, 28);
+		textField.setBounds(16, 54, 611, 28);
 		frmLeaderboard.getContentPane().add(textField);
+		
+		JButton btnEnter = new JButton("Enter");
+		btnEnter.setBounds(626, 53, 100, 28);
+		frmLeaderboard.getContentPane().add(btnEnter);
 		
 		JLabel lblNewLabel = new JLabel("Rank");
 		lblNewLabel.setFont(new Font("Lucida Grande", Font.BOLD, 13));
@@ -173,6 +178,7 @@ public class Leaderboard {
 		frmLeaderboard.getContentPane().add(scrollbar);
 		
 		JLabel lblScore = new JLabel("Score");
+		lblScore.setHorizontalAlignment(SwingConstants.TRAILING);
 		lblScore.setFont(new Font("Lucida Grande", Font.BOLD, 13));
 		lblScore.setBounds(636, 123, 65, 27);
 		frmLeaderboard.getContentPane().add(lblScore);

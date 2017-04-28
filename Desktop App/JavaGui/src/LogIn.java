@@ -2,15 +2,23 @@ import java.awt.EventQueue;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+
 import java.awt.Font;
+
 import javax.swing.JTextField;
+
 import java.awt.Color;
+
+import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
 import javax.swing.JButton;
 import javax.swing.JPasswordField;
 import javax.swing.JTextPane;
+
 import java.awt.SystemColor;
+
 import javax.swing.JCheckBox;
+
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
@@ -52,6 +60,7 @@ public class LogIn {
 		frmLogin.setTitle("ASX Trading Wheels - Login");
 		frmLogin.getContentPane().setFont(new Font("Lucida Grande", Font.ITALIC, 16));
 		frmLogin.setBounds(100, 100, 741, 480);
+		frmLogin.setLocationRelativeTo(null);
 		frmLogin.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmLogin.getContentPane().setLayout(null);
 		
@@ -72,7 +81,9 @@ public class LogIn {
 		JButton btnLogin = new JButton("Login");
 		btnLogin.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				
+				if (txtUsername.getText().isEmpty() || pwdPassword.getText().isEmpty()){
+					JOptionPane.showMessageDialog(null, "Please input Username & Password!");
+				}
 			}
 		});
 		btnLogin.setBounds(310, 219, 100, 28);

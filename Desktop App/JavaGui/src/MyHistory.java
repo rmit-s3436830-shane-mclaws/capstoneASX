@@ -2,19 +2,28 @@ import java.awt.EventQueue;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+
 import java.awt.Font;
+
+import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
 import javax.swing.JComboBox;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JSpinner;
 import javax.swing.JMenuBar;
 import javax.swing.JTextField;
+
 import java.awt.Color;
+
 import javax.swing.JFormattedTextField;
 import javax.swing.JTextPane;
 import javax.swing.JTextArea;
 import javax.swing.JSeparator;
 import javax.swing.JScrollBar;
+import javax.swing.JButton;
+
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 
 public class MyHistory {
@@ -53,6 +62,7 @@ public class MyHistory {
 		frmMyHistory.getContentPane().setLayout(null);
 		frmMyHistory.setTitle("ASX Trading Wheels - My History");
 		frmMyHistory.setBounds(100, 100, 741, 480);
+		frmMyHistory.setLocationRelativeTo(null);
 		frmMyHistory.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmMyHistory.getContentPane().setLayout(null);
 		
@@ -64,15 +74,20 @@ public class MyHistory {
 		
 		JComboBox comboBox = new JComboBox();
 		comboBox.setToolTipText("My Hub");
-		comboBox.setModel(new DefaultComboBoxModel(new String[] {"My Hub", "Account Settings", "Log Out"}));
+		comboBox.setModel(new DefaultComboBoxModel(new String[] {"My Portfolio", "Leaderboards", "My History", "Account Settings", "Log Out"}));
 		comboBox.setSelectedIndex(1);
-		comboBox.setBounds(538, 14, 163, 27);
+		comboBox.setBounds(563, 14, 163, 27);
 		frmMyHistory.getContentPane().add(comboBox);
 		
 		txtSearch = new JTextField();
+		txtSearch.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				JOptionPane.
+			}
+		});
 		txtSearch.setForeground(Color.GRAY);
 		txtSearch.setText("Search");
-		txtSearch.setBounds(26, 54, 686, 28);
+		txtSearch.setBounds(16, 54, 610, 28);
 		frmMyHistory.getContentPane().add(txtSearch);
 		txtSearch.setColumns(10);
 		
@@ -436,7 +451,7 @@ public class MyHistory {
 		JComboBox comboBox_1 = new JComboBox();
 		comboBox_1.setToolTipText("My Hub");
 		comboBox_1.setSelectedIndex(1);
-		comboBox_1.setBounds(659, 89, 42, 27);
+		comboBox_1.setBounds(684, 89, 42, 27);
 		frmMyHistory.getContentPane().add(comboBox_1);
 		
 		JSeparator separator = new JSeparator();
@@ -446,6 +461,10 @@ public class MyHistory {
 		JScrollBar scrollBar = new JScrollBar();
 		scrollBar.setBounds(711, 131, 15, 298);
 		frmMyHistory.getContentPane().add(scrollBar);
+		
+		JButton btnEnter = new JButton("Enter");
+		btnEnter.setBounds(626, 53, 100, 28);
+		frmMyHistory.getContentPane().add(btnEnter);
 		
 	}
 }

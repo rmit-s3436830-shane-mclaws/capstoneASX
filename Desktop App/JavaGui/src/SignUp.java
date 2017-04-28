@@ -2,16 +2,24 @@ import java.awt.EventQueue;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+
 import java.awt.Font;
+
 import javax.swing.SwingConstants;
 import javax.swing.JTextField;
+
 import java.awt.Color;
+
+import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
 import javax.swing.JCheckBox;
 import javax.swing.JButton;
+
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+
 import javax.swing.JTextPane;
+
 import java.awt.SystemColor;
 
 
@@ -55,6 +63,7 @@ public class SignUp {
 		frmSignUp = new JFrame();
 		frmSignUp.setTitle("ASX Trading Wheels - Sign Up");
 		frmSignUp.setBounds(100, 100, 741, 480);
+		frmSignUp.setLocationRelativeTo(null);
 		frmSignUp.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmSignUp.getContentPane().setLayout(null);
 		
@@ -107,6 +116,9 @@ public class SignUp {
 		JButton btnSignUp = new JButton("Sign Up");
 		btnSignUp.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				if (txtUsername.getText().isEmpty() || pwdPassword.getText().isEmpty() || pwdConfirmPassword.getText().isEmpty() || txtEmail.getText().isEmpty()){
+					JOptionPane.showMessageDialog(null, "Please input data for all fields!");
+				}
 			}
 		});
 		btnSignUp.setBounds(314, 349, 100, 28);

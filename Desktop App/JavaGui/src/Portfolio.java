@@ -6,6 +6,7 @@ import javax.swing.JLabel;
 import java.awt.Font;
 
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
 import javax.swing.SwingConstants;
 import javax.swing.JComboBox;
 import javax.swing.JTextField;
@@ -14,6 +15,7 @@ import java.awt.Color;
 import java.awt.Canvas;
 import java.awt.Panel;
 import java.awt.ScrollPane;
+
 import javax.swing.JSeparator;
 import javax.swing.JScrollBar;
 
@@ -63,6 +65,7 @@ public class Portfolio {
 		frmPortfolio.getContentPane().setLayout(null);
 		frmPortfolio.setTitle("ASX Trading Wheels - Portfolio");
 		frmPortfolio.setBounds(100, 100, 741, 480);
+		frmPortfolio.setLocationRelativeTo(null);
 		frmPortfolio.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmPortfolio.getContentPane().setLayout(null);
 		
@@ -74,17 +77,21 @@ public class Portfolio {
 		
 		JComboBox comboBox = new JComboBox();
 		comboBox.setToolTipText("My Hub");		
-		comboBox.setModel(new DefaultComboBoxModel(new String[] {"My Hub", "Account Settings", "Log Out"}));
+		comboBox.setModel(new DefaultComboBoxModel(new String[] {"My Portfolio", "Leaderboards", "My History", "Account Settings", "Log Out"}));
 		comboBox.setSelectedIndex(1);
-		comboBox.setBounds(538, 14, 163, 27);
+		comboBox.setBounds(563, 14, 163, 27);
 		frmPortfolio.getContentPane().add(comboBox);
 		
 		textField = new JTextField();
 		textField.setText("Search");
 		textField.setForeground(Color.GRAY);
 		textField.setColumns(10);
-		textField.setBounds(26, 54, 686, 28);
+		textField.setBounds(16, 54, 611, 28);
 		frmPortfolio.getContentPane().add(textField);
+		
+		JButton btnEnter = new JButton("Enter");
+		btnEnter.setBounds(626, 53, 100, 28);
+		frmPortfolio.getContentPane().add(btnEnter);
 		
 		lblWelcomePlayer = new JLabel("Amount Spent");
 		lblWelcomePlayer.setFont(new Font("Lucida Grande", Font.BOLD, 13));
