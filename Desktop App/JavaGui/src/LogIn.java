@@ -49,9 +49,9 @@ public class LogIn {
 	 */
 	private void initialize() {
 		frmLogin = new JFrame();
-		frmLogin.setTitle("ASX Trading Wheels");
+		frmLogin.setTitle("ASX Trading Wheels - Login");
 		frmLogin.getContentPane().setFont(new Font("Lucida Grande", Font.ITALIC, 16));
-		frmLogin.setBounds(100, 100, 732, 470);
+		frmLogin.setBounds(100, 100, 741, 480);
 		frmLogin.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmLogin.getContentPane().setLayout(null);
 		

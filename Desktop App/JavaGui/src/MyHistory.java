@@ -13,6 +13,8 @@ import java.awt.Color;
 import javax.swing.JFormattedTextField;
 import javax.swing.JTextPane;
 import javax.swing.JTextArea;
+import javax.swing.JSeparator;
+import javax.swing.JScrollBar;
 
 
 public class MyHistory {
@@ -49,15 +51,15 @@ public class MyHistory {
 	private void initialize() {
 		JFrame frmMyHistory = new JFrame();
 		frmMyHistory.getContentPane().setLayout(null);
-		frmMyHistory.setTitle("ASX Trading Wheels");
-		frmMyHistory.setBounds(100, 100, 732, 470);
+		frmMyHistory.setTitle("ASX Trading Wheels - My History");
+		frmMyHistory.setBounds(100, 100, 741, 480);
 		frmMyHistory.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmMyHistory.getContentPane().setLayout(null);
 		
 		JLabel lblAsxTradingWheels = new JLabel("ASX Trading Wheels");
 		lblAsxTradingWheels.setHorizontalAlignment(SwingConstants.CENTER);
 		lblAsxTradingWheels.setFont(new Font("Arial", Font.PLAIN, 20));
-		lblAsxTradingWheels.setBounds(6, 6, 197, 36);
+		lblAsxTradingWheels.setBounds(16, 6, 197, 36);
 		frmMyHistory.getContentPane().add(lblAsxTradingWheels);
 		
 		JComboBox comboBox = new JComboBox();
@@ -70,7 +72,7 @@ public class MyHistory {
 		txtSearch = new JTextField();
 		txtSearch.setForeground(Color.GRAY);
 		txtSearch.setText("Search");
-		txtSearch.setBounds(16, 54, 696, 28);
+		txtSearch.setBounds(26, 54, 686, 28);
 		frmMyHistory.getContentPane().add(txtSearch);
 		txtSearch.setColumns(10);
 		
@@ -95,26 +97,32 @@ public class MyHistory {
 		frmMyHistory.getContentPane().add(lblAccountBalance);
 		
 		JLabel lblNewLabel = new JLabel("12/05");
+		lblNewLabel.setForeground(Color.DARK_GRAY);
 		lblNewLabel.setBounds(26, 274, 42, 16);
 		frmMyHistory.getContentPane().add(lblNewLabel);
 		
 		JLabel label_2 = new JLabel("12/05");
+		label_2.setForeground(Color.DARK_GRAY);
 		label_2.setBounds(26, 162, 42, 16);
 		frmMyHistory.getContentPane().add(label_2);
 		
 		JLabel label_3 = new JLabel("12/05");
+		label_3.setForeground(Color.DARK_GRAY);
 		label_3.setBounds(25, 190, 42, 16);
 		frmMyHistory.getContentPane().add(label_3);
 		
 		JLabel label_4 = new JLabel("12/07");
+		label_4.setForeground(Color.DARK_GRAY);
 		label_4.setBounds(25, 218, 42, 16);
 		frmMyHistory.getContentPane().add(label_4);
 		
 		JLabel label_5 = new JLabel("12/05");
+		label_5.setForeground(Color.DARK_GRAY);
 		label_5.setBounds(25, 246, 42, 16);
 		frmMyHistory.getContentPane().add(label_5);
 		
 		JLabel label_17 = new JLabel("$");
+		label_17.setForeground(Color.GRAY);
 		label_17.setBounds(649, 162, 8, 16);
 		frmMyHistory.getContentPane().add(label_17);
 		
@@ -174,18 +182,22 @@ public class MyHistory {
 		frmMyHistory.getContentPane().add(label_30);
 		
 		JLabel label_13 = new JLabel("$");
+		label_13.setForeground(Color.GRAY);
 		label_13.setBounds(649, 190, 8, 16);
 		frmMyHistory.getContentPane().add(label_13);
 		
 		JLabel label_14 = new JLabel("$");
+		label_14.setForeground(Color.GRAY);
 		label_14.setBounds(649, 218, 8, 16);
 		frmMyHistory.getContentPane().add(label_14);
 		
 		JLabel label_15 = new JLabel("$");
+		label_15.setForeground(Color.GRAY);
 		label_15.setBounds(649, 246, 8, 16);
 		frmMyHistory.getContentPane().add(label_15);
 		
 		JLabel label_16 = new JLabel("$");
+		label_16.setForeground(Color.GRAY);
 		label_16.setBounds(649, 274, 8, 16);
 		frmMyHistory.getContentPane().add(label_16);
 		
@@ -230,22 +242,27 @@ public class MyHistory {
 		frmMyHistory.getContentPane().add(label_9);
 		
 		JLabel label_10 = new JLabel("$");
+		label_10.setForeground(Color.GRAY);
 		label_10.setBounds(572, 162, 8, 16);
 		frmMyHistory.getContentPane().add(label_10);
 		
 		JLabel label_11 = new JLabel("$");
+		label_11.setForeground(Color.GRAY);
 		label_11.setBounds(572, 190, 8, 16);
 		frmMyHistory.getContentPane().add(label_11);
 		
 		JLabel label_12 = new JLabel("$");
+		label_12.setForeground(Color.GRAY);
 		label_12.setBounds(572, 218, 8, 16);
 		frmMyHistory.getContentPane().add(label_12);
 		
 		JLabel label_31 = new JLabel("$");
+		label_31.setForeground(Color.GRAY);
 		label_31.setBounds(572, 246, 8, 16);
 		frmMyHistory.getContentPane().add(label_31);
 		
 		JLabel label_32 = new JLabel("$");
+		label_32.setForeground(Color.GRAY);
 		label_32.setBounds(572, 274, 8, 16);
 		frmMyHistory.getContentPane().add(label_32);
 		
@@ -291,22 +308,27 @@ public class MyHistory {
 		frmMyHistory.getContentPane().add(label_38);
 		
 		JLabel label_39 = new JLabel("$");
+		label_39.setForeground(Color.GRAY);
 		label_39.setBounds(495, 162, 8, 16);
 		frmMyHistory.getContentPane().add(label_39);
 		
 		JLabel label_40 = new JLabel("$");
+		label_40.setForeground(Color.GRAY);
 		label_40.setBounds(495, 190, 8, 16);
 		frmMyHistory.getContentPane().add(label_40);
 		
 		JLabel label_41 = new JLabel("$");
+		label_41.setForeground(Color.GRAY);
 		label_41.setBounds(495, 218, 8, 16);
 		frmMyHistory.getContentPane().add(label_41);
 		
 		JLabel label_42 = new JLabel("$");
+		label_42.setForeground(Color.GRAY);
 		label_42.setBounds(495, 246, 8, 16);
 		frmMyHistory.getContentPane().add(label_42);
 		
 		JLabel label_43 = new JLabel("$");
+		label_43.setForeground(Color.GRAY);
 		label_43.setBounds(495, 274, 8, 16);
 		frmMyHistory.getContentPane().add(label_43);
 		
@@ -331,18 +353,22 @@ public class MyHistory {
 		frmMyHistory.getContentPane().add(label_48);
 		
 		JLabel label_50 = new JLabel("$");
+		label_50.setForeground(Color.GRAY);
 		label_50.setBounds(413, 218, 8, 16);
 		frmMyHistory.getContentPane().add(label_50);
 		
 		JLabel label_51 = new JLabel("$");
+		label_51.setForeground(Color.GRAY);
 		label_51.setBounds(413, 246, 8, 16);
 		frmMyHistory.getContentPane().add(label_51);
 		
 		JLabel label_52 = new JLabel("$");
+		label_52.setForeground(Color.GRAY);
 		label_52.setBounds(413, 274, 8, 16);
 		frmMyHistory.getContentPane().add(label_52);
 		
 		JLabel label_53 = new JLabel("$");
+		label_53.setForeground(Color.GRAY);
 		label_53.setBounds(413, 190, 8, 16);
 		frmMyHistory.getContentPane().add(label_53);
 		
@@ -367,6 +393,7 @@ public class MyHistory {
 		frmMyHistory.getContentPane().add(lblSold_2);
 		
 		JLabel label_49 = new JLabel("$");
+		label_49.setForeground(Color.GRAY);
 		label_49.setBounds(413, 162, 8, 16);
 		frmMyHistory.getContentPane().add(label_49);
 		
@@ -401,16 +428,24 @@ public class MyHistory {
 		label_58.setBounds(127, 274, 28, 16);
 		frmMyHistory.getContentPane().add(label_58);
 		
-		JLabel lbldate = new JLabel("-------------------------------------  Date  -------------------------------------");
-		lbldate.setHorizontalAlignment(SwingConstants.CENTER);
-		lbldate.setFont(new Font("Lucida Grande", Font.ITALIC, 13));
-		lbldate.setBounds(26, 302, 675, 18);
-		frmMyHistory.getContentPane().add(lbldate);
-		
 		JLabel label_33 = new JLabel("3.00");
 		label_33.setHorizontalAlignment(SwingConstants.TRAILING);
 		label_33.setBounds(428, 162, 52, 16);
 		frmMyHistory.getContentPane().add(label_33);
+		
+		JComboBox comboBox_1 = new JComboBox();
+		comboBox_1.setToolTipText("My Hub");
+		comboBox_1.setSelectedIndex(1);
+		comboBox_1.setBounds(659, 89, 42, 27);
+		frmMyHistory.getContentPane().add(comboBox_1);
+		
+		JSeparator separator = new JSeparator();
+		separator.setBounds(26, 312, 675, 12);
+		frmMyHistory.getContentPane().add(separator);
+		
+		JScrollBar scrollBar = new JScrollBar();
+		scrollBar.setBounds(711, 131, 15, 298);
+		frmMyHistory.getContentPane().add(scrollBar);
 		
 	}
 }

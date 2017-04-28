@@ -53,8 +53,8 @@ public class SignUp {
 	 */
 	private void initialize() {
 		frmSignUp = new JFrame();
-		frmSignUp.setTitle("ASX Trading Wheels");
-		frmSignUp.setBounds(100, 100, 732, 470);
+		frmSignUp.setTitle("ASX Trading Wheels - Sign Up");
+		frmSignUp.setBounds(100, 100, 741, 480);
 		frmSignUp.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmSignUp.getContentPane().setLayout(null);
 		

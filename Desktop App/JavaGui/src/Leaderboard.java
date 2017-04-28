@@ -25,6 +25,7 @@ import java.awt.event.ActionEvent;
 import java.awt.Canvas;
 import java.awt.ScrollPane;
 import java.awt.Scrollbar;
+import javax.swing.JSeparator;
 
 public class Leaderboard {
 
@@ -58,8 +59,8 @@ public class Leaderboard {
 	 */
 	private void initialize() {
 		frmLeaderboard = new JFrame();
-		frmLeaderboard.setTitle("ASX Trading Wheels");
-		frmLeaderboard.setBounds(100, 100, 732, 470);
+		frmLeaderboard.setTitle("ASX Trading Wheels - Leaderboard");
+		frmLeaderboard.setBounds(100, 100, 741, 480);
 		frmLeaderboard.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmLeaderboard.getContentPane().setLayout(null);
 		
@@ -80,7 +81,7 @@ public class Leaderboard {
 		textField.setText("Search");
 		textField.setForeground(Color.GRAY);
 		textField.setColumns(10);
-		textField.setBounds(16, 54, 696, 28);
+		textField.setBounds(26, 54, 686, 28);
 		frmLeaderboard.getContentPane().add(textField);
 		
 		JLabel lblNewLabel = new JLabel("Rank");
@@ -221,6 +222,10 @@ public class Leaderboard {
 		label_26.setHorizontalAlignment(SwingConstants.TRAILING);
 		label_26.setBounds(595, 401, 85, 16);
 		frmLeaderboard.getContentPane().add(label_26);
+		
+		JSeparator separator = new JSeparator();
+		separator.setBounds(26, 386, 675, 12);
+		frmLeaderboard.getContentPane().add(separator);
 		
 	}
 }

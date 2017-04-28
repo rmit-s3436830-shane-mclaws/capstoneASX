@@ -11,6 +11,11 @@ import javax.swing.JComboBox;
 import javax.swing.JTextField;
 
 import java.awt.Color;
+import java.awt.Canvas;
+import java.awt.Panel;
+import java.awt.ScrollPane;
+import javax.swing.JSeparator;
+import javax.swing.JScrollBar;
 
 
 public class Portfolio {
@@ -25,6 +30,7 @@ public class Portfolio {
 	private JLabel lblWelcomePlayer_1;
 	private JLabel lblScore;
 	private JLabel label_3;
+	private Canvas canvas;
 
 	/**
 	 * Launch the application.
@@ -55,15 +61,15 @@ public class Portfolio {
 	private void initialize() {
 		frmPortfolio = new JFrame();
 		frmPortfolio.getContentPane().setLayout(null);
-		frmPortfolio.setTitle("ASX Trading Wheels");
-		frmPortfolio.setBounds(100, 100, 732, 470);
+		frmPortfolio.setTitle("ASX Trading Wheels - Portfolio");
+		frmPortfolio.setBounds(100, 100, 741, 480);
 		frmPortfolio.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmPortfolio.getContentPane().setLayout(null);
 		
 		JLabel label = new JLabel("ASX Trading Wheels");
 		label.setHorizontalAlignment(SwingConstants.CENTER);
 		label.setFont(new Font("Arial", Font.PLAIN, 20));
-		label.setBounds(6, 6, 197, 36);
+		label.setBounds(16, 6, 197, 36);
 		frmPortfolio.getContentPane().add(label);
 		
 		JComboBox comboBox = new JComboBox();
@@ -77,7 +83,7 @@ public class Portfolio {
 		textField.setText("Search");
 		textField.setForeground(Color.GRAY);
 		textField.setColumns(10);
-		textField.setBounds(16, 54, 696, 28);
+		textField.setBounds(26, 54, 686, 28);
 		frmPortfolio.getContentPane().add(textField);
 		
 		lblWelcomePlayer = new JLabel("Amount Spent");
@@ -111,6 +117,29 @@ public class Portfolio {
 		label_3 = new JLabel("540");
 		label_3.setBounds(338, 122, 67, 16);
 		frmPortfolio.getContentPane().add(label_3);
+		
+		canvas = new Canvas();
+		canvas.setBounds(26, 289, 331, 100);
+		frmPortfolio.getContentPane().add(canvas);
+		
+		Panel panel = new Panel();
+		panel.setBounds(16, 395, 10, 10);
+		frmPortfolio.getContentPane().add(panel);
+		
+		Canvas canvas_1 = new Canvas();
+		canvas_1.setBounds(26, 174, 331, 100);
+		frmPortfolio.getContentPane().add(canvas_1);
+		
+		Canvas canvas_2 = new Canvas();
+		canvas_2.setBounds(350, 174, 331, 100);
+		frmPortfolio.getContentPane().add(canvas_2);
+		
+		Canvas canvas_3 = new Canvas();
+		canvas_3.setBounds(350, 289, 331, 100);
+		frmPortfolio.getContentPane().add(canvas_3);
+		
+		ScrollPane scrollPane = new ScrollPane();
+		scrollPane.setBounds(693, 174, 19, 231);
+		frmPortfolio.getContentPane().add(scrollPane);
 	}
-
 }
