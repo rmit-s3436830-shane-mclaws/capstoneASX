@@ -26,6 +26,7 @@ import javax.swing.AbstractListModel;
 import java.awt.Label;
 import javax.swing.JTextPane;
 import java.awt.SystemColor;
+import java.awt.Button;
 
 
 public class Portfolio {
@@ -47,6 +48,14 @@ public class Portfolio {
 	private JTextPane txtpnDescriptionDescriptionDescription;
 	private Canvas canvas_1;
 	private Canvas canvas;
+	private JButton btnSell;
+	private JButton button;
+	private JLabel label_6;
+	private JLabel label_7;
+	private JLabel label_8;
+	private JLabel label_9;
+	private JLabel label_10;
+	private JLabel label_11;
 
 	/**
 	 * Launch the application.
@@ -153,18 +162,18 @@ public class Portfolio {
 		lblTitle.setBounds(145, 194, 177, 16);
 		frmPortfolio.getContentPane().add(lblTitle);
 		
-		JLabel lblPrice = new JLabel("$ 1234.00");
+		JLabel lblPrice = new JLabel("1234.00");
 		lblPrice.setForeground(Color.DARK_GRAY);
 		lblPrice.setHorizontalAlignment(SwingConstants.TRAILING);
-		lblPrice.setBounds(504, 194, 177, 16);
+		lblPrice.setBounds(522, 194, 76, 16);
 		frmPortfolio.getContentPane().add(lblPrice);
 		
 		JTextPane txtpnDescription = new JTextPane();
 		txtpnDescription.setEditable(false);
 		txtpnDescription.setForeground(Color.GRAY);
 		txtpnDescription.setBackground(SystemColor.window);
-		txtpnDescription.setText("Description Description Description Description Description Description Description Description Description Description Description Description Description Description Description Description Description Description");
-		txtpnDescription.setBounds(145, 222, 536, 57);
+		txtpnDescription.setText("Description Description Description Description Description Description Description Description Description Description Description Description Description Description ");
+		txtpnDescription.setBounds(145, 231, 536, 48);
 		frmPortfolio.getContentPane().add(txtpnDescription);
 		
 		separator = new JSeparator();
@@ -176,18 +185,18 @@ public class Portfolio {
 		label_4.setBounds(145, 315, 177, 16);
 		frmPortfolio.getContentPane().add(label_4);
 		
-		label_5 = new JLabel("$ 4567.00");
+		label_5 = new JLabel("4567.00");
 		label_5.setForeground(Color.DARK_GRAY);
 		label_5.setHorizontalAlignment(SwingConstants.TRAILING);
-		label_5.setBounds(504, 315, 177, 16);
+		label_5.setBounds(522, 315, 76, 16);
 		frmPortfolio.getContentPane().add(label_5);
 		
 		txtpnDescriptionDescriptionDescription = new JTextPane();
-		txtpnDescriptionDescriptionDescription.setText("Description Description Description Description Description Description Description Description Description Description Description Description Description Description Description Description Description Description");
+		txtpnDescriptionDescriptionDescription.setText("Description Description Description Description Description Description Description Description Description Description Description Description Description Description");
 		txtpnDescriptionDescriptionDescription.setForeground(Color.GRAY);
 		txtpnDescriptionDescriptionDescription.setEditable(false);
 		txtpnDescriptionDescriptionDescription.setBackground(SystemColor.window);
-		txtpnDescriptionDescriptionDescription.setBounds(145, 348, 536, 57);
+		txtpnDescriptionDescriptionDescription.setBounds(145, 357, 536, 48);
 		frmPortfolio.getContentPane().add(txtpnDescriptionDescriptionDescription);
 		
 		canvas_1 = new Canvas();
@@ -199,5 +208,45 @@ public class Portfolio {
 		canvas.setBackground(Color.YELLOW);
 		canvas.setBounds(26, 309, 104, 85);
 		frmPortfolio.getContentPane().add(canvas);
+		
+		btnSell = new JButton("Sell");
+		btnSell.setBounds(626, 189, 54, 29);
+		frmPortfolio.getContentPane().add(btnSell);
+		
+		button = new JButton("Sell");
+		button.setBounds(627, 310, 54, 29);
+		frmPortfolio.getContentPane().add(button);
+		
+		label_6 = new JLabel("$");
+		label_6.setForeground(Color.GRAY);
+		label_6.setBounds(516, 194, 8, 16);
+		frmPortfolio.getContentPane().add(label_6);
+		
+		label_7 = new JLabel("$");
+		label_7.setForeground(Color.GRAY);
+		label_7.setBounds(516, 315, 8, 16);
+		frmPortfolio.getContentPane().add(label_7);
+		
+		label_8 = new JLabel("$");
+		label_8.setForeground(Color.GRAY);
+		label_8.setBounds(145, 215, 8, 16);
+		frmPortfolio.getContentPane().add(label_8);
+		
+		label_9 = new JLabel("1234.00");
+		label_9.setHorizontalAlignment(SwingConstants.TRAILING);
+		label_9.setForeground(Color.GRAY);
+		label_9.setBounds(155, 215, 76, 16);
+		frmPortfolio.getContentPane().add(label_9);
+		
+		label_10 = new JLabel("$");
+		label_10.setForeground(Color.GRAY);
+		label_10.setBounds(145, 341, 8, 16);
+		frmPortfolio.getContentPane().add(label_10);
+		
+		label_11 = new JLabel("1234.00");
+		label_11.setHorizontalAlignment(SwingConstants.TRAILING);
+		label_11.setForeground(Color.GRAY);
+		label_11.setBounds(155, 341, 76, 16);
+		frmPortfolio.getContentPane().add(label_11);
 	}
 }

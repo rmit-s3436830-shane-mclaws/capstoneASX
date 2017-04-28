@@ -83,10 +83,6 @@ public class BuySell {
 		btnEnter.setBounds(626, 53, 100, 28);
 		frmBuySell.getContentPane().add(btnEnter);
 		
-		JScrollBar scrollBar = new JScrollBar();
-		scrollBar.setBounds(697, 174, 15, 215);
-		frmBuySell.getContentPane().add(scrollBar);
-		
 		JLabel lblTitle = new JLabel("Title 01");
 		lblTitle.setForeground(Color.DARK_GRAY);
 		lblTitle.setBounds(145, 194, 177, 16);
