@@ -13,17 +13,7 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.SwingConstants;
 import javax.swing.JButton;
-import javax.swing.JPasswordField;
-import javax.swing.JTextPane;
 
-import java.awt.SystemColor;
-
-import javax.swing.JCheckBox;
-
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
-import java.awt.Canvas;
-import java.awt.ScrollPane;
 import java.awt.Scrollbar;
 import javax.swing.JSeparator;
 
