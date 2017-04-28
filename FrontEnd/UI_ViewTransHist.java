@@ -57,7 +57,7 @@ public class UI_ViewTransHist {
 	}
 	
 	public void updateTableData(){
-		for (int i = AsxGame.activePlayer.transHistory.size() -1; i > 0 ; i--){
+		for (int i = AsxGame.activePlayer.transHistory.size() -1; i >= 0 ; i--){
 			String[] row = new String[6];
 			row[0] = AsxGame.activePlayer.transHistory.get(i).getString("Date");
 			row[1] = AsxGame.activePlayer.transHistory.get(i).getString("Time");

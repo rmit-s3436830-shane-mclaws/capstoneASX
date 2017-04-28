@@ -1,3 +1,11 @@
+/*
+ 	Admin class
+ 	
+ 	All admin functionality should be placed here
+ 	needs work
+  
+ */
+
 package com.amazonaws.samples;
 
 import java.io.BufferedReader;
@@ -22,6 +30,8 @@ public class Admin {
 		
 	}
 	
+	//gets a list of all users
+	//I do not know if this works, I have not tested it - Shane
 	protected boolean getUserList(){
 		Socket connection = null;
 		boolean successState = false;

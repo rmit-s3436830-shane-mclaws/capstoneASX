@@ -1,3 +1,9 @@
+/*
+	generic Utility class/functions
+	currently only contais code for writing errors to log files
+	
+ */
+
 package com.amazonaws.samples;
 
 import java.io.BufferedWriter;
@@ -6,22 +12,6 @@ import java.io.IOException;
 import java.io.Writer;
 
 public class Utilities {
-	
-	public static void loadTempStockList(){
-		AsxPull.getAsxJson("ABC", "20170329");
-		AsxPull.getAsxJson("AWC", "20170329");
-		AsxPull.getAsxJson("ANN", "20170329");
-		AsxPull.getAsxJson("ALU", "20170329");
-		AsxPull.getAsxJson("AMP", "20170329");
-		return;
-	}	
-	
-	/*public static void createTempOfflinePlayer(){
-		AsxGame.activePlayer = new Player("Offline", "Player", "OP@email.com", 1000000,
-									"", "5", "trader");
-		AsxGame.activePlayerLoaded = true;
-		return;
-	}*/
 	
 	public static void errorToLogFile(String error){
 		try{

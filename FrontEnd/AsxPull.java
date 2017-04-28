@@ -1,3 +1,11 @@
+/*
+	AsxPull class
+	
+	This is where all functions used by each Thread to download ASX Data a kept
+	This may need changing ONLY IF you wish to reuse some of it to grab data for multiple days of a stock
+	At the moment, it only grabs the most recent stock data
+ */
+
 package com.amazonaws.samples;
 
 import java.io.BufferedReader;
@@ -28,16 +36,14 @@ public class AsxPull {
 														.build();
 	static int deadCompanies = 0;
 	static String dateString;
-//below is Cal's original code, AmazonS3Client is deprecated
-//AmazonS3 s3Client = new AmazonS3Client(new ProfileCredentialsProvider());
+	//below is Cal's original code, AmazonS3Client is deprecated
+	//AmazonS3 s3Client = new AmazonS3Client(new ProfileCredentialsProvider());
 	
+	// This is the code for downloading a single stocks data
+	// inputs are the asxCode and filename (date) you need to grab
+	// Only called from loadStocks()
 	protected static boolean getAsxJson(String asxCode, String fileName){
-		//Define variables
-		
 		String filePath =  asxCode + "/" + fileName + ".json";
-		
-		//Establish connection to S3
-		//System.out.println(filePath);	
 		
 		//Get object into stream
 		try {
@@ -49,7 +55,6 @@ public class AsxPull {
 			String currentLine = null;
 			try{
 				while((line = reader.readLine()) != null){
-					//System.out.println(line);
 					if (line != null){
 						currentLine = line;
 					}				
@@ -103,6 +108,8 @@ public class AsxPull {
 		return true;
 	}
 	
+	// downloads the list of stock codes kept on the server
+	// this is called to populate AsxGame.stockList
 	public static String[] getStockList(){
 		String filePath = "companies.csv";
 		String line = null;
@@ -122,11 +129,12 @@ public class AsxPull {
 		return output;
 	}
 	
+	// this takes a startPoint and endPoint as integers and loops through
+	// those indexes in AsxGame.stockList[] to download those stocks
+	// putting a -1 into the endPoint sets the endpoint to be the last stock in the list
 	public static boolean loadStocks(int startPoint, int endPoint){					//currently only working for single day, set in this method
-	//	int totalCompaniesDownloaded = 0;
 		
 		getMostRecentDateString();
-		
 		if (AsxGame.stockList != null){
 			if (endPoint == -1){
 				endPoint = AsxGame.stockList.length;
@@ -146,6 +154,8 @@ public class AsxPull {
 		return false;
 	}
 	
+	// sets variable "dateString" to be the date of the most recent asxData
+	// in the format YYYYmmDD
 	private static void getMostRecentDateString(){
 		LocalDateTime timePoint = LocalDateTime.now();
 		LocalDate date = timePoint.toLocalDate();

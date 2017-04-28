@@ -1,3 +1,7 @@
+/*
+	Class for Player object
+ */
+
 package com.amazonaws.samples;
 
 import java.time.LocalDate;
@@ -19,6 +23,8 @@ public class Player {
 	float shareVal;
 	float totalValue;
 	
+	
+	//constructor
 	public Player(String name, String surname, String email, float balance,
 					String shareString, String score, String rights, String transHist) {
 		this.name = name;
@@ -61,6 +67,8 @@ public class Player {
 		return;
 	}
 		
+	//	calculates the value of players shares
+	//	then calculates and returns a players total value
 	float calcValue(){
 		shareVal = 0;						//reset when starting calculation
 		
@@ -100,6 +108,7 @@ public class Player {
 		return;
 	}
 	
+	// returns how many of a share a player owns
 	int getShareCount(String asxCode){
 		String[] shareSplit = null;
 		for (int i = 0; i < shares.size(); i++){
@@ -111,6 +120,9 @@ public class Player {
 		return 0;
 	}
 	
+	// adds shares to the players owned shares
+	// takes the stock code and number in
+	// return TRUE if successful
 	boolean addShares(String asxCode, int number){
 		boolean newShare = true;
 		String[] shareSplit = null;
@@ -138,6 +150,9 @@ public class Player {
 		}
 	}
 	
+	//  removes shares from the players owned shares
+	//  takes stock code and number in
+	// return TRUE if shares removed
 	boolean removeShares(String asxCode, int number){
 		String[] shareSplit;
 		for (int i = 0; i < shares.size(); i++){
@@ -156,6 +171,8 @@ public class Player {
 		return false;
 	}
 	
+	// adds JSON formatted lines to the Player.transHist arraylist
+	// returns TRUE if successful
 	boolean updateTransHist(String dateIn, String timeIn, String asxCodeIn, String transTypeIn, int numberIn, float priceIn){
 		JSONObject json = new JSONObject();
 		if (Integer.parseInt(dateIn) == -1 || Integer.parseInt(timeIn) == -1){	
@@ -188,6 +205,7 @@ public class Player {
 		return true;
 	}
 	
+	// Generates the string that is sent to the server when the player is saved
 	String generateDataSaveString(){
 		String sharesString = "";
 		for (int i = 0; i < shares.size(); i++){
@@ -221,6 +239,7 @@ public class Player {
 		return output;
 	}
 	
+	//returns players balance as String
 	public String getBalanceToString(){
 		return Float.toString(balance);
 	}

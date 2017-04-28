@@ -1,3 +1,9 @@
+/*
+	this is the class for the threads that prepare the asxErrorLog.log file
+	and calls the load stock functions
+	Prints the total number of stocks downloaded when the thread finishes
+ */
+
 package com.amazonaws.samples;
 
 import java.io.FileNotFoundException;

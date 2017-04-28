@@ -1,5 +1,14 @@
-package com.amazonaws.samples;
+/*
+	Main game controls are here
+	Including:
+		- Buying and Selling functions
+		- login,register and save functions
+		- leaderBoard download function
+		- get current price for specified stock function
+	
+ */
 
+package com.amazonaws.samples;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,28 +19,26 @@ import java.util.zip.DeflaterOutputStream;
 
 import org.json.*;
 
-/*import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.GetObjectRequest;
-*/
-
 public class Game {
 	float buyersFee = 50;
 	
+	// function for buying stocks
+	// pass an asxCode and number of stocks to buy and it will
+	// add those stocks to the player, calculate and subtract money from balance
+	// and add the transaction to the players history
+	// returns TRUE or FALSE depending on if it could successfully buy the stocks
 	protected static boolean buyStocks(String asxCode, int number){
 		int index;
-		float price, totalPrice;
+		float price, totalPrice, totalPriceWithFee;
 		for (index = 0; index < AsxGame.stockArray.size(); index++){							
-			if (asxCode.equals(AsxGame.stockArray.get(index).code)){
-				price = AsxGame.stockArray.get(index).askPrice;
-				totalPrice = price * number;
-				if (totalPrice <= AsxGame.activePlayer.balance){
-					if (AsxGame.activePlayer.addShares(asxCode, number)){
+			if (asxCode.equals(AsxGame.stockArray.get(index).code)){	//searches stockArray for stock
+				price = AsxGame.stockArray.get(index).askPrice;			//gets stocks price
+				totalPrice = price * number;							//calculates the price of that many stocks
+				totalPriceWithFee = totalPrice + calcBrokersFeePurch(totalPrice); //calculates the total price including fee
+				
+				if (totalPriceWithFee <= AsxGame.activePlayer.balance){		//checks that player can afford it
+					//add shares and update player
+					if (AsxGame.activePlayer.addShares(asxCode, number)){	
 						AsxGame.activePlayer.removeBalance(totalPrice + calcBrokersFeePurch(totalPrice));
 						AsxGame.activePlayer.calcValue();
 						AsxGame.activePlayer.updateTransHist("-1", "-1", asxCode, "Buy", number, price);
@@ -48,6 +55,10 @@ public class Game {
 		return false;		
 	}
 	
+	// function for selling stocks
+	// pass an asxCode and number of stocks to sell and it will
+	// remove those stocks from the player, calculate and add money to balance
+	// and add the transaction to the players history
 	protected static boolean sellStocks(String asxCode, int number){
 		int index;
 		float price, totalPrice;
@@ -74,6 +85,10 @@ public class Game {
 		return false;
 	}
 	
+	// login function
+	// pass in string and password
+	// if successfully logged in, will load player into AsxGame.activePlayer
+	// returns TRUE if login is successful, otherwise FALSE
 	protected static boolean login(String uEmail, String password){
 		Socket connection = null;
 		boolean successState = false;
@@ -167,6 +182,9 @@ public class Game {
 		return successState;
 	} 
 	
+	// register function
+	// registers player, then, if successfull, logs player in using above function
+	// returns TRUE is player successfully registered and logged in, otherwise FALSE
 	protected static boolean registerPlayer(String fName, String sName, String uEmail, String password){
 		Socket connection = null;
 		boolean successState = false;
@@ -248,6 +266,10 @@ public class Game {
 		return successState;
 	}
 	
+	// save player function
+	// saves the player currently contained in AsxGame.activePlayer
+	// takes a JSONObject of transaction history to append to there file on server
+	// if transHist = null, then doesn't send any
 	protected static boolean saveActivePlayer(JSONObject transHist){
 		Socket connection = null;
 		boolean successState = false;
@@ -333,6 +355,8 @@ public class Game {
 		return successState;
 	}
 	
+	//this function gets the response from the login request and loads the player into AsxGame.activePlayer
+	//returning true if successful
 	protected static boolean loadPlayer(String response){
 		//gets response from login function, gets values for each variable
 		//and creates active player
@@ -361,6 +385,8 @@ public class Game {
 		}
 	}
 	
+	// loads the leaderboard into AsxGame.leaderBoard
+	// returns true if successful
 	protected static boolean getValueLeaderboard(){
 		AsxGame.leaderboard.clear();
 		Socket connection = null;
@@ -449,6 +475,19 @@ public class Game {
 		return successState;
 	}
 	
+	// this function returns the current price for a specific stock
+	// returns -1 if it cant find a stock
+	public static float getStockCurrentPrice(String asxCode){
+		for (int i = 0; i < AsxGame.stockArray.size(); i++){
+			if (AsxGame.stockArray.get(i).code.equals(asxCode)){
+				return AsxGame.stockArray.get(i).askPrice;
+			}
+		}
+		return -1;
+	}
+	
+	//these 2 used to calculate the brokers fee for buying and selling
+	// both return floats
 	public static float calcBrokersFeePurch(float transactionAmount){ 	//$50 + %1
 		float output = 50;
 		float fee = (float) (transactionAmount * 0.01);
@@ -463,13 +502,5 @@ public class Game {
 		return output;
 	}
 	
-	public static float getStockCurrentPrice(String asxCode){
-		for (int i = 0; i < AsxGame.stockArray.size(); i++){
-			if (AsxGame.stockArray.get(i).code.equals(asxCode)){
-				return AsxGame.stockArray.get(i).askPrice;
-			}
-		}
-		return -1;
-	}
 }
 

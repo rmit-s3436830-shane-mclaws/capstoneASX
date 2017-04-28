@@ -1,3 +1,9 @@
+/*
+	Class for Stock Object
+	these are what is saved into AsxGame.stockArray
+	most variables are not used at the moment, but may be in the future
+ */
+
 package com.amazonaws.samples;
 
 public class Stock {

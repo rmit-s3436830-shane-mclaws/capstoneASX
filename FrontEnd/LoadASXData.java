@@ -1,3 +1,9 @@
+/*
+	This class is a Thread that itself runs the threads to download the Asx Data from the s3
+	bucket. includes a timer for testing purposes
+	
+ */
+
 package com.amazonaws.samples;
 
 public class LoadASXData implements Runnable{
@@ -43,6 +49,8 @@ public class LoadASXData implements Runnable{
 		long endTime = System.currentTimeMillis();
 		long runTime = (endTime - startTime) / 1000;
 		System.out.println(Long.toString(runTime));
+		
+		//ignore these, they are for UI usage, will likely disappear once, JavaFX implemented
 		AsxGame.asxLoadComplete = true;
 		AsxGame.loginWindow.checkLoadState();
 		AsxGame.signUpWindow.checkLoadState();

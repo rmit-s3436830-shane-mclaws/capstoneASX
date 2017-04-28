@@ -1,5 +1,12 @@
-package com.amazonaws.samples;
+//Main class
+/*
+ global variables are held here, including:
+  - Player
+  - Stock List
+  - Connection constants
+ */
 
+package com.amazonaws.samples;
 
 import java.awt.EventQueue;
 import java.io.IOException;
@@ -10,22 +17,27 @@ import org.json.JSONObject;
 
 public class AsxGame {
 
+	//network connectivity constants
 	//Make these not plain text somehow, even just remove them from the version that gets uploaded to github
-	public static String accessKey = creds.accessKey;
-	public static String secretAccessKey = creds.secretAccessKey;
-
-	public static String connectionName = "ec2-13-54-16-160.ap-southeast-2.compute.amazonaws.com"; //original code
-	public static int portNumber = 28543;
+	final public static String accessKey = creds.accessKey;
+	final public static String secretAccessKey = creds.secretAccessKey;
+	final public static String connectionName = "ec2-13-54-16-160.ap-southeast-2.compute.amazonaws.com"; //original code
+	final public static int portNumber = 28543;
 	
-	public static boolean asxLoadComplete = false;
-	final static String[] stockList = AsxPull.getStockList();
+	//asxStock data global variables
+	public static boolean asxLoadComplete = false;						//boolean status of asx data download
+	public static int loadCompletePercent = 0;							//number status of asx data download
+	final static String[] stockList = AsxPull.getStockList();			//array of all stock codes, loaded from CSV in S3 bucket
 	public static ArrayList<Stock> stockArray = new ArrayList<Stock>();
 	
-	public static Player activePlayer;
-	public static Player activeAdmin;
-	public static boolean activePlayerLoaded = false;
-	public static boolean activeAdminLoaded = false;
-	public static int loadCompletePercent = 0;
+	//	player/admin global variables
+	public static Player activePlayer;						//holds the Player object for currently loaded player
+	public static Player activeAdmin;						//holds the Player object for currently loaded admin
+	public static boolean activePlayerLoaded = false;		//state of whether or not a player is loaded
+	public static boolean activeAdminLoaded = false;		//state of whether or not an admin is loaded
+	
+	//leaderboard array (stored as JSON Objects)
+	//Keys: "Name" (as String), "Surname" (as String), "Score" (as String)
 	public static ArrayList<JSONObject> leaderboard = new ArrayList<JSONObject>();
 	
 	//windows defined here
@@ -50,11 +62,12 @@ public class AsxGame {
 				+ "Press Enter to continue..."
 		);
 		
+		//starts the loading of ASX Data from S3 bucket
 		System.out.println("Stocklist Length: " + stockList.length);
 		Thread loadASXdata = new Thread(new LoadASXData());
 		loadASXdata.start();
 		
-		
+		//starts User Interface
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
@@ -65,7 +78,7 @@ public class AsxGame {
 			}
 		});
 
-		
+		//Command Line stuff
 		try{
 			System.in.read();
 		} catch(IOException e) {

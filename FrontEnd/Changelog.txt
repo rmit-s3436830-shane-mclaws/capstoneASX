@@ -2,6 +2,7 @@ Version 0.4 (9:30PM 27/4/2017)
  - A basic working User Interface (uses swing, will likely be updated to JavaFX)
  - Program now uses a seperate .java file that contains AWS credential information
 	- hopefully, this file will never be uploaded
+ - Commented lots of shit
 
 Version 0.3 (11:20PM 20/4/2017)
  - Transaction tracking implemented (Still needs work though)
