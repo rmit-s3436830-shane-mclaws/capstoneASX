@@ -2,28 +2,20 @@ import java.awt.EventQueue;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-
 import java.awt.Font;
-
-import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
 import javax.swing.JComboBox;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JSpinner;
 import javax.swing.JMenuBar;
 import javax.swing.JTextField;
-
 import java.awt.Color;
-
 import javax.swing.JFormattedTextField;
 import javax.swing.JTextPane;
 import javax.swing.JTextArea;
 import javax.swing.JSeparator;
 import javax.swing.JScrollBar;
 import javax.swing.JButton;
-
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
 
 
 public class MyHistory {
@@ -62,7 +54,6 @@ public class MyHistory {
 		frmMyHistory.getContentPane().setLayout(null);
 		frmMyHistory.setTitle("ASX Trading Wheels - My History");
 		frmMyHistory.setBounds(100, 100, 741, 480);
-		frmMyHistory.setLocationRelativeTo(null);
 		frmMyHistory.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmMyHistory.getContentPane().setLayout(null);
 		
@@ -80,11 +71,6 @@ public class MyHistory {
 		frmMyHistory.getContentPane().add(comboBox);
 		
 		txtSearch = new JTextField();
-		txtSearch.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				JOptionPane.
-			}
-		});
 		txtSearch.setForeground(Color.GRAY);
 		txtSearch.setText("Search");
 		txtSearch.setBounds(16, 54, 610, 28);

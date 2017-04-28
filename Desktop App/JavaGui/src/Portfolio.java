@@ -7,17 +7,25 @@ import java.awt.Font;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
+import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.JComboBox;
 import javax.swing.JTextField;
 
 import java.awt.Color;
 import java.awt.Canvas;
+import java.awt.Container;
 import java.awt.Panel;
 import java.awt.ScrollPane;
 
 import javax.swing.JSeparator;
 import javax.swing.JScrollBar;
+import javax.swing.JFormattedTextField;
+import javax.swing.JList;
+import javax.swing.AbstractListModel;
+import java.awt.Label;
+import javax.swing.JTextPane;
+import java.awt.SystemColor;
 
 
 public class Portfolio {
@@ -32,7 +40,11 @@ public class Portfolio {
 	private JLabel lblWelcomePlayer_1;
 	private JLabel lblScore;
 	private JLabel label_3;
-	private Canvas canvas;
+	private JScrollBar scrollBar;
+	private JSeparator separator;
+	private JLabel label_4;
+	private JLabel label_5;
+	private JTextPane textPane;
 
 	/**
 	 * Launch the application.
@@ -55,7 +67,9 @@ public class Portfolio {
 	 */
 	public Portfolio() {
 		initialize();
+		
 	}
+
 
 	/**
 	 * Initialize the contents of the frame.
@@ -125,28 +139,60 @@ public class Portfolio {
 		label_3.setBounds(338, 122, 67, 16);
 		frmPortfolio.getContentPane().add(label_3);
 		
-		canvas = new Canvas();
-		canvas.setBounds(26, 289, 331, 100);
-		frmPortfolio.getContentPane().add(canvas);
-		
-		Panel panel = new Panel();
-		panel.setBounds(16, 395, 10, 10);
-		frmPortfolio.getContentPane().add(panel);
-		
-		Canvas canvas_1 = new Canvas();
-		canvas_1.setBounds(26, 174, 331, 100);
-		frmPortfolio.getContentPane().add(canvas_1);
-		
-		Canvas canvas_2 = new Canvas();
-		canvas_2.setBounds(350, 174, 331, 100);
-		frmPortfolio.getContentPane().add(canvas_2);
-		
-		Canvas canvas_3 = new Canvas();
-		canvas_3.setBounds(350, 289, 331, 100);
-		frmPortfolio.getContentPane().add(canvas_3);
-		
 		ScrollPane scrollPane = new ScrollPane();
-		scrollPane.setBounds(693, 174, 19, 231);
+		scrollPane.setBounds(707, 174, 19, 231);
 		frmPortfolio.getContentPane().add(scrollPane);
+		
+		scrollBar = new JScrollBar();
+		scrollBar.setBounds(697, 174, 15, 215);
+		frmPortfolio.getContentPane().add(scrollBar);
+		
+		JLabel lblTitle = new JLabel("Title 01");
+		lblTitle.setBounds(16, 194, 177, 16);
+		frmPortfolio.getContentPane().add(lblTitle);
+		
+		JLabel lblPrice = new JLabel("$ 1234.00");
+		lblPrice.setHorizontalAlignment(SwingConstants.TRAILING);
+		lblPrice.setBounds(504, 194, 177, 16);
+		frmPortfolio.getContentPane().add(lblPrice);
+		
+		JTextPane txtpnDescription = new JTextPane();
+		txtpnDescription.setEditable(false);
+		txtpnDescription.setForeground(Color.GRAY);
+		txtpnDescription.setBackground(SystemColor.window);
+		txtpnDescription.setText("Description Description Description Description Description Description Description Description Description Description Description Description Description Description Description Description Description Description Description Description Description");
+		txtpnDescription.setBounds(16, 222, 665, 57);
+		frmPortfolio.getContentPane().add(txtpnDescription);
+		
+		separator = new JSeparator();
+		separator.setBounds(16, 291, 665, 12);
+		frmPortfolio.getContentPane().add(separator);
+		
+		label_4 = new JLabel("Title 01");
+		label_4.setBounds(16, 315, 177, 16);
+		frmPortfolio.getContentPane().add(label_4);
+		
+		label_5 = new JLabel("$ 4567.00");
+		label_5.setHorizontalAlignment(SwingConstants.TRAILING);
+		label_5.setBounds(504, 315, 177, 16);
+		frmPortfolio.getContentPane().add(label_5);
+		
+		textPane = new JTextPane();
+		textPane.setText("Description Description Description Description Description Description Description Description Description Description Description Description Description Description Description Description Description Description Description Description Description");
+		textPane.setForeground(Color.GRAY);
+		textPane.setEditable(false);
+		textPane.setBackground(SystemColor.window);
+		textPane.setBounds(16, 348, 665, 57);
+		frmPortfolio.getContentPane().add(textPane);
+	}
+
+	private Container getContentPane() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private void CreateView() {
+		// TODO Auto-generated method stub
+		
 	}
 }

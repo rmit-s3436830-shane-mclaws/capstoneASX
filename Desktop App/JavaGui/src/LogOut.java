@@ -11,6 +11,9 @@ import java.awt.event.MouseEvent;
 import java.awt.Button;
 import java.awt.Color;
 import java.awt.Dimension;
+import javax.swing.JButton;
+import java.awt.Panel;
+import javax.swing.JScrollBar;
 
 
 public class LogOut {
@@ -46,47 +49,32 @@ public class LogOut {
 	private void initialize() {
 		frmLogOut = new JFrame();
 		frmLogOut.setTitle("ASX Trading Wheels - Log Out");
-		frmLogOut.setBounds(100, 100, 741, 480);
+		frmLogOut.setBounds(100, 100, 824, 556);
 		frmLogOut.setLocationRelativeTo(null);
 		frmLogOut.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmLogOut.getContentPane().setLayout(null);
 		
 		JLabel label = new JLabel("ASX Trading Wheels");
+		label.setBounds(263, 29, 202, 58);
 		label.setHorizontalAlignment(SwingConstants.CENTER);
 		label.setFont(new Font("Arial", Font.PLAIN, 20));
-		label.setBounds(263, 29, 202, 58);
 		frmLogOut.getContentPane().add(label);
 		
 		JLabel lblAreYouSure = new JLabel("Log out?");
+		lblAreYouSure.setBounds(337, 99, 64, 16);
 		lblAreYouSure.setHorizontalAlignment(SwingConstants.CENTER);
-		lblAreYouSure.setBounds(327, 140, 64, 16);
 		frmLogOut.getContentPane().add(lblAreYouSure);
 		
-		JLabel lblNewLabel = new JLabel("Yes");
-		lblNewLabel.setHorizontalAlignment(SwingConstants.CENTER);
-		lblNewLabel.setBounds(263, 179, 61, 16);
-		frmLogOut.getContentPane().add(lblNewLabel);
+		JButton btnYes = new JButton("Yes");
+		btnYes.setBounds(288, 127, 84, 29);
+		frmLogOut.getContentPane().add(btnYes);
 		
-		JLabel lblNo = new JLabel("No");
-		lblNo.setHorizontalAlignment(SwingConstants.CENTER);
-		lblNo.setBounds(404, 179, 61, 16);
-		frmLogOut.getContentPane().add(lblNo);
-	}
-	private static void addPopup(Component component, final JPopupMenu popup) {
-		component.addMouseListener(new MouseAdapter() {
-			public void mousePressed(MouseEvent e) {
-				if (e.isPopupTrigger()) {
-					showMenu(e);
-				}
-			}
-			public void mouseReleased(MouseEvent e) {
-				if (e.isPopupTrigger()) {
-					showMenu(e);
-				}
-			}
-			private void showMenu(MouseEvent e) {
-				popup.show(e.getComponent(), e.getX(), e.getY());
-			}
-		});
+		JButton btnNo = new JButton("No");
+		btnNo.setBounds(381, 127, 84, 29);
+		frmLogOut.getContentPane().add(btnNo);
+		
+		JScrollBar scrollBar = new JScrollBar();
+		scrollBar.setBounds(763, 156, 15, 355);
+		frmLogOut.getContentPane().add(scrollBar);
 	}
 }
