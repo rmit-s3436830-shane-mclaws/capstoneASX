@@ -29,6 +29,8 @@ public class AsxGame {
 	public static int loadCompletePercent = 0;							//number status of asx data download
 	final static String[] stockList = AsxPull.getStockList();			//array of all stock codes, loaded from CSV in S3 bucket
 	public static ArrayList<Stock> stockArray = new ArrayList<Stock>();
+	public static String requestedStockCode;
+	public static ArrayList<JSONObject> requestedStockHistory = new ArrayList<JSONObject>();
 	
 	//	player/admin global variables
 	public static Player activePlayer;						//holds the Player object for currently loaded player
