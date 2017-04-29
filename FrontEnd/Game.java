@@ -141,6 +141,11 @@ public class Game {
                                // transaction += line + '\n';
                                 //Handle individual lines of transaction history here
                             }
+							while((response = connectionRead.readLine()) != null)
+							{
+								JSONObject valLine = new JSONObject(response);
+								AsxGame.activePlayer.valueHistory.add(valLine);
+							}
 							successState = true;
 							break;
 						}
@@ -484,6 +489,81 @@ public class Game {
 			}
 		}
 		return -1;
+	}
+	
+	public static boolean getStockHistory(String asxCode, int startDate, int endDate) //int date = 20170214 -- 14th Feb 2017
+	{
+		AsxGame.requestedStockCode = asxCode;
+		Socket connection = null;
+		boolean successState = false;
+		try
+		{
+			connection = new Socket(AsxGame.connectionName, AsxGame.portNumber);
+			
+			//Input Streams
+			BufferedReader connectionRead = null;
+			String response = null;
+			
+    		//Output Streams
+			DeflaterOutputStream deflStream = null;
+			
+			try
+			{
+				// call
+				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
+				System.out.println("Attempt getUserList...");
+				String sendString = "stockHistory\n"+asxCode+"\n"+startDate+"\n"+endDate;
+				byte[] sendBytes = sendString.getBytes("UTF-8");
+				deflStream.write(sendBytes);
+				deflStream.finish();
+				deflStream.flush();
+				while (true)
+				{
+					connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(connection.getInputStream())));
+					response = connectionRead.readLine();
+					if(response != null)
+					{
+						if(response.equals("200"))
+						{
+							successState = true;
+							while((response = connectionRead.readLine()) != null)
+							{
+								JSONObject stockHis = new JSONObject(response);
+								AsxGame.requestedStockHistory.add(stockHis);
+							}
+							
+						}
+						else
+						{
+							System.out.println("500: INTERNAL SERVER ERROR!");
+							successState = false;
+							break;
+						}
+					}
+				}
+				
+			} 
+			catch (IOException e) 
+			{
+				System.out.println("Exception while communicating with server: " + e);
+				successState = false;
+			}
+		} 
+		catch (IOException e) 
+		{
+			System.out.println("Exception while opening connection: " + e);
+			successState = false;
+		}
+		try
+		{
+			connection.close();
+		}
+		catch (IOException e) 
+		{
+			System.out.println("Exception while closing connection: " + e);
+			successState = false;
+		}
+		return successState;
 	}
 	
 	//these 2 used to calculate the brokers fee for buying and selling
