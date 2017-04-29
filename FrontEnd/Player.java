@@ -4,10 +4,16 @@
 
 package com.amazonaws.samples;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.Socket;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.InflaterInputStream;
 
 import org.json.JSONObject;
 
@@ -18,6 +24,7 @@ public class Player {
 	float balance;
 	ArrayList<String> shares = new ArrayList<String>();	//formatted: "asxCode:Number"
 	ArrayList<JSONObject> transHistory = new ArrayList<JSONObject>(); 	//formatted as JSON; keys:date,time,buy/sell,stock code,number,price
+	ArrayList<JSONObject> valueHistory = new ArrayList<JSONObject>();
 	float score;												
 	boolean adminRights = false;
 	float shareVal;
