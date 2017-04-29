@@ -22,10 +22,6 @@ public class Admin {
 	
 	ArrayList<String> playerList = new ArrayList<String>();
 	
-	protected void adminLoadPlayer(){
-		
-	}
-	
 	protected void adminUnloadPlayer(){
 		
 	}
@@ -85,8 +81,85 @@ public class Admin {
 			System.out.println("Exception while opening connection: " + e);
 			successState = false;
 		}
+		try{
+			connection.close();
+		}catch (IOException e) {
+			System.out.println("Exception while closing connection: " + e);
+			successState = false;
+		}
 		
 		return successState;
+	}
+	
+	//Gets a users data String from the server - Cal
+	//user is the desired users email address
+	protected void adminLoadPlayer(String user)
+	{
+		String emailHash = Integer.toString(user.hashCode());
+		Socket connection = null;
+		try
+		{
+			connection = new Socket(AsxGame.connectionName, AsxGame.portNumber);
+			
+			//Input Streams
+			BufferedReader connectionRead = null;
+			String response = null;
+			
+    		//Output Streams
+			DeflaterOutputStream deflStream = null;
+			
+			try
+			{
+				// call
+				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
+				System.out.println("Attempt getUserList...");
+				String sendString = "getUser\n"+emailHash;
+				byte[] sendBytes = sendString.getBytes("UTF-8");
+				deflStream.write(sendBytes);
+				deflStream.finish();
+				deflStream.flush();
+				while (true)
+				{
+					connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(connection.getInputStream())));
+					response = connectionRead.readLine();
+					if(response != null)
+					{
+						if(!response.equals("500"))
+						{
+							Game.loadPlayer(response);
+							while((response = connectionRead.readLine()) != null)
+							{
+								JSONObject histLine = new JSONObject(response);
+								AsxGame.activePlayer.transHistory.add(histLine);
+							}
+						}
+						else
+						{
+							System.out.println("500: INTERNAL SERVER ERROR!");
+							break;
+						}
+					}
+				}
+				
+			} 
+			catch (IOException e) 
+			{
+				System.out.println("Exception while communicating with server: " + e);
+			}
+		} 
+		catch (IOException e) 
+		{
+			System.out.println("Exception while opening connection: " + e);
+		}
+		try
+		{
+			connection.close();
+		}
+		catch (IOException e) 
+		{
+			System.out.println("Exception while closing connection: " + e);
+		}
+		return;
 	}
 	
 	protected boolean changeBalance(float newBalance){
