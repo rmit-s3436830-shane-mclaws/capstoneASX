@@ -195,6 +195,26 @@ public class threadedConnection implements Runnable
 						bytes = "500".getBytes("UTF-8");
 					}
 				}
+				else if(line.equals("stockHistory"))
+				{
+					String stockCode = connectionRead.readLine();
+					int startDate = Integer.parseInt(connectionRead.readLine());
+					int endDate = Integer.parseInt(connectionRead.readLine());
+					fileData += "Requesting: " + line + " : " + stockCode + " : " + startDate + " : " + endDate + "\n";
+					String response = "";
+					if((response = stockHistory(stockCode, startDate, endDate)) != null)
+					{
+						response = "200\n" + response;
+						fileData += "Returning: Stock History Data\n";
+						fileData += response + "\n";
+						bytes = response.getBytes("UTF-8");
+					}
+					else
+					{
+						fileData += "Returning: 500\n";
+						bytes = "500".getBytes("UTF-8");
+					}
+				}
 				else
 				{
 					//System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 400: BAD REQUEST!");
@@ -901,5 +921,73 @@ public class threadedConnection implements Runnable
 			}
 		}
 		return null;
+	}
+	
+	private String stockHistory(String asxCode, int startDate, int endDate)
+	{
+		String prefix = asxCode+"/";
+		String dataReturn = "";
+		String ASXJSON = "asx-json-host";
+		ArrayList<String> files = new ArrayList<String>();
+		ObjectListing objectList = s3Client.listObjects(ASXJSON, prefix);
+		List<S3ObjectSummary> summaries = objectList.getObjectSummaries();
+		if(summaries.size() != 0)
+		{
+			if(objectList.isTruncated())
+			{
+				do
+				{
+					for(S3ObjectSummary summary : summaries)
+					{
+						int fileDate = Integer.parseInt(summary.getKey().split("/")[1].split(".")[0]);	//key should read "asx/20170214.json", fileDate should result in 20170214
+						if(fileDate >= startDate && fileDate <= endDate)
+						{
+							files.add(summary.getKey());
+						}
+					}
+					objectList = s3Client.listNextBatchOfObjects(objectList);
+				}while (objectList.isTruncated());
+			}
+			else
+			{
+				for(S3ObjectSummary summary : summaries)
+				{
+					int fileDate = Integer.parseInt(summary.getKey().split("/")[1].split(".")[0]);	//key should read "asx/20170214.json", fileDate should result in 20170214
+					if(fileDate >= startDate && fileDate <= endDate)
+					{
+						files.add(summary.getKey());
+					}
+				}
+			}
+		}
+		for(String key:files)
+		{
+			//Open file, add contents to return data
+			S3Object object = s3Client.getObject(new GetObjectRequest(ASXJSON, key));
+			InputStream objectData = object.getObjectContent();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(objectData));
+			String data = "";
+			String prevData = "";
+			try
+			{
+				while((data = reader.readLine()) != null)
+				{
+					prevData = data; //Ensures that prevData will be the last line of data when the loop terminates
+				}
+				reader.close();
+				objectData.close();
+				JSONObject tmp = new JSONObject(prevData);
+				JSONObject jData = new JSONObject();
+				jData.put("ASX Code",  tmp.get("ASX Code"));
+				jData.put("Ask Price", tmp.get("Ask Price"));
+				dataReturn += jData.toString() + "\n";
+			}
+			catch (IOException ie)
+			{
+				System.out.println("Exception when reading ASX data: " + ie);
+				fileData += "stockHistory: Exception when reading ASX data: " + ie + "\n";
+			}
+		}
+		return dataReturn;
 	}
 }
