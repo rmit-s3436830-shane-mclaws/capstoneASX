@@ -5,6 +5,7 @@
 		- login,register and save functions
 		- leaderBoard download function
 		- get current price for specified stock function
+		- retrieving history of a stock
 	
  */
 
