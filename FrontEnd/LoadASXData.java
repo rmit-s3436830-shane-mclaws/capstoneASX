@@ -46,9 +46,16 @@ public class LoadASXData implements Runnable{
 		} catch (InterruptedException e){
 			e.printStackTrace();
 		}
+		//Implement bubble sort on ASX Stock List
 		long endTime = System.currentTimeMillis();
 		long runTime = (endTime - startTime) / 1000;
-		System.out.println(Long.toString(runTime));
+		System.out.println("Pull Time (s): " + Long.toString(runTime));
+		
+		startTime = System.currentTimeMillis();
+		bubbleSortASX();
+		endTime = System.currentTimeMillis();
+		runTime = (endTime - startTime) / 1000;
+		System.out.println("Sort Time (s): " + Long.toString(runTime));
 		
 		//ignore these, they are for UI usage, will likely disappear once, JavaFX implemented
 		AsxGame.asxLoadComplete = true;
@@ -58,6 +65,26 @@ public class LoadASXData implements Runnable{
 		if (AsxGame.mainWindow != null){
 			AsxGame.mainWindow.updateTableData();
 			AsxGame.mainWindow.updateTitle();
+		}
+	}
+	
+	private void bubbleSortASX()
+	{
+		Stock stock;
+		Stock nextStock;
+		for(int i=1; i<AsxGame.stockArray.size(); i++)
+		{
+			for(int j=0; j<AsxGame.stockArray.size()-i; j++)
+			{
+				stock = AsxGame.stockArray.get(j);
+				nextStock = AsxGame.stockArray.get(j+1);
+				if(stock.code.compareTo(nextStock.code) > 0) //yields true if alphabetically nextStock should be before stock
+				{
+					//swap positions of stock and nextStock within arraylist
+					AsxGame.stockArray.set(j, nextStock);
+					AsxGame.stockArray.set(j+1, stock);
+				}
+			}
 		}
 	}
 }
