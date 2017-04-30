@@ -22,6 +22,7 @@ public class AsxGame {
 	final public static String accessKey = creds.accessKey;
 	final public static String secretAccessKey = creds.secretAccessKey;
 	final public static String connectionName = "ec2-13-54-16-160.ap-southeast-2.compute.amazonaws.com"; //original code
+	//final public static String connectionName = "127.0.0.1";
 	final public static int portNumber = 28543;
 	
 	//asxStock data global variables
