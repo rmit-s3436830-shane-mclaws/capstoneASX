@@ -5,7 +5,6 @@
 		- login,register and save functions
 		- leaderBoard download function
 		- get current price for specified stock function
-		- retrieving history of a stock
 	
  */
 
@@ -495,6 +494,7 @@ public class Game {
 	public static boolean getStockHistory(String asxCode, int startDate, int endDate) //int date = 20170214 -- 14th Feb 2017
 	{
 		AsxGame.requestedStockCode = asxCode;
+		AsxGame.requestedStockHistory.clear();
 		Socket connection = null;
 		boolean successState = false;
 		try
@@ -512,7 +512,7 @@ public class Game {
 			{
 				// call
 				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
-				System.out.println("Attempt getUserList...");
+				System.out.println("Attempt getStockHistory...");
 				String sendString = "stockHistory\n"+asxCode+"\n"+startDate+"\n"+endDate;
 				byte[] sendBytes = sendString.getBytes("UTF-8");
 				deflStream.write(sendBytes);
@@ -532,7 +532,8 @@ public class Game {
 								JSONObject stockHis = new JSONObject(response);
 								AsxGame.requestedStockHistory.add(stockHis);
 							}
-							
+							connectionRead.close();
+							break;
 						}
 						else
 						{
@@ -553,15 +554,6 @@ public class Game {
 		catch (IOException e) 
 		{
 			System.out.println("Exception while opening connection: " + e);
-			successState = false;
-		}
-		try
-		{
-			connection.close();
-		}
-		catch (IOException e) 
-		{
-			System.out.println("Exception while closing connection: " + e);
 			successState = false;
 		}
 		return successState;
