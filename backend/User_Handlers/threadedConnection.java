@@ -217,7 +217,11 @@ public class threadedConnection implements Runnable
 				}
 				else
 				{
-					//System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 400: BAD REQUEST!");
+					while((line = connectionRead.readLine()) != null)
+					{
+						line += line + "/n";
+					}
+					fileData  += "Requested: " + line + "\n";
 					fileData  += "Returning: 400: BAD REQUEST!\n";
 					bytes = "400: BAD REQUEST!".getBytes("UTF-8");
 				}
@@ -939,7 +943,9 @@ public class threadedConnection implements Runnable
 				{
 					for(S3ObjectSummary summary : summaries)
 					{
-						int fileDate = Integer.parseInt(summary.getKey().split("/")[1].split(".")[0]);	//key should read "asx/20170214.json", fileDate should result in 20170214
+						String file = summary.getKey().split("[/.]")[1];
+						//String[] sDate = file.split(".");
+						int fileDate = Integer.parseInt(file);	//key should read "asx/20170214.json", fileDate should result in 20170214
 						if(fileDate >= startDate && fileDate <= endDate)
 						{
 							files.add(summary.getKey());
@@ -952,7 +958,9 @@ public class threadedConnection implements Runnable
 			{
 				for(S3ObjectSummary summary : summaries)
 				{
-					int fileDate = Integer.parseInt(summary.getKey().split("/")[1].split(".")[0]);	//key should read "asx/20170214.json", fileDate should result in 20170214
+					String file = summary.getKey().split("[/.]")[1];
+					//String[] sDate = file.split(".");
+					int fileDate = Integer.parseInt(file);	//key should read "asx/20170214.json", fileDate should result in 20170214
 					if(fileDate >= startDate && fileDate <= endDate)
 					{
 						files.add(summary.getKey());
@@ -966,6 +974,7 @@ public class threadedConnection implements Runnable
 			S3Object object = s3Client.getObject(new GetObjectRequest(ASXJSON, key));
 			InputStream objectData = object.getObjectContent();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(objectData));
+			String date = key.split("[/.]")[1];
 			String data = "";
 			String prevData = "";
 			try
@@ -979,6 +988,7 @@ public class threadedConnection implements Runnable
 				JSONObject tmp = new JSONObject(prevData);
 				JSONObject jData = new JSONObject();
 				jData.put("ASX Code",  tmp.get("ASX Code"));
+				jData.put("Date", date);
 				jData.put("Ask Price", tmp.get("Ask Price"));
 				dataReturn += jData.toString() + "\n";
 			}
