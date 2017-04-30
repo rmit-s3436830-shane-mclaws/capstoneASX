@@ -166,6 +166,7 @@ public class AsxPull {
 		while (!s3Client.doesObjectExist(bucket, AsxGame.stockList[0]+"/"+fileString+".json")){
 			date = date.minusDays(1);
 			dateSplit = date.toString().split("-");
+			fileString = dateSplit[0]+dateSplit[1]+dateSplit[2];
 		}		
 		System.out.println(fileString);
 		dateString = fileString;
