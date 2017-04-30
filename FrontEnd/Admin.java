@@ -112,7 +112,7 @@ public class Admin {
 			{
 				// call
 				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
-				System.out.println("Attempt getUserList...");
+				System.out.println("Attempt getUser...");
 				String sendString = "getUser\n"+emailHash;
 				byte[] sendBytes = sendString.getBytes("UTF-8");
 				deflStream.write(sendBytes);
@@ -122,6 +122,7 @@ public class Admin {
 				{
 					connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(connection.getInputStream())));
 					response = connectionRead.readLine();
+					System.out.println(response);
 					if(response != null)
 					{
 						if(!response.equals("500"))
@@ -132,6 +133,8 @@ public class Admin {
 								JSONObject histLine = new JSONObject(response);
 								AsxGame.activePlayer.transHistory.add(histLine);
 							}
+							connectionRead.close();
+							break;
 						}
 						else
 						{
@@ -150,14 +153,6 @@ public class Admin {
 		catch (IOException e) 
 		{
 			System.out.println("Exception while opening connection: " + e);
-		}
-		try
-		{
-			connection.close();
-		}
-		catch (IOException e) 
-		{
-			System.out.println("Exception while closing connection: " + e);
 		}
 		return;
 	}
