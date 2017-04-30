@@ -34,8 +34,8 @@ public class downloader implements Runnable
 	private static final String bucket = "asx-json-host";
 	private static String date;
 	private static String time;
-	private static String AccessKey = REDACTED;
-	private static String SecretKey = REDACTED;
+	private static String AccessKey = "REDACTED";
+	private static String SecretKey = "REDACTED";
 	
 	public downloader(String[] companies)
 	{
@@ -72,40 +72,47 @@ public class downloader implements Runnable
 			{
 				//Downloads data from Yahoo Finance
 				if((dataString = downloadData(code)) != null) //Will return null if no data could be retrieved
-				{				
-					//Upload json object to amazon S3
-					fileName = code + "/" + downloader.date + ".json";
-					if(!s3Client.doesObjectExist(bucket, fileName))
+				{
+					JSONObject checkAlive = new JSONObject(dataString);
+					if(!checkAlive.get("Name").toString().equals("N/A")) //If the company is still alive, then...
 					{
-						//Create new data file for day
-						contentAsBytes = dataString.getBytes("UTF-8");
-						contentAsStream = new ByteArrayInputStream(contentAsBytes);
-						md = new ObjectMetadata();
-						md.setContentLength(contentAsBytes.length);
-						s3Client.putObject(new PutObjectRequest(bucket, fileName, contentAsStream, md));
-						//System.out.println("Code complete: " + code);
-					}
-					else
-					{
-						fullData = "";
-						//Append data to end of existing file
-						object = s3Client.getObject(new GetObjectRequest(bucket, fileName));
-						objectData = object.getObjectContent();
-						s3Reader = new BufferedReader(new InputStreamReader(objectData));
-						while((data = s3Reader.readLine()) != null)
+						//Upload json object to amazon S3
+						fileName = code + "/" + downloader.date + ".json";
+						if(!s3Client.doesObjectExist(bucket, fileName))
 						{
-							fullData += data + "\n";
+							//Create new data file for day
+							contentAsBytes = dataString.getBytes("UTF-8");
+							contentAsStream = new ByteArrayInputStream(contentAsBytes);
+							md = new ObjectMetadata();
+							md.setContentLength(contentAsBytes.length);
+							s3Client.putObject(new PutObjectRequest(bucket, fileName, contentAsStream, md));
+							//System.out.println("Code complete: " + code);
 						}
-						fullData += dataString;
-						//Upload new data
-						contentAsBytes = fullData.getBytes("UTF-8");
-						contentAsStream = new ByteArrayInputStream(contentAsBytes);
-						md = new ObjectMetadata();
-						md.setContentLength(contentAsBytes.length);
-						s3Client.putObject(new PutObjectRequest(bucket, fileName, contentAsStream, md));
-						//System.out.println("Code complete: " + code);
+						else
+						{
+							fullData = "";
+							//Append data to end of existing file
+							//System.out.println("Reading S3 file: " + fileName);
+							object = s3Client.getObject(new GetObjectRequest(bucket, fileName));
+							objectData = object.getObjectContent();
+							s3Reader = new BufferedReader(new InputStreamReader(objectData));
+							while((data = s3Reader.readLine()) != null)
+							{
+								fullData += data + "\n";
+								//System.out.println(data);
+							}
+							fullData += dataString;
+							//System.out.println("Full String: " + fullData);
+							//Upload new data
+							contentAsBytes = fullData.getBytes("UTF-8");
+							contentAsStream = new ByteArrayInputStream(contentAsBytes);
+							md = new ObjectMetadata();
+							md.setContentLength(contentAsBytes.length);
+							s3Client.putObject(new PutObjectRequest(bucket, fileName, contentAsStream, md));
+							//System.out.println("Code complete: " + code);
+						}
+						/*****************************************************/
 					}
-					/*****************************************************/
 				}
 				
 			}
@@ -157,7 +164,7 @@ public class downloader implements Runnable
 			dataJSON.put("Ex-Dividend Date", dataPoints[15]);
 			dataJSON.put("Dividend Pay Date", dataPoints[16]);
 			dataJSON.put("Dividend Yield", dataPoints[17]);
-			dataString = dataJSON.toString();
+			dataString = dataJSON.toString() + "\n";
 			/*****************************************************/
 		}
 		catch(SocketTimeoutException ste)
