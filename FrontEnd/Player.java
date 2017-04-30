@@ -4,16 +4,10 @@
 
 package com.amazonaws.samples;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.Socket;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.zip.DeflaterOutputStream;
-import java.util.zip.InflaterInputStream;
 
 import org.json.JSONObject;
 
@@ -69,6 +63,9 @@ public class Player {
 		System.out.println("admin: " + adminRights);
 		for (int i = 0; i < transHistory.size(); i++){
 			System.out.println(transHistory.get(i).toString());
+		}
+		for (int i = 0; i < valueHistory.size(); i++){
+			System.out.println(valueHistory.get(i).toString());
 		}
 		generateDataSaveString();
 		return;
