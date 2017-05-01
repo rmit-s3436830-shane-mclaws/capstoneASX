@@ -18,9 +18,15 @@ import java.util.zip.InflaterInputStream;
 
 import org.json.JSONObject;
 
-public class Admin {
+public class Admin
+{
+	private static ArrayList<String> playerList = new ArrayList<String>();
 	
-	static ArrayList<String> playerList = new ArrayList<String>();
+	//returns the private variable playerList
+	protected static ArrayList<String> returnPlayerList()
+	{
+		return playerList;
+	}
 	
 	protected static void adminUnloadPlayer()
 	{
