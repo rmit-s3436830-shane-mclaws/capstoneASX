@@ -6,7 +6,9 @@ import java.util.*;
 public class Menus {	
 	private static Scanner consoleRead = new Scanner(System.in);
 	private static String input; 
-	private static int inputInt; 
+	private static int inputInt;
+	private static int qty;
+	private static float amount;
 	
 	protected static void menuLogin(){		
 		System.out.println("\nPlease select on of the following options: \n");
@@ -15,20 +17,21 @@ public class Menus {
 		System.out.println("	3. Get temp asx data + print");
 		System.out.println("	0. Exit");
 		input = consoleRead.next();
-		switch (input){
-			case "1":
+		inputInt = Integer.parseInt(input);
+		switch (inputInt){
+			case 1:
 				menuLoginDialogue();
 				return;
-			case "2":
+			case 2:
 				menuRegisterDialogue();
 				return;
-			case "3":
+			case 3:
 				//Utilities.loadTempStockList();
 				AsxPull.getAsxJson("ABP", "20170329");
 				AsxGame.stockArray.get(0).printStock();
 				AsxGame.stockArray.remove(0);
 				return;
-			case "0": 		//exit
+			case 0: 		//exit
 				System.exit(0);
 				break;
 		}
@@ -151,27 +154,28 @@ public class Menus {
 			System.out.println("	0. Exit");
 			
 			input = consoleRead.next();
-			switch (input) {
-				case "1":		//Print Active Player Details
+			inputInt = Integer.parseInt(input);
+			switch (inputInt) {
+				case 1:		//Print Active Player Details
 					AsxGame.activePlayer.printPlayer();
 					break;
-				case "2": 		//List all available stocks
+				case 2: 		//List all available stocks
 					System.out.println(AsxGame.stockArray.size());
 					for (int i = 0; i < AsxGame.stockArray.size(); i++){
 						AsxGame.stockArray.get(i).printStock();
 					}
 					break;
-				case "3":		//Buy stocks
+				case 3:		//Buy stocks
 					buyStockDialogue();
 					break;
-				case "4":		//Sell Stocks
+				case 4:		//Sell Stocks
 					sellStockDialogue();
 					break;
-				case "5":		//Save player to server
+				case 5:		//Save player to server
 					//System.out.println(AsxGame.activePlayer.generateSaveString());
 					Game.saveActivePlayer(null);
 					break;
-				case "6":
+				case 6:
 					Game.getValueLeaderboard();
 					for (int i = 0; i < AsxGame.leaderboard.size(); i++){
 						System.out.println(AsxGame.leaderboard.get(i));
@@ -180,11 +184,11 @@ public class Menus {
 	//			case "L":
 	//				Utilities.loadTempStockList();
 	//				break;
-				case "9": 		//logout
+				case 9: 		//logout
 					AsxGame.activePlayer = null;
 					AsxGame.activePlayerLoaded = false;
-					return;
-				case "0": 		//exit
+					return;					
+				case 0: 		//exit
 					System.exit(0);
 					break;
 				default: System.out.println("Invalid Choice!");
@@ -206,40 +210,49 @@ public class Menus {
 			System.out.println("	0. Exit");
 			
 			input = consoleRead.next();
-			switch (input) {
-				case "1":		//Print Active Admin Details
+			inputInt = Integer.parseInt(input);
+			switch (inputInt) {
+				case 1:		//Print Active Admin Details
 					AsxGame.activeAdmin.printPlayer();
 					break;
-				case "2": 		//load player for admin to modify
-					break;			
-								//to be implemented
-							
-				case "3":		//View loaded player account details
+				case 2: 		//load player for admin to modify
+					Admin.getUserList();
+					System.out.println(Admin.playerList.toString());
+					System.out.println("Enter a user email address");
+					input = consoleRead.next();
+					Admin.adminLoadPlayer(input);
+					break;				
+				case 3:		//View loaded player account details
 					AsxGame.activePlayer.printPlayer();
 					break;
-				case "4":		//Add stocks to loaded player
-							
-								//to be implemented
+				case 4:		//Add stocks to loaded player
+					System.out.println("Enter a stock code, then qty to add to user");
+					input = consoleRead.next();
+					qty = Integer.parseInt(consoleRead.next());
+					Admin.addStock(input, qty);
 					break;
-				case "5":		//Remove stocks from loaded player
-					
-								//to be implemented
+				case 5:		//Remove stocks from loaded player
+					System.out.println("Enter a stock code, then qty to remove from user");
+					input = consoleRead.next();
+					qty = Integer.parseInt(consoleRead.next());
+					Admin.removeStock(input, qty);
 					break;
-				case "6":		//Set loaded players balance
-					AsxGame.activePlayer.setBalance(0);	//to be implemented
+				case 6:		//Set loaded players balance
+					System.out.println("Enter a number to change users balance to");
+					amount = Float.parseFloat(consoleRead.next());
+					Admin.changeBalance(amount);
 					break;
-				case "7":		//Save + unload loaded player
-					Game.saveActivePlayer(null);
-					AsxGame.activePlayerLoaded = false;
-					AsxGame.activePlayer = null;
+				case 7:		//Save + unload loaded player
+					System.out.println("Unloading player");
+					Admin.adminUnloadPlayer();
 					break;
-				case "9": 		//logout
+				case 9: 		//logout
 					AsxGame.activeAdminLoaded = false;
 					AsxGame.activeAdmin = null;
 					AsxGame.activePlayer = null;
 					AsxGame.activePlayerLoaded = false;
 					return;
-				case "0": 		//exit
+				case 0: 		//exit
 					System.exit(0);
 					break;
 				default: System.out.println("Invalid Choice!");
