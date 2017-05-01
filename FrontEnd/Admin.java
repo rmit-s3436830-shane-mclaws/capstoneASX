@@ -20,15 +20,20 @@ import org.json.JSONObject;
 
 public class Admin {
 	
-	ArrayList<String> playerList = new ArrayList<String>();
+	static ArrayList<String> playerList = new ArrayList<String>();
 	
-	protected void adminUnloadPlayer(){
-		
+	protected static void adminUnloadPlayer()
+	{
+		//Save then unload
+		Game.saveActivePlayer(null);
+		AsxGame.activePlayer = null;
+		AsxGame.activePlayerLoaded = false;
 	}
 	
 	//gets a list of all users
 	//I do not know if this works, I have not tested it - Shane
-	protected boolean getUserList(){
+	protected static boolean getUserList()
+	{
 		Socket connection = null;
 		boolean successState = false;
 		try{
@@ -41,7 +46,8 @@ public class Admin {
     		//Output Streams
 			DeflaterOutputStream deflStream = null;
 			
-			try{
+			try
+			{
 				// call
 				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
 				System.out.println("Attempt getUserList...");
@@ -51,7 +57,8 @@ public class Admin {
 				deflStream.finish();
 				deflStream.flush();
 				
-				while (true){
+				while (true)
+				{
 					connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(connection.getInputStream())));
 					response = connectionRead.readLine();
 					if(response != null)
@@ -73,17 +80,24 @@ public class Admin {
 					}
 				}
 				
-			} catch (IOException e) {
+			}
+			catch (IOException e)
+			{
 				
 			}
 			
-		} catch (IOException e) {
+		}
+		catch (IOException e)
+		{
 			System.out.println("Exception while opening connection: " + e);
 			successState = false;
 		}
-		try{
+		try
+		{
 			connection.close();
-		}catch (IOException e) {
+		}
+		catch (IOException e)
+		{
 			System.out.println("Exception while closing connection: " + e);
 			successState = false;
 		}
@@ -93,7 +107,7 @@ public class Admin {
 	
 	//Gets a users data String from the server - Cal
 	//user is the desired users email address
-	protected void adminLoadPlayer(String user)
+	protected static void adminLoadPlayer(String user)
 	{
 		String emailHash = Integer.toString(user.hashCode());
 		Socket connection = null;
@@ -157,15 +171,88 @@ public class Admin {
 		return;
 	}
 	
-	protected boolean changeBalance(float newBalance){
+	protected static boolean changeBalance(float newBalance)
+	{
+		//Changes the balance of the loaded player
+		if(AsxGame.activePlayer != null)
+		{
+			AsxGame.activePlayer.balance = newBalance;
+			Game.saveActivePlayer(null);
+			return true;
+		}
+		//No player loaded in
 		return false;
 	}
 	
-	protected boolean addStock(String asxCode, int number){
+	protected static boolean addStock(String asxCode, int number)
+	{
+		//Adds a quantity of stock to the loaded player
+		if(AsxGame.activePlayer != null)
+		{
+			ArrayList<String> shareList= AsxGame.activePlayer.shares;
+			int count = 0;
+			for(String shareString:shareList)
+			{
+				String share = shareString.split(":")[0];
+				int qty = Integer.parseInt(shareString.split(":")[1]);
+				if(share.equals(asxCode)) //If user already owns a quantity in the share being added
+				{
+					qty += number;
+					shareString = share + ":" + qty;
+					shareList.set(count, shareString); //Replace old share data with new, updated share data
+					AsxGame.activePlayer.shares = shareList;
+					Game.saveActivePlayer(null);
+					return true;
+				}
+				count++;
+			}
+			//If code reaches this point, the user doesn't own any of the shares that are being added
+			String shareString = asxCode + ":" + number;
+			shareList.add(shareString);
+			Game.saveActivePlayer(null);
+			return true;
+		}
+		//No player loaded in
 		return false;
 	}
 	
-	protected boolean removeStock(String asxCode, int number){
+	protected static boolean removeStock(String asxCode, int number)
+	{
+		//Removes a quantity of stocks from the loaded player
+		if(AsxGame.activePlayer != null)
+		{
+			ArrayList<String> shareList= AsxGame.activePlayer.shares;
+			int count = 0;
+			for(String shareString:shareList)
+			{
+				String share = shareString.split(":")[0];
+				int qty = Integer.parseInt(shareString.split(":")[1]);
+				if(share.equals(asxCode)) //If user already owns a quantity in the share being added
+				{
+					qty -= number;
+					if(qty <= 0)
+					{
+						//User now owns 0 of stock being removed
+						shareList.remove(count);
+						AsxGame.activePlayer.shares = shareList;
+						Game.saveActivePlayer(null);
+						return true;
+					}
+					else
+					{
+						shareString = share + ":" + qty;
+						shareList.set(count, shareString); //Replace old share data with new, updated share data
+						AsxGame.activePlayer.shares = shareList;
+						Game.saveActivePlayer(null);
+						return true;
+					}
+				}
+				count++;
+			}
+			//If code reaches this point, the user doesn't own any of the shares that are being removed
+			return false;
+		}
+		//No player loaded in
 		return false;
 	}
 	
