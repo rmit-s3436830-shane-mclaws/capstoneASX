@@ -15,14 +15,14 @@ import java.util.ArrayList;
 
 import org.json.JSONObject;
 
-public class AsxGame {
+public class AsxGame
+{
 
 	//network connectivity constants
 	//Make these not plain text somehow, even just remove them from the version that gets uploaded to github
 	final public static String accessKey = creds.accessKey;
 	final public static String secretAccessKey = creds.secretAccessKey;
 	final public static String connectionName = "ec2-13-54-16-160.ap-southeast-2.compute.amazonaws.com"; //original code
-	//final public static String connectionName = "127.0.0.1";
 	final public static int portNumber = 28543;
 	
 	//asxStock data global variables
@@ -53,7 +53,8 @@ public class AsxGame {
 	public static UI_Leaderboard leadersWindow;
 	public static UI_ViewTransHist transHistWindow;
 			
-	public static void main(String[] args){		
+	public static void main(String[] args)
+	{		
 		System.out.println(
 				"Welcome to Programming Project 1 - Stock Market game \"Trading Wheels\"\n\n"
 				
@@ -71,31 +72,45 @@ public class AsxGame {
 		loadASXdata.start();
 		
 		//starts User Interface
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
+		EventQueue.invokeLater(new Runnable()
+		{
+			public void run()
+			{
+				try
+				{
 					loginWindow.frmLogin.setVisible(true);
-				} catch (Exception e) {
+				}
+				catch (Exception e)
+				{
 					e.printStackTrace();
 				}
 			}
 		});
 
 		//Command Line stuff
-		try{
+		try
+		{
 			System.in.read();
-		} catch(IOException e) {
+		}
+		catch(IOException e)
+		{
 			e.printStackTrace();
 		}
-		while (true){
-			if (activePlayerLoaded == false){
-				Menus.menuLogin();
-			} else if (activeAdminLoaded == true){
+		while (true)
+		{
+			if(activeAdminLoaded == true)
+			{
 				System.out.println("Admin loaded");
 				Menus.adminMenu();
-			} else {
+			}
+			else if(activePlayerLoaded == true)
+			{
 				System.out.println("Player loaded");
 				Menus.mainMenu();
+			}
+			else
+			{
+				Menus.menuLogin();
 			}
 		}
 	}
