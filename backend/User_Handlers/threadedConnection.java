@@ -27,6 +27,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -293,6 +294,63 @@ public class threadedConnection implements Runnable
 					}
 					fileData += "Requesting: " + line + "; Sender: " + sender + "; Recipient: " + recipient + "; Type: " + type + "\nContents: " + contents + "\n";
 					if(sendMessage(sender, recipient, type, contents))
+					{
+						fileData += "Returning: 200\n";
+						bytes = "200".getBytes("UTF-8");
+					}
+					else
+					{
+						fileData += "Returning: 500\n";
+						bytes = "500".getBytes("UTF-8");
+					}
+				}
+				else if(line.equals("getMessageList"))
+				{
+					String user = connectionRead.readLine();
+					fileData += "Requesting: " + line + "; User: " + user + "\n";
+					String gmlReturn = getMessageList(user);
+					if(gmlReturn != null)
+					{
+						if(gmlReturn.equals("0"))
+						{
+							fileData += "Returning: 204\n";
+							bytes = "204".getBytes("UTF-8");
+						}
+						else
+						{
+							fileData += "Returning: " + gmlReturn + "\n";
+							bytes = gmlReturn.getBytes("UTF-8");
+						}
+					}
+					else
+					{
+						fileData += "Returning: 500\n";
+						bytes = "500".getBytes("UTF-8");
+					}
+				}
+				else if(line.equals("getMessage"))
+				{
+					String user = connectionRead.readLine();
+					int mailID = Integer.parseInt(connectionRead.readLine());
+					fileData += "Requesting: " + line + "; User: " + user + "; Mail ID: " + mailID + "\n";
+					String message = getMessage(user, mailID);
+					if(message != null)
+					{
+						fileData += "Returning: " + message + "\n";
+						bytes = message.getBytes("UTF-8");
+					}
+					else
+					{
+						fileData += "Returning: 500\n";
+						bytes = "500".getBytes("UTF-8");
+					}
+				}
+				else if(line.equals("deleteMessage"))
+				{
+					String user = connectionRead.readLine();
+					int mailID = Integer.parseInt(connectionRead.readLine());
+					fileData += "Requesting: " + line + "; User: " + user + "; Mail ID: " + mailID + "\n";
+					if(deleteMessage(user, mailID))
 					{
 						fileData += "Returning: 200\n";
 						bytes = "200".getBytes("UTF-8");
@@ -1194,7 +1252,7 @@ public class threadedConnection implements Runnable
 				}
 			}
 			mailID++;
-			String mailPath = "data/"+ID+"/mailbox/"+mailID+".JSON";
+			String mailPath = "data/"+ID+"/mailbox/"+mailID+".json";
 			//Post mail to User
 			byte[] contentAsBytes = null;
 			try 
@@ -1229,5 +1287,152 @@ public class threadedConnection implements Runnable
 			return false;
 		}		
 		return true;
+	}
+	
+	private String getMessageList(String user)
+	{
+		/**Convert users emailHash to unique ID**/
+		String senderCreds = "creds/"+user+".rec";
+		String ID = "";
+		//Grab sender record into Buffered Reader Stream
+		S3Object object = s3Client.getObject(new GetObjectRequest(bucket, senderCreds));
+		InputStream objectData = object.getObjectContent();
+		BufferedReader reader = new BufferedReader(new InputStreamReader(objectData));
+		try
+		{
+			reader.readLine();  //Skip password hash line
+			ID = reader.readLine(); //Get recipients ID number
+		}
+		catch(IOException ie)
+		{
+			System.out.println("Exception when reading senders record file: " + ie);
+			fileData += "getMessageList: Exception when reading senders record file: " + ie + "\n";
+			return null;
+		}
+		//returns a list of message ID's
+		ObjectListing objectList = s3Client.listObjects(bucket, "data/"+ID+"/mailbox/");
+		List<S3ObjectSummary> summaries = objectList.getObjectSummaries();
+		ArrayList<Integer> mail = new ArrayList<Integer>();
+		int num = 0;
+		if(summaries.size() != 0)
+		{
+			if(objectList.isTruncated())
+			{
+				do
+				{
+					for(S3ObjectSummary summary : summaries)
+					{
+						String key = summary.getKey();
+						num = Integer.parseInt(key.split("[/.]")[3]);
+						mail.add(num);
+					}
+					objectList = s3Client.listNextBatchOfObjects(objectList);
+				}while (objectList.isTruncated());
+			}
+			else
+			{
+				for(S3ObjectSummary summary : summaries)
+				{
+					String key = summary.getKey();
+					num = Integer.parseInt(key.split("[/.]")[3]);
+					mail.add(num);
+				}
+			}
+			String result = "";
+			for(int id:mail)
+			{
+				result += id+",";
+			}
+			result = result.substring(0, result.length()-1);
+			return result;
+		}
+		else
+		{
+			return "0";
+		}
+	}
+	
+	private String getMessage(String user, int mailId)
+	{
+		/**Convert users emailHash to unique ID**/
+		String senderCreds = "creds/"+user+".rec";
+		String ID = "";
+		//Grab sender record into Buffered Reader Stream
+		S3Object object = s3Client.getObject(new GetObjectRequest(bucket, senderCreds));
+		InputStream objectData = object.getObjectContent();
+		BufferedReader reader = new BufferedReader(new InputStreamReader(objectData));
+		try
+		{
+			reader.readLine();  //Skip password hash line
+			ID = reader.readLine(); //Get recipients ID number
+		}
+		catch(IOException ie)
+		{
+			System.out.println("Exception when reading senders record file: " + ie);
+			fileData += "getMessage: Exception when reading senders record file: " + ie + "\n";
+			return null;
+		}
+		/**Open Mail Item**/
+		String mailPath = "data/" + ID + "/mailbox/" + mailId + ".json";
+		if(s3Client.doesObjectExist(bucket, mailPath))
+		{
+			object = s3Client.getObject(new GetObjectRequest(bucket, mailPath));
+			objectData = object.getObjectContent();
+			reader = new BufferedReader(new InputStreamReader(objectData));
+			String line = "";
+			try
+			{
+				line = reader.readLine();
+			}
+			catch(IOException ie)
+			{
+				System.out.println("Exception when reading senders data file: " + ie);
+				fileData += "getMessage: Exception when reading senders data file: " + ie + "\n";
+				return null;
+			}
+			JSONObject mailJSON = new JSONObject(line);
+			return mailJSON.toString();
+		}
+		else
+		{
+			System.out.println("Mail item does not exist!");
+			fileData += "getMessage: Mail item does not exist!\n";
+			return null;
+		}
+	}
+	
+	private boolean deleteMessage(String user, int mailId)
+	{
+		/**Convert users emailHash to unique ID**/
+		String userCreds = "creds/"+user+".rec";
+		String ID = "";
+		//Grab sender record into Buffered Reader Stream
+		S3Object object = s3Client.getObject(new GetObjectRequest(bucket, userCreds));
+		InputStream objectData = object.getObjectContent();
+		BufferedReader reader = new BufferedReader(new InputStreamReader(objectData));
+		try
+		{
+			reader.readLine();  //Skip password hash line
+			ID = reader.readLine(); //Get recipients ID number
+		}
+		catch(IOException ie)
+		{
+			System.out.println("Exception when reading senders record file: " + ie);
+			fileData += "getMessage: Exception when reading senders record file: " + ie + "\n";
+			return false;
+		}
+		/**Delete Mail Item**/
+		String mailPath = "data/" + ID + "/mailbox/" + mailId + ".json";
+		if(s3Client.doesObjectExist(bucket, mailPath))
+		{
+			s3Client.deleteObject(new DeleteObjectRequest(bucket, mailPath));
+			return true;
+		}
+		else
+		{
+			System.out.println("Mail item does not exist!");
+			fileData += "deleteMessage: Mail item does not exist!\n";
+			return false;
+		}
 	}
 }
