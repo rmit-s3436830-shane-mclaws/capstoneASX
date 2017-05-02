@@ -83,7 +83,7 @@ public class threadedConnection implements Runnable
 				{
 					String userEmail = connectionRead.readLine();
 					String passwdHash = connectionRead.readLine();
-					fileData += "Requesting: " + line + " : " + userEmail + " : " + passwdHash + "\n";
+					fileData += "Requesting: " + line + "; Email Hash: " + userEmail + "; Password Hash: " + passwdHash + "\n";
 					if((line = login(userEmail,passwdHash)) != null)
 					{
 						//System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: Valid Login Data");
@@ -102,7 +102,7 @@ public class threadedConnection implements Runnable
 				{
 					String emailHash = connectionRead.readLine();
 					String type = connectionRead.readLine();
-					fileData += "Requesting: " + line + " : " + emailHash + " : " + type + "\n";
+					fileData += "Requesting: " + line + "; Email Hash: " + emailHash + "; Type: " + type + "\n";
 					if((line = getHistory(emailHash,type)) != null)
 					{
 						//System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: Valid History Data");
@@ -123,7 +123,7 @@ public class threadedConnection implements Runnable
 					String newFName = connectionRead.readLine();
 					String newSName = connectionRead.readLine();
 					String newUEmail = connectionRead.readLine();
-					fileData += "Requesting: " + line + " : " + newPasswdHash + " : " + newFName + " : " + newSName + " : " + newUEmail +"\n";
+					fileData += "Requesting: " + line + "; Password Hash: " + newPasswdHash + "; First Name: " + newFName + "; Surname: " + newSName + "; Email: " + newUEmail +"\n";
 					if(register(newPasswdHash, newFName, newSName, newUEmail))
 					{
 						//System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 200");
@@ -142,7 +142,7 @@ public class threadedConnection implements Runnable
 					String userEmail = connectionRead.readLine();
 					String userJson = connectionRead.readLine();
 					String userTransaction = connectionRead.readLine();
-					fileData += "Requesting: " + line + " : " + userEmail + " : " + userJson + " : " + userTransaction + "\n";
+					fileData += "Requesting: " + line + "; Email Hash: " + userEmail + "\n JSON String: " + userJson + "\n Transaction String: " + userTransaction + "\n";
 					if(save(userEmail, userJson, userTransaction))
 					{
 						//System.out.println("[" + this.client.getRemoteSocketAddress() + "] Returning: 200");
@@ -160,7 +160,7 @@ public class threadedConnection implements Runnable
 				{
 					int topPos = Integer.parseInt(connectionRead.readLine());
 					int count = Integer.parseInt(connectionRead.readLine());
-					fileData += "Requesting: " + line + " : " + topPos + " : " + count +  "\n";
+					fileData += "Requesting: " + line + "; Top Position: " + topPos + "; Num: " + count +  "\n";
 					String leaders = "";
 					if((leaders = leaderboard(topPos, count)) != null)
 					{
@@ -179,7 +179,7 @@ public class threadedConnection implements Runnable
 				else if(line.equals("getUser"))
 				{
 					String emailHash = connectionRead.readLine();
-					fileData += "Requesting: " + line + " : " + emailHash + "\n";
+					fileData += "Requesting: " + line + "; Email Hash: " + emailHash + "\n";
 					String response = "";
 					if((response = getUsers(emailHash)) != null)
 					{
@@ -200,7 +200,7 @@ public class threadedConnection implements Runnable
 					String stockCode = connectionRead.readLine();
 					int startDate = Integer.parseInt(connectionRead.readLine());
 					int endDate = Integer.parseInt(connectionRead.readLine());
-					fileData += "Requesting: " + line + " : " + stockCode + " : " + startDate + " : " + endDate + "\n";
+					fileData += "Requesting: " + line + "; ASX Code: " + stockCode + "; Start Date: " + startDate + "; End Date: " + endDate + "\n";
 					String response = "";
 					if((response = stockHistory(stockCode, startDate, endDate)) != null)
 					{
@@ -221,7 +221,7 @@ public class threadedConnection implements Runnable
 					{
 						double flat = Double.parseDouble(connectionRead.readLine());
 						double percentage = Double.parseDouble(connectionRead.readLine());
-						fileData += "Requesting: " + line + " : " + flat + " : " + percentage + "\n";
+						fileData += "Requesting: " + line + "; Flat: " + flat + "; Percentage: " + percentage + "\n";
 						UserServer.flatBuyFee = flat;
 						UserServer.perBuyFee = percentage;
 						fileData += "Returning: 200\n";
@@ -239,7 +239,7 @@ public class threadedConnection implements Runnable
 					{
 						double flat = Double.parseDouble(connectionRead.readLine());
 						double percentage = Double.parseDouble(connectionRead.readLine());
-						fileData += "Requesting: " + line + " : " + flat + " : " + percentage + "\n";
+						fileData += "Requesting: " + line + "; Flat: " + flat + "; Percentage: " + percentage + "\n";
 						UserServer.flatSellFee = flat;
 						UserServer.perSellFee = percentage;
 						fileData += "Returning: 200\n";
@@ -276,6 +276,28 @@ public class threadedConnection implements Runnable
 						bytes = response.getBytes("UTF-8");
 					}
 					catch (NumberFormatException nfe)
+					{
+						fileData += "Returning: 500\n";
+						bytes = "500".getBytes("UTF-8");
+					}
+				}
+				else if(line.equals("sendMessage"))
+				{
+					String sender = connectionRead.readLine();
+					String recipient = connectionRead.readLine();
+					String type = connectionRead.readLine();
+					String contents = "";
+					while((line = connectionRead.readLine()) != null)
+					{
+						contents += line + "\n";
+					}
+					fileData += "Requesting: " + line + "; Sender: " + sender + "; Recipient: " + recipient + "; Type: " + type + "\nContents: " + contents + "\n";
+					if(sendMessage(sender, recipient, type, contents))
+					{
+						fileData += "Returning: 200\n";
+						bytes = "200".getBytes("UTF-8");
+					}
+					else
 					{
 						fileData += "Returning: 500\n";
 						bytes = "500".getBytes("UTF-8");
@@ -860,11 +882,10 @@ public class threadedConnection implements Runnable
 		if(emailHash.equals("*"))
 		{
 			List<Integer> users = new ArrayList<Integer>();
-			int count = 0;
 			ObjectListing objectList = s3Client.listObjects(bucket, "data/");
 			List<S3ObjectSummary> summaries = objectList.getObjectSummaries();
 			summaries.remove(0);
-			
+			int currID = 0;
 			//Get list of all userID's and put it into Integer List 'Users'
 			if(summaries.size() != 0)
 			{
@@ -874,11 +895,11 @@ public class threadedConnection implements Runnable
 					{
 						for(S3ObjectSummary summary : summaries)
 						{
-							if(count % 3 == 0)
+							currID = Integer.parseInt(summary.getKey().split("/")[1]);
+							if(users.indexOf(currID) == -1) //If element hasn't already been added to list add it to list
 							{
-								users.add(Integer.parseInt(summary.getKey().split("/")[1]));
+								users.add(currID);
 							}
-							count++;
 						}
 						objectList = s3Client.listNextBatchOfObjects(objectList);
 					}while (objectList.isTruncated());
@@ -887,11 +908,11 @@ public class threadedConnection implements Runnable
 				{
 					for(S3ObjectSummary summary : summaries)
 					{
-						if(count % 3 == 0)
+						currID = Integer.parseInt(summary.getKey().split("/")[1]);
+						if(users.indexOf(currID) == -1) //If element hasn't already been added to list add it to list
 						{
-							users.add(Integer.parseInt(summary.getKey().split("/")[1]));
+							users.add(currID);
 						}
-						count++;
 					}
 				}
 			}
@@ -1065,5 +1086,146 @@ public class threadedConnection implements Runnable
 			}
 		}
 		return dataReturn;
+	}
+	
+	private boolean sendMessage(String sender, String recipient, String type, String contents)
+	{
+		/**Convert senders emailHash to email address**/
+		String senderCreds = "creds/"+sender+".rec";
+		String ID = "";
+		String line = "";
+		//Grab sender record into Buffered Reader Stream
+		S3Object object = s3Client.getObject(new GetObjectRequest(bucket, senderCreds));
+		InputStream objectData = object.getObjectContent();
+		BufferedReader reader = new BufferedReader(new InputStreamReader(objectData));
+		try
+		{
+			reader.readLine();  //Skip password hash line
+			ID = reader.readLine(); //Get recipients ID number
+		}
+		catch(IOException ie)
+		{
+			System.out.println("Exception when reading senders record file: " + ie);
+			fileData += "sendMessage: Exception when reading senders record file: " + ie + "\n";
+			return false;
+		}
+		//Open senders data file and grab email field
+		String senderData = "data/"+ID+"/data.json";
+		object = s3Client.getObject(new GetObjectRequest(bucket, senderData));
+		objectData = object.getObjectContent();
+		reader = new BufferedReader(new InputStreamReader(objectData));
+		try
+		{
+			line = reader.readLine();
+		}
+		catch(IOException ie)
+		{
+			System.out.println("Exception when reading senders data file: " + ie);
+			fileData += "sendMessage: Exception when reading senders data file: " + ie + "\n";
+			return false;
+		}
+		JSONObject senderJSON = new JSONObject(line);
+		String senderEmail = senderJSON.getString("Email");
+		
+		/**Create JSON object to be posted in users mailbox**/
+		JSONObject newMail = new JSONObject();
+		newMail.put("Sender", senderEmail);
+		newMail.put("Type", type);
+		newMail.put("Contents", contents);
+		String mailEntry = newMail.toString();
+		
+		/**Find user to send mail to**/
+		//Get recipients unique ID from creds file
+		String recipientCreds = "creds/"+recipient+".rec";
+		if(s3Client.doesObjectExist(bucket, recipientCreds))
+		{
+			object = s3Client.getObject(new GetObjectRequest(bucket, recipientCreds));
+			objectData = object.getObjectContent();
+			reader = new BufferedReader(new InputStreamReader(objectData));
+			line = "";
+			try
+			{
+				reader.readLine();  //Skip password hash line
+				ID = reader.readLine(); //Get recipients ID number
+			}
+			catch(IOException ie)
+			{
+				System.out.println("Exception when reading recipients record file: " + ie);
+				fileData += "sendMessage: Exception when reading recipients record file: " + ie + "\n";
+				return false;
+			}
+			/**Post message to recipients mailbox folder**/
+			//Generate message number
+			ObjectListing objectList = s3Client.listObjects(bucket, "data/"+ID+"/mailbox/");
+			List<S3ObjectSummary> summaries = objectList.getObjectSummaries();
+			int mailID = 999; //minimum number for mailID is 1000
+			int comp;
+			if(summaries.size() != 0)
+			{
+				if(objectList.isTruncated())
+				{
+					do
+					{
+						for(S3ObjectSummary summary : summaries)
+						{
+							String key = summary.getKey();
+							comp = Integer.parseInt(key.split("[/.]")[3]);
+							if(comp > mailID)
+							{
+								mailID = comp;
+							}
+						}
+						objectList = s3Client.listNextBatchOfObjects(objectList);
+					}while (objectList.isTruncated());
+				}
+				else
+				{
+					for(S3ObjectSummary summary : summaries)
+					{
+						String key = summary.getKey();
+						comp = Integer.parseInt(key.split("[/.]")[3]);
+						if(comp > mailID)
+						{
+							mailID = comp;
+						}
+					}
+				}
+			}
+			mailID++;
+			String mailPath = "data/"+ID+"/mailbox/"+mailID+".JSON";
+			//Post mail to User
+			byte[] contentAsBytes = null;
+			try 
+			{
+				contentAsBytes = mailEntry.getBytes("UTF-8");
+			} 
+			catch (UnsupportedEncodingException uee)
+			{
+				System.out.println("Exception when converting mail JSON to bytes: " + uee);
+				fileData += "sendMessage: Exception when converting mail JSON to bytes: " + uee + "\n";
+				return false;
+			}
+			ByteArrayInputStream contentAsStream = new ByteArrayInputStream(contentAsBytes);
+			ObjectMetadata md = new ObjectMetadata();
+			md.setContentLength(contentAsBytes.length);
+			s3Client.putObject(new PutObjectRequest(bucket, mailPath, contentAsStream, md));
+			try
+			{
+				contentAsStream.close();
+			}
+			catch(IOException ie)
+			{
+				System.out.println("Exception when closing stream to S3: " + ie);
+				fileData += "sendMessage: Exception when closing stream to S3: " + ie + "\n";
+				return false;
+			}
+		}
+		else
+		{
+			System.out.println("Recipient does not exist!");
+			fileData += "sendMessage: Recipient does not exist!";
+			return false;
+		}		
+		return true;
 	}
 }
