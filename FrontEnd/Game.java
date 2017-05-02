@@ -664,8 +664,6 @@ public class Game
 		return successState;
 	}
 	
-	//these 2 used to calculate the brokers fee for buying and selling
-	// both return floats
 	public static float calcBrokersFeePurch(float transactionAmount)
 	{		
 		Socket connection = null;
@@ -739,11 +737,7 @@ public class Game
 	}
 	
 	public static float calcBrokersFeeSale(float transactionAmount)
-	{ 	//$50 + %0.25
-		/*float output = 50;
-		float fee = (float) (transactionAmount * 0.0025);
-		output += fee;
-		return output;*/
+	{ 
 		
 		Socket connection = null;
 		//default values if server can't be reached
@@ -839,6 +833,225 @@ public class Game
 				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
 				System.out.println("Attempt sendMessage...");
 				String sendString = "sendMessage\n"+senderHash+"\n"+recipientHash+"\n"+type+"\n"+message+"\n";
+				byte[] sendBytes = sendString.getBytes("UTF-8");
+				deflStream.write(sendBytes);
+				deflStream.finish();
+				deflStream.flush();
+				
+				while (true)
+				{
+					connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(connection.getInputStream())));
+					response = connectionRead.readLine();
+					if(response != null)
+					{
+						if(response.equals("200"))
+						{
+							System.out.println("200");
+							state = true;
+							break;
+						}
+						else
+						{
+							System.out.println("500: INTERNAL SERVER ERROR!");
+							state = false;
+							break;
+						}
+					}
+				}
+				
+			}
+			catch (IOException e)
+			{
+				System.out.println("Exception while reading connection response: " + e);
+				state = false;
+			}
+		}
+		catch (IOException e)
+		{
+			System.out.println("Exception while opening connection: " + e);
+			return false;
+		}
+		try
+		{
+			connection.close();
+		}
+		catch (IOException e)
+		{
+			System.out.println("Exception while closing connection: " + e);
+			return false;
+		}
+		return state;
+	}
+	
+	public static String getMessageList()
+	{
+		//convert currentPlayer email and recipient email to hash
+		String userHash = Integer.toString(AsxGame.activePlayer.email.hashCode());
+		Socket connection = null;
+		String messageList = "";
+		try
+		{
+			connection = new Socket(AsxGame.connectionName, AsxGame.portNumber);
+			
+			//Input Streams
+			BufferedReader connectionRead = null;
+			String response = null;
+			
+			//Output Streams
+			DeflaterOutputStream deflStream = null;
+			
+			try
+			{
+				//Call
+				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
+				System.out.println("Attempt getMessageList...");
+				String sendString = "getMessageList\n"+userHash;
+				byte[] sendBytes = sendString.getBytes("UTF-8");
+				deflStream.write(sendBytes);
+				deflStream.finish();
+				deflStream.flush();
+				
+				while (true)
+				{
+					connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(connection.getInputStream())));
+					response = connectionRead.readLine();
+					if(response != null)
+					{
+						if(!response.equals("500"))
+						{
+							messageList = response;
+							if(response.equals("204"))
+							{
+								System.out.println("Mailbox Empty!");
+							}
+							break;
+						}
+						else
+						{
+							System.out.println("500: INTERNAL SERVER ERROR!");
+							return null;
+						}
+					}
+				}
+				
+			}
+			catch (IOException e)
+			{
+				System.out.println("Exception while reading connection response: " + e);
+				return null;
+			}
+		}
+		catch (IOException e)
+		{
+			System.out.println("Exception while opening connection: " + e);
+			return null;
+		}
+		try
+		{
+			connection.close();
+		}
+		catch (IOException e)
+		{
+			System.out.println("Exception while closing connection: " + e);
+			return null;
+		}
+		return messageList;
+	}
+	
+	public static String getMessage(int messageID)
+	{
+		//convert currentPlayer email and recipient email to hash
+		String userHash = Integer.toString(AsxGame.activePlayer.email.hashCode());
+		Socket connection = null;
+		String message = "";
+		try
+		{
+			connection = new Socket(AsxGame.connectionName, AsxGame.portNumber);
+			
+			//Input Streams
+			BufferedReader connectionRead = null;
+			String response = null;
+			
+			//Output Streams
+			DeflaterOutputStream deflStream = null;
+			
+			try
+			{
+				//Call
+				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
+				System.out.println("Attempt getMessage...");
+				String sendString = "getMessage\n"+userHash+"\n"+messageID;
+				byte[] sendBytes = sendString.getBytes("UTF-8");
+				deflStream.write(sendBytes);
+				deflStream.finish();
+				deflStream.flush();
+				
+				while (true)
+				{
+					connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(connection.getInputStream())));
+					response = connectionRead.readLine();
+					if(response != null)
+					{
+						if(!response.equals("500"))
+						{
+							message = response;
+							break;
+						}
+						else
+						{
+							System.out.println("500: INTERNAL SERVER ERROR!");
+							return null;
+						}
+					}
+				}
+				
+			}
+			catch (IOException e)
+			{
+				System.out.println("Exception while reading connection response: " + e);
+				return null;
+			}
+		}
+		catch (IOException e)
+		{
+			System.out.println("Exception while opening connection: " + e);
+			return null;
+		}
+		try
+		{
+			connection.close();
+		}
+		catch (IOException e)
+		{
+			System.out.println("Exception while closing connection: " + e);
+			return null;
+		}
+		return message;
+	}
+	
+	public static boolean deleteMessage(int messageID)
+	{
+		//convert currentPlayer email and recipient email to hash
+		String userHash = Integer.toString(AsxGame.activePlayer.email.hashCode());
+		Socket connection = null;
+		boolean state = false;
+		try
+		{
+			connection = new Socket(AsxGame.connectionName, AsxGame.portNumber);
+			
+			//Input Streams
+			BufferedReader connectionRead = null;
+			String response = null;
+			
+			//Output Streams
+			DeflaterOutputStream deflStream = null;
+			
+			try
+			{
+				//Call
+				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
+				System.out.println("Attempt deleteMessage...");
+				String sendString = "deleteMessage\n"+userHash+"\n"+messageID+"\n";
 				byte[] sendBytes = sendString.getBytes("UTF-8");
 				deflStream.write(sendBytes);
 				deflStream.finish();
