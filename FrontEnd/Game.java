@@ -21,8 +21,6 @@ import org.json.*;
 
 public class Game
 {
-	float buyersFee = 50;
-	
 	// function for buying stocks
 	// pass an asxCode and number of stocks to buy and it will
 	// add those stocks to the player, calculate and subtract money from balance
@@ -669,20 +667,150 @@ public class Game
 	//these 2 used to calculate the brokers fee for buying and selling
 	// both return floats
 	public static float calcBrokersFeePurch(float transactionAmount)
-	{ 	//$50 + %1
-		float output = 50;
-		float fee = (float) (transactionAmount * 0.01);
-		output += fee;
-		return output;
+	{		
+		Socket connection = null;
+		//default values if server can't be reached
+		float flat = 50;
+		float percentage = 1;
+		try{
+			connection = new Socket(AsxGame.connectionName, AsxGame.portNumber);
+			
+			//Input Streams
+			BufferedReader connectionRead = null;
+			String response = null;
+			
+    		//Output Streams
+			DeflaterOutputStream deflStream = null;
+			
+			try
+			{
+				// call
+				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
+				System.out.println("Attempt getBuy...");
+				String sendString = "getBuy\n";
+				byte[] sendBytes = sendString.getBytes("UTF-8");
+				deflStream.write(sendBytes);
+				deflStream.finish();
+				deflStream.flush();
+				
+				while (true)
+				{
+					connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(connection.getInputStream())));
+					response = connectionRead.readLine();
+					if(response != null)
+					{
+						if(!response.equals("500"))
+						{
+							flat = Float.parseFloat(connectionRead.readLine());
+							percentage = Float.parseFloat(connectionRead.readLine());
+							break;
+						}
+						else
+						{
+							System.out.println("500: INTERNAL SERVER ERROR!");
+							break;
+						}
+					}
+				}
+				
+			}
+			catch (IOException e)
+			{
+				System.out.println("Exception while reading connection response: " + e);
+			}
+		}
+		catch (IOException e)
+		{
+			System.out.println("Exception while opening connection: " + e);
+		}
+		try
+		{
+			connection.close();
+		}
+		catch (IOException e)
+		{
+			System.out.println("Exception while closing connection: " + e);
+		}
+		
+		float purchaseFee = transactionAmount * percentage/100;
+		purchaseFee += flat;
+		return purchaseFee;
 	}
 	
 	public static float calcBrokersFeeSale(float transactionAmount)
-	{ 	//$50 + %1
-		float output = 50;
+	{ 	//$50 + %0.25
+		/*float output = 50;
 		float fee = (float) (transactionAmount * 0.0025);
 		output += fee;
-		return output;
+		return output;*/
+		
+		Socket connection = null;
+		//default values if server can't be reached
+		float flat = 50;
+		float percentage = 0.25f;
+		try{
+			connection = new Socket(AsxGame.connectionName, AsxGame.portNumber);
+			
+			//Input Streams
+			BufferedReader connectionRead = null;
+			String response = null;
+			
+    		//Output Streams
+			DeflaterOutputStream deflStream = null;
+			
+			try
+			{
+				// call
+				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
+				System.out.println("Attempt getSell...");
+				String sendString = "getSell\n";
+				byte[] sendBytes = sendString.getBytes("UTF-8");
+				deflStream.write(sendBytes);
+				deflStream.finish();
+				deflStream.flush();
+				
+				while (true)
+				{
+					connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(connection.getInputStream())));
+					response = connectionRead.readLine();
+					if(response != null)
+					{
+						if(!response.equals("500"))
+						{
+							flat = Float.parseFloat(connectionRead.readLine());
+							percentage = Float.parseFloat(connectionRead.readLine());
+							break;
+						}
+						else
+						{
+							System.out.println("500: INTERNAL SERVER ERROR!");
+							break;
+						}
+					}
+				}
+				
+			}
+			catch (IOException e)
+			{
+				System.out.println("Exception while reading connection response: " + e);
+			}
+		}
+		catch (IOException e)
+		{
+			System.out.println("Exception while opening connection: " + e);
+		}
+		try
+		{
+			connection.close();
+		}
+		catch (IOException e)
+		{
+			System.out.println("Exception while closing connection: " + e);
+		}
+		
+		float saleFee = transactionAmount * percentage/100;
+		saleFee += flat;
+		return saleFee;
 	}
-	
 }
 
