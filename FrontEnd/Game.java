@@ -672,7 +672,8 @@ public class Game
 		//default values if server can't be reached
 		float flat = 50;
 		float percentage = 1;
-		try{
+		try
+		{
 			connection = new Socket(AsxGame.connectionName, AsxGame.portNumber);
 			
 			//Input Streams
@@ -748,7 +749,8 @@ public class Game
 		//default values if server can't be reached
 		float flat = 50;
 		float percentage = 0.25f;
-		try{
+		try
+		{
 			connection = new Socket(AsxGame.connectionName, AsxGame.portNumber);
 			
 			//Input Streams
@@ -811,6 +813,80 @@ public class Game
 		float saleFee = transactionAmount * percentage/100;
 		saleFee += flat;
 		return saleFee;
+	}
+	
+	public static boolean sendMessage(String recipient, String type, String message)
+	{
+		//convert currentPlayer email and recipient email to hash
+		String senderHash = Integer.toString(AsxGame.activePlayer.email.hashCode());
+		String recipientHash = Integer.toString(recipient.hashCode());
+		Socket connection = null;
+		boolean state = false;
+		try
+		{
+			connection = new Socket(AsxGame.connectionName, AsxGame.portNumber);
+			
+			//Input Streams
+			BufferedReader connectionRead = null;
+			String response = null;
+			
+			//Output Streams
+			DeflaterOutputStream deflStream = null;
+			
+			try
+			{
+				// call
+				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
+				System.out.println("Attempt sendMessage...");
+				String sendString = "sendMessage\n"+senderHash+"\n"+recipientHash+"\n"+type+"\n"+message+"\n";
+				byte[] sendBytes = sendString.getBytes("UTF-8");
+				deflStream.write(sendBytes);
+				deflStream.finish();
+				deflStream.flush();
+				
+				while (true)
+				{
+					connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(connection.getInputStream())));
+					response = connectionRead.readLine();
+					if(response != null)
+					{
+						if(response.equals("200"))
+						{
+							System.out.println("200");
+							state = true;
+							break;
+						}
+						else
+						{
+							System.out.println("500: INTERNAL SERVER ERROR!");
+							state = false;
+							break;
+						}
+					}
+				}
+				
+			}
+			catch (IOException e)
+			{
+				System.out.println("Exception while reading connection response: " + e);
+				state = false;
+			}
+		}
+		catch (IOException e)
+		{
+			System.out.println("Exception while opening connection: " + e);
+			return false;
+		}
+		try
+		{
+			connection.close();
+		}
+		catch (IOException e)
+		{
+			System.out.println("Exception while closing connection: " + e);
+			return false;
+		}
+		return state;
 	}
 }
 
