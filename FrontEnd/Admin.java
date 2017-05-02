@@ -71,7 +71,8 @@ public class Admin
 					{
 						if(!response.equals("500"))
 						{
-							while (response != null){
+							while (response != null)
+							{
 								playerList.add(response);
 								response = connectionRead.readLine();
 							}
@@ -89,9 +90,8 @@ public class Admin
 			}
 			catch (IOException e)
 			{
-				
+				System.out.println("Exception while reading connection response: " + e);
 			}
-			
 		}
 		catch (IOException e)
 		{
@@ -262,5 +262,122 @@ public class Admin
 		return false;
 	}
 	
+	protected static boolean setBuyFee(float flat, float percentage)
+	{
+		boolean successState = false;
+		Socket connection = null;
+		try
+		{
+			connection = new Socket(AsxGame.connectionName, AsxGame.portNumber);
+			
+			//Input Streams
+			BufferedReader connectionRead = null;
+			String response = null;
+			
+    		//Output Streams
+			DeflaterOutputStream deflStream = null;
+			
+			try
+			{
+				// call
+				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
+				System.out.println("Attempt setBuy...");
+				String sendString = "setBuy\n"+flat+"\n"+percentage;
+				byte[] sendBytes = sendString.getBytes("UTF-8");
+				deflStream.write(sendBytes);
+				deflStream.finish();
+				deflStream.flush();
+				while (true)
+				{
+					connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(connection.getInputStream())));
+					response = connectionRead.readLine();
+					System.out.println(response);
+					if(response != null)
+					{
+						if(response.equals("200"))
+						{
+							successState = true;
+							break;
+						}
+						else
+						{
+							System.out.println("500: INTERNAL SERVER ERROR!");
+							successState = false;
+							break;
+						}
+					}
+				}
+				
+			} 
+			catch (IOException e) 
+			{
+				System.out.println("Exception while communicating with server: " + e);
+			}
+		} 
+		catch (IOException e) 
+		{
+			System.out.println("Exception while opening connection: " + e);
+		}
+		return successState;
+	}
+	
+	protected static boolean setSellFee(float flat, float percentage)
+	{
+		boolean successState = false;
+		Socket connection = null;
+		try
+		{
+			connection = new Socket(AsxGame.connectionName, AsxGame.portNumber);
+			
+			//Input Streams
+			BufferedReader connectionRead = null;
+			String response = null;
+			
+    		//Output Streams
+			DeflaterOutputStream deflStream = null;
+			
+			try
+			{
+				// call
+				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
+				System.out.println("Attempt setSell...");
+				String sendString = "setSell\n"+flat+"\n"+percentage;
+				byte[] sendBytes = sendString.getBytes("UTF-8");
+				deflStream.write(sendBytes);
+				deflStream.finish();
+				deflStream.flush();
+				while (true)
+				{
+					connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(connection.getInputStream())));
+					response = connectionRead.readLine();
+					System.out.println(response);
+					if(response != null)
+					{
+						if(response.equals("200"))
+						{
+							successState = true;
+							break;
+						}
+						else
+						{
+							System.out.println("500: INTERNAL SERVER ERROR!");
+							successState = false;
+							break;
+						}
+					}
+				}
+				
+			} 
+			catch (IOException e) 
+			{
+				System.out.println("Exception while communicating with server: " + e);
+			}
+		} 
+		catch (IOException e) 
+		{
+			System.out.println("Exception while opening connection: " + e);
+		}
+		return successState;
+	}
 	
 }
