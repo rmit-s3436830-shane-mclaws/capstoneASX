@@ -215,6 +215,72 @@ public class threadedConnection implements Runnable
 						bytes = "500".getBytes("UTF-8");
 					}
 				}
+				else if(line.equals("setBuy"))
+				{
+					try
+					{
+						double flat = Double.parseDouble(connectionRead.readLine());
+						double percentage = Double.parseDouble(connectionRead.readLine());
+						fileData += "Requesting: " + line + " : " + flat + " : " + percentage + "\n";
+						UserServer.flatBuyFee = flat;
+						UserServer.perBuyFee = percentage;
+						fileData += "Returning: 200\n";
+						bytes = "200".getBytes("UTF-8");
+					}
+					catch (NumberFormatException nfe)
+					{
+						fileData += "Returning: 400\n";
+						bytes = "400".getBytes("UTF-8");
+					}
+				}
+				else if(line.equals("setSell"))
+				{
+					try
+					{
+						double flat = Double.parseDouble(connectionRead.readLine());
+						double percentage = Double.parseDouble(connectionRead.readLine());
+						fileData += "Requesting: " + line + " : " + flat + " : " + percentage + "\n";
+						UserServer.flatSellFee = flat;
+						UserServer.perSellFee = percentage;
+						fileData += "Returning: 200\n";
+						bytes = "200".getBytes("UTF-8");
+					}
+					catch (NumberFormatException nfe)
+					{
+						fileData += "Returning: 400\n";
+						bytes = "400".getBytes("UTF-8");
+					}
+				}
+				else if(line.equals("getBuy"))
+				{
+					try
+					{
+						fileData += "Requesting: " + line + "\n";
+						String response = "200\n" + UserServer.flatBuyFee + "\n" + UserServer.perBuyFee + "\n";
+						fileData += "Returning: " + response;
+						bytes = response.getBytes("UTF-8");
+					}
+					catch (NumberFormatException nfe)
+					{
+						fileData += "Returning: 500\n";
+						bytes = "500".getBytes("UTF-8");
+					}
+				}
+				else if(line.equals("getSell"))
+				{
+					try
+					{
+						fileData += "Requesting: " + line + "\n";
+						String response = "200\n" + UserServer.flatSellFee + "\n" + UserServer.perSellFee + "\n";
+						fileData += "Returning: " + response;
+						bytes = response.getBytes("UTF-8");
+					}
+					catch (NumberFormatException nfe)
+					{
+						fileData += "Returning: 500\n";
+						bytes = "500".getBytes("UTF-8");
+					}
+				}
 				else
 				{
 					while((line = connectionRead.readLine()) != null)
