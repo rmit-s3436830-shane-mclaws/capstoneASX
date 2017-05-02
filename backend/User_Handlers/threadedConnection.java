@@ -58,7 +58,9 @@ public class threadedConnection implements Runnable
 		Date dateobj = new Date();
 		threadedConnection.date = df.format(dateobj);
 		threadedConnection.time = tf.format(dateobj);
-		threadedConnection.fileName = "serverLogs/" + date + "-" + time + ".log";
+		String directory = "serverLogs/" + date + "/";
+		new File(directory).mkdirs();
+		threadedConnection.fileName = "serverLogs/" + date + "/" + time + ".log";
 	}
 	
 	public void run()
