@@ -42,7 +42,8 @@ public class Admin
 	{
 		Socket connection = null;
 		boolean successState = false;
-		try{
+		try
+		{
 			connection = new Socket(AsxGame.connectionName, AsxGame.portNumber);
 			
 			//Input Streams
@@ -77,6 +78,7 @@ public class Admin
 								response = connectionRead.readLine();
 							}
 							successState = true;
+							break;
 						}
 						else
 						{
@@ -378,6 +380,21 @@ public class Admin
 			System.out.println("Exception while opening connection: " + e);
 		}
 		return successState;
+	}
+	
+	protected static void messageAllUsers(String type, String message)
+	{
+		if(playerList.isEmpty())
+		{
+			getUserList();
+		}
+		for(String player:playerList)
+		{
+			JSONObject playerJSON = new JSONObject(player);
+			String email = playerJSON.getString("Email");
+			System.out.println("Emailing: " + email);
+			Game.sendMessage(AsxGame.activeAdmin.email, email, type, message);
+		}
 	}
 	
 }
