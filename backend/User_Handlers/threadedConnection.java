@@ -41,8 +41,8 @@ public class threadedConnection implements Runnable
 	private AWSCredentials credentials;
 	private static AmazonS3 s3Client;
 	private static final String bucket = "asx-user-store";
-	private static String AccessKey = "REDACTED";
-	private static String SecretKey = "REDACTED";
+	private static String AccessKey = creds.accessKey;
+	private static String SecretKey = creds.secretAccessKey;
 	private static String fileData;
 	
 	public threadedConnection(Socket cSocket)
@@ -1132,6 +1132,8 @@ public class threadedConnection implements Runnable
 		newMail.put("Sender", senderEmail);
 		newMail.put("Type", type);
 		newMail.put("Contents", contents);
+		newMail.put("Date", threadedConnection.date);
+		newMail.put("Time", threadedConnection.time);
 		String mailEntry = newMail.toString();
 		
 		/**Find user to send mail to**/
