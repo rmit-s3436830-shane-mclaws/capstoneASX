@@ -2,6 +2,8 @@ package com.amazonaws.samples;
 
 import java.util.*;
 
+import org.json.JSONObject;
+
 //temp control file while the project is console operated
 public class Menus
 {	
@@ -181,7 +183,10 @@ public class Menus
 			System.out.println("	5. Save player to server");
 			System.out.println("	6. Get Leaderboard");
 	//		System.out.println("	L. Load stock list (only a select few stocks available currently");
-			System.out.println("	9. Logout (NOTE: THIS DOES NOT SAVE YOUR PLAYER CURRENTLY!");
+			System.out.println("	7. Send Message");
+			System.out.println("	8. View a message");
+			System.out.println("	9. Delete a message");
+			System.out.println("	10. Logout (NOTE: THIS DOES NOT SAVE YOUR PLAYER CURRENTLY!");
 			System.out.println("	0. Exit");
 			
 			input = consoleRead.next();
@@ -218,7 +223,54 @@ public class Menus
 	//			case "L":
 	//				Utilities.loadTempStockList();
 	//				break;
-				case 9: 		//logout
+				case 7: //Send Message
+					System.out.println("Enter recipient then message");
+					String recipient = consoleRead.next();
+					String message = consoleRead.next();
+					Game.sendMessage(null, recipient, "message", message);
+					break;
+				case 8: //View Message
+					System.out.println("Retrieving list of messages");
+					String messageList = Game.getMessageList();
+					if(!messageList.equals("204") && messageList != null)
+					{
+						String messageID[] = messageList.split(",");
+						System.out.println("Messages available:");
+						for(String id:messageID)
+						{
+							System.out.println(id);
+						}
+						System.out.println("Please enter a message ID to view...");
+						int mID = Integer.parseInt(consoleRead.next());
+						String mailItem = Game.getMessage(mID);
+						if(mailItem != null)
+						{
+							JSONObject mailJSON = new JSONObject(mailItem);
+							System.out.println("Received: " + mailJSON.getString("Date") + "-" + mailJSON.getString("Time"));
+							System.out.println("Message from: " + mailJSON.getString("Sender"));
+							System.out.println("Message type: " + mailJSON.getString("Type"));
+							System.out.println("Message contents: " + mailJSON.getString("Contents"));
+						}
+					}
+					break;
+				case 9:
+					System.out.println("Retrieving list of messages");
+					messageList = Game.getMessageList();
+					if(!messageList.equals("204") && messageList != null)
+					{
+						String messageID[] = messageList.split(",");
+						System.out.println("Messages available:");
+						for(String id:messageID)
+						{
+							System.out.println(id);
+						}
+						System.out.println("Please enter a message ID to delete...");
+						int mID = Integer.parseInt(consoleRead.next());
+						Game.deleteMessage(mID);
+						System.out.println("Message deleted");
+					}
+					break;
+				case 10: 		//logout
 					AsxGame.activePlayer = null;
 					AsxGame.activePlayerLoaded = false;
 					return;					
@@ -245,6 +297,7 @@ public class Menus
 			System.out.println("	9. Logout (NOTE: THIS DOES NOT SAVE YOUR PLAYER CURRENTLY!");
 			System.out.println("	10. Set brokers fee on purchases");
 			System.out.println("	11. Set brokers fee on sales");
+			System.out.println("	12. Message all users");
 			System.out.println("	0. Exit");
 			
 			input = consoleRead.next();
@@ -294,19 +347,24 @@ public class Menus
 					AsxGame.activeAdmin = null;
 					AsxGame.activePlayer = null;
 					AsxGame.activePlayerLoaded = false;
-					return;
+					break;
 				case 10: 		//set buy fees
 					System.out.println("Enter flat fee then percentage fee");
 					float flat = Float.parseFloat(consoleRead.next());
 					float per = Float.parseFloat(consoleRead.next());
 					Admin.setBuyFee(flat, per);
-					return;
+					break;
 				case 11: 		//set sell fees
 					System.out.println("Enter flat fee then percentage fee");
 					flat = Float.parseFloat(consoleRead.next());
 					per = Float.parseFloat(consoleRead.next());
 					Admin.setSellFee(flat, per);
-					return;
+					break;
+				case 12:
+					System.out.println("Enter message to send to all users");
+					String message = consoleRead.next();
+					Admin.messageAllUsers("message", message);
+					break;
 				case 0: 		//exit
 					System.exit(0);
 					break;
