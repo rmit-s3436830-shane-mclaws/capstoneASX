@@ -186,7 +186,9 @@ public class Menus
 			System.out.println("	7. Send Message");
 			System.out.println("	8. View a message");
 			System.out.println("	9. Delete a message");
-			System.out.println("	10. Logout (NOTE: THIS DOES NOT SAVE YOUR PLAYER CURRENTLY!");
+			System.out.println("	10. View list of unread messages");
+			System.out.println("	11. Mark message as unread");
+			System.out.println("	20. Logout (NOTE: THIS DOES NOT SAVE YOUR PLAYER CURRENTLY!");
 			System.out.println("	0. Exit");
 			
 			input = consoleRead.next();
@@ -270,7 +272,37 @@ public class Menus
 						System.out.println("Message deleted");
 					}
 					break;
-				case 10: 		//logout
+				case 10:
+					System.out.println("Retrieving list of unread messages");
+					messageList = Game.getUnreadMessages();
+					if(messageList != null)
+					{
+						String messageID[] = messageList.split(",");
+						System.out.println("Unread Messages:");
+						for(String id:messageID)
+						{
+							System.out.println(id);
+						}
+					}
+					break;
+				case 11:
+					System.out.println("Retrieving list of messages");
+					messageList = Game.getMessageList();
+					if(!messageList.equals("204") && messageList != null)
+					{
+						String messageID[] = messageList.split(",");
+						System.out.println("Messages available:");
+						for(String id:messageID)
+						{
+							System.out.println(id);
+						}
+						System.out.println("Please enter a message ID to delete...");
+						int mID = Integer.parseInt(consoleRead.next());
+						Game.markUnread(mID);
+						System.out.println("Message deleted");
+					}
+					break;
+				case 20: 		//logout
 					AsxGame.activePlayer = null;
 					AsxGame.activePlayerLoaded = false;
 					return;					
