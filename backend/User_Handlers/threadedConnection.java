@@ -294,7 +294,7 @@ public class threadedConnection implements Runnable
 					{
 						contents += line + "\n";
 					}
-					fileData += "Requesting: " + line + "; Sender: " + sender + "; Recipient: " + recipient + "; Type: " + type + "\nContents: " + contents + "\n";
+					fileData += "Requesting: sendMessage; Sender: " + sender + "; Recipient: " + recipient + "; Type: " + type + "\nContents: " + contents + "\n";
 					if(sendMessage(sender, recipient, type, contents))
 					{
 						fileData += "Returning: 200\n";
@@ -382,7 +382,7 @@ public class threadedConnection implements Runnable
 				{
 					String user = connectionRead.readLine();
 					int mailID = Integer.parseInt(connectionRead.readLine());
-					fileData += "Requesting: " + line + "; User: " + user + "\n";
+					fileData += "Requesting: " + line + "; User: " + user + "; mailID: " + mailID +"\n";
 					if(markMailUnread(user, mailID))
 					{
 						fileData += "Returning: 200\n";
@@ -628,7 +628,11 @@ public class threadedConnection implements Runnable
 		String file = "";
 		
 		/**Convert users emailHash to unique ID**/
-		String userID = userHashToID(emailHash, "getHistory");
+		String userID;
+		if((userID = userHashToID(emailHash, "getHistory")) == null)
+		{
+			return null;
+		}
 		
 		if(type.equals("transaction"))
 		{
@@ -770,7 +774,12 @@ public class threadedConnection implements Runnable
 	private static boolean save(String emailHash, String newJSON, String transaction)
 	{
 		/**Convert users emailHash to unique ID**/
-		String userID = userHashToID(emailHash, "getHistory");
+		/**Convert users emailHash to unique ID**/
+		String userID;
+		if((userID = userHashToID(emailHash, "getHistory")) == null)
+		{
+			return false;
+		}
 		String userData = "data/"+userID+"/data.json";
 		String dataString = newJSON + "\n";
 		
@@ -969,23 +978,13 @@ public class threadedConnection implements Runnable
 			return userList;
 		}
 		else //return full data + transaction history string for a single user
-		{
-			//Define known variables
-			String userCreds = "creds/"+emailHash+".rec";
-			
-			//Get User ID Number from email
-			if(!s3Client.doesObjectExist(bucket, userCreds))
-			{
-				System.out.println("User does not exist!");
-				fileData += "getUsers: User does not exist!\n";
-				return null;
-			}
-			String storedCreds;
-			if((storedCreds = readFromS3(bucket, userCreds, "login")) == null)
+		{		
+			/**Convert users emailHash to unique ID**/
+			String userID;
+			if((userID = userHashToID(emailHash, "getHistory")) == null)
 			{
 				return null;
 			}
-			String userID = storedCreds.split("\n")[1];
 			
 			String userData = "data/"+userID+"/data.json";
 			String transHistory = "data/"+userID+"/purchaseHistory.json";
@@ -1079,7 +1078,11 @@ public class threadedConnection implements Runnable
 	private boolean sendMessage(String senderEmailHash, String recipientEmailHash, String type, String contents)
 	{
 		/**Convert senders emailHash to unique ID**/
-		String senderID = userHashToID(senderEmailHash, "getHistory");
+		String senderID;
+		if((senderID = userHashToID(senderEmailHash, "getHistory")) == null)
+		{
+			return false;
+		}
 		String senderData;
 		//Open senders data file and grab email field
 		String senderDataFile = "data/"+senderID+"/data.json";
@@ -1101,7 +1104,11 @@ public class threadedConnection implements Runnable
 		String mailEntry = newMail.toString();
 		
 		/**Convert recipients emailHash to unique ID**/
-		String recipientID = userHashToID(recipientEmailHash, "getHistory");
+		String recipientID;
+		if((recipientID = userHashToID(recipientEmailHash, "getHistory")) == null)
+		{
+			return false;
+		}
 		/***************************************************************************************/
 			
 		/**Post message to recipients mailbox folder**/
@@ -1158,7 +1165,11 @@ public class threadedConnection implements Runnable
 	private String getMessageList(String emailHash)
 	{
 		/**Convert users emailHash to unique ID**/
-		String userID = userHashToID(emailHash, "getHistory");
+		String userID;
+		if((userID = userHashToID(emailHash, "getHistory")) == null)
+		{
+			return null;
+		}
 		
 		//returns a list of message ID's
 		ObjectListing objectList = s3Client.listObjects(bucket, "data/"+userID+"/mailbox/");
@@ -1206,7 +1217,11 @@ public class threadedConnection implements Runnable
 	private String getMessage(String emailHash, int mailId)
 	{
 		/**Convert users emailHash to unique ID**/
-		String userID = userHashToID(emailHash, "getHistory");
+		String userID;
+		if((userID = userHashToID(emailHash, "getHistory")) == null)
+		{
+			return null;
+		}
 		
 		/**Mark mail item as read and reupload**/
 		String mailPath = "data/" + userID + "/mailbox/" + mailId + ".json";
@@ -1236,7 +1251,11 @@ public class threadedConnection implements Runnable
 	private boolean deleteMessage(String emailHash, int mailId)
 	{
 		/**Convert users emailHash to unique ID**/
-		String userID = userHashToID(emailHash, "getHistory");
+		String userID;
+		if((userID = userHashToID(emailHash, "getHistory")) == null)
+		{
+			return false;
+		}
 		
 		/**Delete Mail Item**/
 		String mailPath = "data/" + userID + "/mailbox/" + mailId + ".json";
@@ -1254,7 +1273,11 @@ public class threadedConnection implements Runnable
 	private String getUnreadMail(String emailHash)
 	{
 		/**Convert users emailHash to unique ID**/
-		String userID = userHashToID(emailHash, "getHistory");
+		String userID;
+		if((userID = userHashToID(emailHash, "getHistory")) == null)
+		{
+			return null;
+		}
 		
 		/**Get contents of unreadMail.csv for user**/
 		//returns a list of message ID's
@@ -1302,7 +1325,20 @@ public class threadedConnection implements Runnable
 					unreadMailID.add(mailId);
 				}
 			}
-			return unreadMailID.toString();
+			if(!unreadMailID.isEmpty()) //If list has elements in it
+			{
+				String result = "";
+				for(int id:unreadMailID)
+				{
+					result += id+",";
+				}
+				result = result.substring(0, result.length()-1);
+				return result;
+			}
+			else //If list is empty
+			{
+				return "0";
+			}
 		}
 		else //User has no mail
 		{
@@ -1313,7 +1349,11 @@ public class threadedConnection implements Runnable
 	private boolean markMailUnread(String emailHash, int mailId)
 	{
 		/**Convert users emailHash to unique ID**/
-		String userID = userHashToID(emailHash, "getHistory");
+		String userID;
+		if((userID = userHashToID(emailHash, "getHistory")) == null)
+		{
+			return false;
+		}
 		
 		/**Mark mail item as unread and reupload**/
 		String mailPath = "data/" + userID + "/mailbox/" + mailId + ".json";
