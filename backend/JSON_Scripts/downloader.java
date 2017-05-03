@@ -31,11 +31,11 @@ public class downloader implements Runnable
 	private String[] companyList;
 	private AWSCredentials credentials;
 	private static AmazonS3 s3Client;
-	private static final String bucket = "asx-json-host";
+	private static final String bucket = manager.bucket;
 	private static String date;
 	private static String time;
-	private static String AccessKey = "REDACTED";
-	private static String SecretKey = "REDACTED";
+	private static String AccessKey = manager.AccessKey;
+	private static String SecretKey = manager.SecretKey;
 	
 	public downloader(String[] companies)
 	{
@@ -77,6 +77,7 @@ public class downloader implements Runnable
 					if(!checkAlive.get("Name").toString().equals("N/A")) //If the company is still alive, then...
 					{
 						//Upload json object to amazon S3
+						manager.stockCodes.add(code); //Add stock code to stock code list
 						fileName = code + "/" + downloader.date + ".json";
 						if(!s3Client.doesObjectExist(bucket, fileName))
 						{
