@@ -10,22 +10,14 @@
 
 package com.amazonaws.samples;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.Socket;
-import java.util.zip.InflaterInputStream;
-import java.util.zip.DeflaterOutputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+
 
 import org.json.*;
 
 public class Game
 {
-	// function for buying stocks
-	// pass an asxCode and number of stocks to buy and it will
-	// add those stocks to the player, calculate and subtract money from balance
-	// and add the transaction to the players history
-	// returns TRUE or FALSE depending on if it could successfully buy the stocks
 	protected static boolean buyStocks(String asxCode, int number)
 	{
 		int index;
@@ -63,10 +55,6 @@ public class Game
 		return false;		
 	}
 	
-	// function for selling stocks
-	// pass an asxCode and number of stocks to sell and it will
-	// remove those stocks from the player, calculate and add money to balance
-	// and add the transaction to the players history
 	protected static boolean sellStocks(String asxCode, int number)
 	{
 		int index;
@@ -101,340 +89,104 @@ public class Game
 		return false;
 	}
 	
-	// login function
-	// pass in string and password
-	// if successfully logged in, will load player into AsxGame.activePlayer
-	// returns TRUE if login is successful, otherwise FALSE
 	protected static boolean login(String uEmail, String password)
 	{
-		Socket connection = null;
 		boolean successState = false;
-		long startTime = System.currentTimeMillis();
-		long currentTime, elapsedTime;
-		try 
+		String emailHash = Integer.toString(uEmail.hashCode());
+		String pwHash = Integer.toString(password.hashCode());
+		System.out.println("Attempt login...");
+		String sendString = "login\n" + emailHash + "\n" + pwHash;
+		String response = Utilities.sendServerMessage(sendString);
+		ArrayList<String> lines = new ArrayList<String>(Arrays.asList(response.split("\n")));
+		if(!lines.get(0).equals("401"))
 		{
-			connection = new Socket(AsxGame.connectionName, AsxGame.portNumber);
-			System.out.println("Local Address: " + connection.getLocalAddress());
-			System.out.println("Local Port: " + connection.getLocalPort());
-			
-			//Input Streams
-			BufferedReader connectionRead = null;
-			String response = null;
-			
-    		//Output Streams
-			DeflaterOutputStream deflStream = null;
-			
-			try
+			loadPlayer(lines.get(0));
+			boolean trans = false;
+			boolean val = false;
+			for(String line:lines)
 			{
-				String emailHash = Integer.toString(uEmail.hashCode());
-				String pwHash = Integer.toString(password.hashCode());
-				
-				//login call
-				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
-				System.out.println("Attempt login...");
-				System.out.println("Using ID: " + uEmail);
-				System.out.println("Using email hash: " + emailHash);
-				System.out.println("Using password hash: " + pwHash);
-				String loginString = "login\n" + emailHash + "\n" + pwHash;
-				byte[] loginBytes = loginString.getBytes("UTF-8");
-				deflStream.write(loginBytes);
-				deflStream.finish();
-				deflStream.flush();
-				
-				while(true)
+				if(line.equals("transaction"))
 				{
-					connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(connection.getInputStream())));
-					response = connectionRead.readLine();
-					if(response != null)
-					{
-						if(!response.equals("401"))
-						{
-							System.out.println("Login successful!");
-							System.out.println("Data received: " + response);
-							loadPlayer(response);
-							connectionRead.readLine();
-							while(!((response = connectionRead.readLine()).equals("value")))
-                            {
-								JSONObject histLine = new JSONObject(response);
-								AsxGame.activePlayer.transHistory.add(histLine);
-                               // transaction += line + '\n';
-                                //Handle individual lines of transaction history here
-                            }
-							while((response = connectionRead.readLine()) != null)
-							{
-								JSONObject valLine = new JSONObject(response);
-								AsxGame.activePlayer.valueHistory.add(valLine);
-							}
-							successState = true;
-							break;
-						}
-						else
-						{
-							System.out.println("401: UNAUTHORIZED!");
-							successState = false;
-							break;
-						}
-					}
-					currentTime = System.currentTimeMillis();
-					elapsedTime = currentTime - startTime;
-					if (elapsedTime > 10000)
-					{
-						System.out.println("Timeout Error!");
-						successState = false;
-						break;
-					}
+					trans = true;
+				}
+				else if(line.equals("value"))
+				{
+					trans = false;
+					val = true;
+				}
+				else if(trans)
+				{
+					JSONObject histLine = new JSONObject(line);
+					AsxGame.activePlayer.transHistory.add(histLine);
+				}
+				else if(val)
+				{
+					JSONObject valLine = new JSONObject(line);
+					AsxGame.activePlayer.valueHistory.add(valLine);
 				}
 			}
-			catch (IOException e)
-			{
-				System.out.println("Exception while reading input: " + e);
-				successState = false;
-			}
-			finally
-			{
-				try
-				{
-					connectionRead.close();
-    			}
-				catch (IOException e)
-				{
-    				System.out.println("Exception while closing streams: " +e);
-    			}
-			}
+			successState = true;
 		}
-		catch (IOException e)
+		else
 		{
-			System.out.println("Exception while opening connection: " + e);
+			System.out.println("401: UNAUTHORIZED!");
 			successState = false;
-		}
-		finally
-		{
-			try
-			{
-        		connection.close();
-        	}
-			catch (IOException e)
-			{
-        		System.out.println("Exception while closing connection: " + e);
-        	}
 		}
 		return successState;
 	} 
 	
-	// register function
-	// registers player, then, if successfull, logs player in using above function
-	// returns TRUE is player successfully registered and logged in, otherwise FALSE
 	protected static boolean registerPlayer(String fName, String sName, String uEmail, String password)
 	{
-		Socket connection = null;
 		boolean successState = false;
-		long startTime = System.currentTimeMillis();
-		long currentTime, elapsedTime;
-		try
+		String pwHash = Integer.toString(password.hashCode());
+		System.out.println("Attempt registration...");
+		String sendString = "register\n" + pwHash + "\n" + fName + "\n" + sName + "\n" + uEmail;
+		String response = Utilities.sendServerMessage(sendString);
+		if(!response.equals("500\n"))
 		{
-			connection = new Socket(AsxGame.connectionName, AsxGame.portNumber);
-			System.out.println("Local Address: " + connection.getLocalAddress());
-			System.out.println("Local Port: " + connection.getLocalPort());
-			
-			//Input Streams
-			BufferedReader connectionRead = null;
-			String response = null;
-			
-    		//Output Streams
-			DeflaterOutputStream deflStream = null;
-			
-			try
+			System.out.println("Registration successful!");
+			if (login(uEmail, password))
 			{
-				String pwHash = Integer.toString(password.hashCode());
-				
-				//register call
-				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
-				System.out.println("Attempt registration...");
-				String registerString = "register\n" + pwHash + "\n" + fName + "\n" + sName + "\n" + uEmail;
-				System.out.println("Using: " + registerString);
-				byte[] registerBytes = registerString.getBytes("UTF-8");
-				deflStream.write(registerBytes);
-				deflStream.finish();
-				deflStream.flush();
-				
-				while(true)
-				{
-					connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(connection.getInputStream())));
-					response = connectionRead.readLine();
-					if(response != null)
-					{
-						if(!response.equals("500"))
-						{
-							System.out.println("Registration successful!");
-							if (login(uEmail, password)){
-								successState = true;
-							} 							
-							break;
-						}
-						else
-						{
-							System.out.println("500: INTERNAL SERVER ERROR!");
-							break;
-						}
-					}
-					currentTime = System.currentTimeMillis();
-					elapsedTime = currentTime - startTime;
-					if (elapsedTime > 10000)
-					{
-						System.out.println("Timeout Error!");
-						successState = false;
-						break;
-					}
-				}
-			}
-			catch (IOException e)
-			{
-				System.out.println("Exception while reading input: " + e);
-				successState = false;
-			}
-			finally
-			{
-				try
-				{
-					connectionRead.close();
-    			}
-				catch (IOException e)
-				{
-    				System.out.println("Exception while closing streams: " +e);
-    			}
-			}
+				successState = true;
+			} 							
 		}
-		catch (IOException e)
+		else
 		{
-			System.out.println("Exception while opening connection: " + e);
-			successState = false;
-		}
-		finally
-		{
-			try
-			{
-        		connection.close();
-        	}
-			catch (IOException e)
-			{
-        		System.out.println("Exception while closing connection: " + e);
-        	}
+			System.out.println("500: INTERNAL SERVER ERROR!");
 		}
 		return successState;
 	}
 	
-	// save player function
-	// saves the player currently contained in AsxGame.activePlayer
-	// takes a JSONObject of transaction history to append to there file on server
-	// if transHist = null, then doesn't send any
+
 	protected static boolean saveActivePlayer(JSONObject transHist)
 	{
-		Socket connection = null;
 		boolean successState = false;
 		String saveString;
-		long startTime = System.currentTimeMillis();
-		long currentTime, elapsedTime;
-		try
+		System.out.println("Attempt save...");
+		String emailHash = Integer.toString(AsxGame.activePlayer.email.hashCode());
+		String playerSaveString = AsxGame.activePlayer.generateDataSaveString();
+		if (transHist != null)
 		{
-			connection = new Socket(AsxGame.connectionName, AsxGame.portNumber);
-			System.out.println("Local Address: " + connection.getLocalAddress());
-			System.out.println("Local Port: " + connection.getLocalPort());
-			
-			//Input Streams
-			BufferedReader connectionRead = null;
-			String response = null;
-			
-    		//Output Streams
-			DeflaterOutputStream deflStream = null;
-			
-			try
-			{
-				String emailHash = Integer.toString(AsxGame.activePlayer.email.hashCode());
-				
-				//register call
-				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
-				System.out.println("Attempt save...");
-				String playerSaveString = AsxGame.activePlayer.generateDataSaveString();
-				if (transHist != null)
-				{
-					saveString = "save\n" + emailHash + "\n" + playerSaveString + "\n" + transHist.toString();
-				}
-				else
-				{
-					saveString = "save\n" + emailHash + "\n" + playerSaveString;
-				}
-				System.out.println("Using: " + saveString);
-				byte[] saveBytes = saveString.getBytes("UTF-8");
-				deflStream.write(saveBytes);
-				deflStream.finish();
-				deflStream.flush();
-				
-				while(true)
-				{
-					connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(connection.getInputStream())));
-					response = connectionRead.readLine();
-					if(response != null)
-					{
-						if(!response.equals("500"))
-						{
-							System.out.println("Save Successful!");
-							successState = true;
-							break;
-						}
-						else
-						{
-							System.out.println("500: INTERNAL SERVER ERROR!");
-							break;
-						}
-					}
-					currentTime = System.currentTimeMillis();
-					elapsedTime = currentTime - startTime;
-					if (elapsedTime > 10000)
-					{
-						System.out.println("Timeout Error!");
-						successState = false;
-						break;
-					}
-				}
-			}
-			catch (IOException e)
-			{
-				System.out.println("Exception while reading input: " + e);
-				successState = false;
-			}
-			finally
-			{
-				try
-				{
-					connectionRead.close();
-    			}
-				catch (IOException e)
-				{
-    				System.out.println("Exception while closing streams: " +e);
-    			}
-			}
+			saveString = "save\n" + emailHash + "\n" + playerSaveString + "\n" + transHist.toString();
 		}
-		catch (IOException e)
+		else
 		{
-			System.out.println("Exception while opening connection: " + e);
-			successState = false;
+			saveString = "save\n" + emailHash + "\n" + playerSaveString;
 		}
-		finally
+		String response = Utilities.sendServerMessage(saveString);
+		if(!response.equals("500\n"))
 		{
-			try
-			{
-        		connection.close();
-        	}
-			catch (IOException e)
-			{
-        		System.out.println("Exception while closing connection: " + e);
-        	}
+			System.out.println("Save Successful!");
+			successState = true;
+		}
+		else
+		{
+			System.out.println("500: INTERNAL SERVER ERROR!");
 		}
 		return successState;
 	}
 	
-	//this function gets the response from the login request and loads the player into AsxGame.activePlayer
-	//returning true if successful
+
 	protected static boolean loadPlayer(String response)
 	{
 		//gets response from login function, gets values for each variable
@@ -470,120 +222,30 @@ public class Game
 		}
 	}
 	
-	// loads the leaderboard into AsxGame.leaderBoard
-	// returns true if successful
 	protected static boolean getValueLeaderboard()
 	{
 		AsxGame.leaderboard.clear();
-		Socket connection = null;
 		boolean successState = false;
-		long startTime = System.currentTimeMillis();
-		long currentTime, elapsedTime;
-		try
+		System.out.println("Attempt getStockHistory...");
+		String sendString = "leaders\n" + "0" + "\n" + "10"; //'0' is top position returned, '10' is number of places returned
+		String response = Utilities.sendServerMessage(sendString);
+		if(!response.equals("500\n"))
 		{
-			connection = new Socket(AsxGame.connectionName, AsxGame.portNumber);
-			System.out.println("Local Address: " + connection.getLocalAddress());
-			System.out.println("Local Port: " + connection.getLocalPort());
-			
-			//Input Streams
-			BufferedReader connectionRead = null;
-			String response = null;
-			
-    		//Output Streams
-			DeflaterOutputStream deflStream = null;
-			
-			try
-			{				
-				//leaderboard call
-				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
-				String leaderString = "leaders\n" + "0" + "\n" + "10"; //'0' is top position returned, '10' is number of places returned
-				byte[] leaderBytes = leaderString.getBytes("UTF-8");
-				deflStream.write(leaderBytes);
-				deflStream.finish();
-				deflStream.flush();
-				
-				while(true)
-				{
-					connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(connection.getInputStream())));
-					response = connectionRead.readLine();
-					if(response != null)
-					{
-						if(!response.equals("500"))
-						{
-							System.out.println("Leaderboard download successful!");
-							System.out.println(response);	
-							try
-							{
-								String[] leadersJSON = response.split(";");
-								for (int i = 0; i < leadersJSON.length; i++)
-								{
-									JSONObject json = new JSONObject(leadersJSON[i]);
-									AsxGame.leaderboard.add(json);
-								}
-								successState = true;
-								break;
-							}
-							catch (JSONException e)
-							{
-								e.printStackTrace();
-								successState = false;
-								break;
-							}
-						}
-						else
-						{
-							System.out.println("500: INTERNAL SERVER ERROR!");
-							break;
-						}
-					}
-					currentTime = System.currentTimeMillis();
-					elapsedTime = currentTime - startTime;
-					if (elapsedTime > 10000)
-					{
-						System.out.println("Timeout Error!");
-						successState = false;
-						break;
-					}
-				}
-			}
-			catch (IOException e)
+			String[] leadersJSON = response.split(";");
+			for (int i = 0; i < leadersJSON.length; i++)
 			{
-				System.out.println("Exception while reading input: " + e);
-				successState = false;
+				JSONObject json = new JSONObject(leadersJSON[i]);
+				AsxGame.leaderboard.add(json);
 			}
-			finally
-			{
-				try
-				{
-					connectionRead.close();
-    			}
-				catch (IOException e)
-				{
-    				System.out.println("Exception while closing streams: " +e);
-    			}
-			}
+			successState = true;
 		}
-		catch (IOException e)
+		else
 		{
-			System.out.println("Exception while opening connection: " + e);
-			successState = false;
-		}
-		finally
-		{
-			try
-			{
-        		connection.close();
-        	}
-			catch (IOException e)
-			{
-        		System.out.println("Exception while closing connection: " + e);
-        	}
+			System.out.println("500: INTERNAL SERVER ERROR!");
 		}
 		return successState;
 	}
 	
-	// this function returns the current price for a specific stock
-	// returns -1 if it cant find a stock
 	public static float getStockCurrentPrice(String asxCode)
 	{
 		for (int i = 0; i < AsxGame.stockArray.size(); i++)
@@ -600,135 +262,48 @@ public class Game
 	{
 		AsxGame.requestedStockCode = asxCode;
 		AsxGame.requestedStockHistory.clear();
-		Socket connection = null;
 		boolean successState = false;
-		try
+		System.out.println("Attempt getStockHistory...");
+		String sendString = "stockHistory\n"+asxCode+"\n"+startDate+"\n"+endDate;
+		String response = Utilities.sendServerMessage(sendString);
+		ArrayList<String> lines = new ArrayList<String>(Arrays.asList(response.split("\n")));
+		if(lines.get(0).equals("200"))
 		{
-			connection = new Socket(AsxGame.connectionName, AsxGame.portNumber);
-			
-			//Input Streams
-			BufferedReader connectionRead = null;
-			String response = null;
-			
-    		//Output Streams
-			DeflaterOutputStream deflStream = null;
-			
-			try
+			successState = true;
+			for(String line:lines)
 			{
-				// call
-				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
-				System.out.println("Attempt getStockHistory...");
-				String sendString = "stockHistory\n"+asxCode+"\n"+startDate+"\n"+endDate;
-				byte[] sendBytes = sendString.getBytes("UTF-8");
-				deflStream.write(sendBytes);
-				deflStream.finish();
-				deflStream.flush();
-				while (true)
+				if(!lines.equals("200"))
 				{
-					connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(connection.getInputStream())));
-					response = connectionRead.readLine();
-					if(response != null)
-					{
-						if(response.equals("200"))
-						{
-							successState = true;
-							while((response = connectionRead.readLine()) != null)
-							{
-								JSONObject stockHis = new JSONObject(response);
-								AsxGame.requestedStockHistory.add(stockHis);
-							}
-							connectionRead.close();
-							break;
-						}
-						else
-						{
-							System.out.println("500: INTERNAL SERVER ERROR!");
-							successState = false;
-							break;
-						}
-					}
+					JSONObject stockHis = new JSONObject(line);
+					AsxGame.requestedStockHistory.add(stockHis);
 				}
-				
-			} 
-			catch (IOException e) 
-			{
-				System.out.println("Exception while communicating with server: " + e);
-				successState = false;
 			}
-		} 
-		catch (IOException e) 
+		}
+		else
 		{
-			System.out.println("Exception while opening connection: " + e);
+			System.out.println("500: INTERNAL SERVER ERROR!");
 			successState = false;
 		}
 		return successState;
 	}
 	
 	public static float calcBrokersFeePurch(float transactionAmount)
-	{		
-		Socket connection = null;
+	{
 		//default values if server can't be reached
 		float flat = 50;
 		float percentage = 1;
-		try
+		System.out.println("Attempt getBuy...");
+		String sendString = "getBuy\n";
+		String response = Utilities.sendServerMessage(sendString);
+		ArrayList<String> lines = new ArrayList<String>(Arrays.asList(response.split("\n")));
+		if(!lines.get(0).equals("500"))
 		{
-			connection = new Socket(AsxGame.connectionName, AsxGame.portNumber);
-			
-			//Input Streams
-			BufferedReader connectionRead = null;
-			String response = null;
-			
-    		//Output Streams
-			DeflaterOutputStream deflStream = null;
-			
-			try
-			{
-				// call
-				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
-				System.out.println("Attempt getBuy...");
-				String sendString = "getBuy\n";
-				byte[] sendBytes = sendString.getBytes("UTF-8");
-				deflStream.write(sendBytes);
-				deflStream.finish();
-				deflStream.flush();
-				
-				while (true)
-				{
-					connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(connection.getInputStream())));
-					response = connectionRead.readLine();
-					if(response != null)
-					{
-						if(!response.equals("500"))
-						{
-							flat = Float.parseFloat(connectionRead.readLine());
-							percentage = Float.parseFloat(connectionRead.readLine());
-							break;
-						}
-						else
-						{
-							System.out.println("500: INTERNAL SERVER ERROR!");
-							break;
-						}
-					}
-				}
-				
-			}
-			catch (IOException e)
-			{
-				System.out.println("Exception while reading connection response: " + e);
-			}
+			flat = Float.parseFloat(lines.get(1).toString());
+			percentage = Float.parseFloat(lines.get(2).toString());
 		}
-		catch (IOException e)
+		else
 		{
-			System.out.println("Exception while opening connection: " + e);
-		}
-		try
-		{
-			connection.close();
-		}
-		catch (IOException e)
-		{
-			System.out.println("Exception while closing connection: " + e);
+			System.out.println("500: INTERNAL SERVER ERROR!");
 		}
 		
 		float purchaseFee = transactionAmount * percentage/100;
@@ -738,70 +313,21 @@ public class Game
 	
 	public static float calcBrokersFeeSale(float transactionAmount)
 	{ 
-		
-		Socket connection = null;
 		//default values if server can't be reached
 		float flat = 50;
 		float percentage = 0.25f;
-		try
+		System.out.println("Attempt getSell...");
+		String sendString = "getSell\n";
+		String response = Utilities.sendServerMessage(sendString);
+		ArrayList<String> lines = new ArrayList<String>(Arrays.asList(response.split("\n")));
+		if(!lines.get(0).equals("500"))
 		{
-			connection = new Socket(AsxGame.connectionName, AsxGame.portNumber);
-			
-			//Input Streams
-			BufferedReader connectionRead = null;
-			String response = null;
-			
-    		//Output Streams
-			DeflaterOutputStream deflStream = null;
-			
-			try
-			{
-				// call
-				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
-				System.out.println("Attempt getSell...");
-				String sendString = "getSell\n";
-				byte[] sendBytes = sendString.getBytes("UTF-8");
-				deflStream.write(sendBytes);
-				deflStream.finish();
-				deflStream.flush();
-				
-				while (true)
-				{
-					connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(connection.getInputStream())));
-					response = connectionRead.readLine();
-					if(response != null)
-					{
-						if(!response.equals("500"))
-						{
-							flat = Float.parseFloat(connectionRead.readLine());
-							percentage = Float.parseFloat(connectionRead.readLine());
-							break;
-						}
-						else
-						{
-							System.out.println("500: INTERNAL SERVER ERROR!");
-							break;
-						}
-					}
-				}
-				
-			}
-			catch (IOException e)
-			{
-				System.out.println("Exception while reading connection response: " + e);
-			}
+			flat = Float.parseFloat(lines.get(1).toString());
+			percentage = Float.parseFloat(lines.get(2).toString());
 		}
-		catch (IOException e)
+		else
 		{
-			System.out.println("Exception while opening connection: " + e);
-		}
-		try
-		{
-			connection.close();
-		}
-		catch (IOException e)
-		{
-			System.out.println("Exception while closing connection: " + e);
+			System.out.println("500: INTERNAL SERVER ERROR!");
 		}
 		
 		float saleFee = transactionAmount * percentage/100;
@@ -809,76 +335,32 @@ public class Game
 		return saleFee;
 	}
 	
-	public static boolean sendMessage(String recipient, String type, String message)
+	public static boolean sendMessage(String sender, String recipient, String type, String message)
 	{
 		//convert currentPlayer email and recipient email to hash
-		String senderHash = Integer.toString(AsxGame.activePlayer.email.hashCode());
-		String recipientHash = Integer.toString(recipient.hashCode());
-		Socket connection = null;
 		boolean state = false;
-		try
+		String senderHash = "";
+		if(sender == null)
 		{
-			connection = new Socket(AsxGame.connectionName, AsxGame.portNumber);
-			
-			//Input Streams
-			BufferedReader connectionRead = null;
-			String response = null;
-			
-			//Output Streams
-			DeflaterOutputStream deflStream = null;
-			
-			try
-			{
-				// call
-				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
-				System.out.println("Attempt sendMessage...");
-				String sendString = "sendMessage\n"+senderHash+"\n"+recipientHash+"\n"+type+"\n"+message+"\n";
-				byte[] sendBytes = sendString.getBytes("UTF-8");
-				deflStream.write(sendBytes);
-				deflStream.finish();
-				deflStream.flush();
-				
-				while (true)
-				{
-					connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(connection.getInputStream())));
-					response = connectionRead.readLine();
-					if(response != null)
-					{
-						if(response.equals("200"))
-						{
-							System.out.println("200");
-							state = true;
-							break;
-						}
-						else
-						{
-							System.out.println("500: INTERNAL SERVER ERROR!");
-							state = false;
-							break;
-						}
-					}
-				}
-				
-			}
-			catch (IOException e)
-			{
-				System.out.println("Exception while reading connection response: " + e);
-				state = false;
-			}
+			senderHash = Integer.toString(AsxGame.activePlayer.email.hashCode());
 		}
-		catch (IOException e)
+		else
 		{
-			System.out.println("Exception while opening connection: " + e);
-			return false;
+			senderHash = Integer.toString(sender.hashCode());
+		}		
+		String recipientHash = Integer.toString(recipient.hashCode());
+		System.out.println("Attempt sendMessage...");
+		String sendString = "sendMessage\n"+senderHash+"\n"+recipientHash+"\n"+type+"\n"+message+"\n";
+		String response = Utilities.sendServerMessage(sendString);
+		if(response.equals("200\n"))
+		{
+			System.out.println("200");
+			state = true;
 		}
-		try
+		else
 		{
-			connection.close();
-		}
-		catch (IOException e)
-		{
-			System.out.println("Exception while closing connection: " + e);
-			return false;
+			System.out.println("500: INTERNAL SERVER ERROR!");
+			state = false;
 		}
 		return state;
 	}
@@ -887,72 +369,21 @@ public class Game
 	{
 		//convert currentPlayer email and recipient email to hash
 		String userHash = Integer.toString(AsxGame.activePlayer.email.hashCode());
-		Socket connection = null;
 		String messageList = "";
-		try
+		System.out.println("Attempt getMessageList...");
+		String sendString = "getMessageList\n"+userHash;
+		String response = Utilities.sendServerMessage(sendString);
+		if(!response.equals("500\n"))
 		{
-			connection = new Socket(AsxGame.connectionName, AsxGame.portNumber);
-			
-			//Input Streams
-			BufferedReader connectionRead = null;
-			String response = null;
-			
-			//Output Streams
-			DeflaterOutputStream deflStream = null;
-			
-			try
+			messageList = response.toString();
+			if(response.equals("204\n"))
 			{
-				//Call
-				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
-				System.out.println("Attempt getMessageList...");
-				String sendString = "getMessageList\n"+userHash;
-				byte[] sendBytes = sendString.getBytes("UTF-8");
-				deflStream.write(sendBytes);
-				deflStream.finish();
-				deflStream.flush();
-				
-				while (true)
-				{
-					connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(connection.getInputStream())));
-					response = connectionRead.readLine();
-					if(response != null)
-					{
-						if(!response.equals("500"))
-						{
-							messageList = response;
-							if(response.equals("204"))
-							{
-								System.out.println("Mailbox Empty!");
-							}
-							break;
-						}
-						else
-						{
-							System.out.println("500: INTERNAL SERVER ERROR!");
-							return null;
-						}
-					}
-				}
-				
-			}
-			catch (IOException e)
-			{
-				System.out.println("Exception while reading connection response: " + e);
-				return null;
+				System.out.println("Mailbox Empty!");
 			}
 		}
-		catch (IOException e)
+		else
 		{
-			System.out.println("Exception while opening connection: " + e);
-			return null;
-		}
-		try
-		{
-			connection.close();
-		}
-		catch (IOException e)
-		{
-			System.out.println("Exception while closing connection: " + e);
+			System.out.println("500: INTERNAL SERVER ERROR!");
 			return null;
 		}
 		return messageList;
@@ -962,142 +393,84 @@ public class Game
 	{
 		//convert currentPlayer email and recipient email to hash
 		String userHash = Integer.toString(AsxGame.activePlayer.email.hashCode());
-		Socket connection = null;
 		String message = "";
-		try
+		System.out.println("Attempt getMessage...");
+		String sendString = "getMessage\n"+userHash+"\n"+messageID;
+		String response = Utilities.sendServerMessage(sendString);
+		if(!response.equals("500\n"))
 		{
-			connection = new Socket(AsxGame.connectionName, AsxGame.portNumber);
-			
-			//Input Streams
-			BufferedReader connectionRead = null;
-			String response = null;
-			
-			//Output Streams
-			DeflaterOutputStream deflStream = null;
-			
-			try
-			{
-				//Call
-				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
-				System.out.println("Attempt getMessage...");
-				String sendString = "getMessage\n"+userHash+"\n"+messageID;
-				byte[] sendBytes = sendString.getBytes("UTF-8");
-				deflStream.write(sendBytes);
-				deflStream.finish();
-				deflStream.flush();
-				
-				while (true)
-				{
-					connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(connection.getInputStream())));
-					response = connectionRead.readLine();
-					if(response != null)
-					{
-						if(!response.equals("500"))
-						{
-							message = response;
-							break;
-						}
-						else
-						{
-							System.out.println("500: INTERNAL SERVER ERROR!");
-							return null;
-						}
-					}
-				}
-				
-			}
-			catch (IOException e)
-			{
-				System.out.println("Exception while reading connection response: " + e);
-				return null;
-			}
+			message = response;
 		}
-		catch (IOException e)
+		else
 		{
-			System.out.println("Exception while opening connection: " + e);
-			return null;
-		}
-		try
-		{
-			connection.close();
-		}
-		catch (IOException e)
-		{
-			System.out.println("Exception while closing connection: " + e);
+			System.out.println("500: INTERNAL SERVER ERROR!");
 			return null;
 		}
 		return message;
+	}
+	
+	public static String getUnreadMessages()
+	{
+		//convert currentPlayer email and recipient email to hash
+		String userHash = Integer.toString(AsxGame.activePlayer.email.hashCode());
+		String messageList = "";
+		System.out.println("Attempt getUnreadMessages...");
+		String sendString = "unreadMail\n"+userHash;
+		String response = Utilities.sendServerMessage(sendString);
+		if(!response.equals("500\n"))
+		{
+			if(response.equals("0\n"))
+			{
+				messageList = null;
+			}
+			messageList = response;
+		}
+		else
+		{
+			System.out.println("500: INTERNAL SERVER ERROR!");
+			return null;
+		}
+		return messageList;
 	}
 	
 	public static boolean deleteMessage(int messageID)
 	{
 		//convert currentPlayer email and recipient email to hash
 		String userHash = Integer.toString(AsxGame.activePlayer.email.hashCode());
-		Socket connection = null;
 		boolean state = false;
-		try
+		System.out.println("Attempt deleteMessage...");
+		String sendString = "deleteMessage\n"+userHash+"\n"+messageID+"\n";
+		String response = Utilities.sendServerMessage(sendString);
+		if(response.equals("200\n"))
 		{
-			connection = new Socket(AsxGame.connectionName, AsxGame.portNumber);
-			
-			//Input Streams
-			BufferedReader connectionRead = null;
-			String response = null;
-			
-			//Output Streams
-			DeflaterOutputStream deflStream = null;
-			
-			try
-			{
-				//Call
-				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
-				System.out.println("Attempt deleteMessage...");
-				String sendString = "deleteMessage\n"+userHash+"\n"+messageID+"\n";
-				byte[] sendBytes = sendString.getBytes("UTF-8");
-				deflStream.write(sendBytes);
-				deflStream.finish();
-				deflStream.flush();
-				
-				while (true)
-				{
-					connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(connection.getInputStream())));
-					response = connectionRead.readLine();
-					if(response != null)
-					{
-						if(response.equals("200"))
-						{
-							System.out.println("200");
-							state = true;
-							break;
-						}
-						else
-						{
-							System.out.println("500: INTERNAL SERVER ERROR!");
-							state = false;
-							break;
-						}
-					}
-				}
-				
-			}
-			catch (IOException e)
-			{
-				System.out.println("Exception while reading connection response: " + e);
-				state = false;
-			}
+			System.out.println("200");
+			state = true;
 		}
-		catch (IOException e)
+		else
 		{
-			System.out.println("Exception while opening connection: " + e);
-			return false;
+			System.out.println("500: INTERNAL SERVER ERROR!");
+			state = false;
 		}
-		try
+		return state;
+	}
+	
+	public static boolean markUnread(int messageID)
+	{
+		//convert currentPlayer email and recipient email to hash
+		String userHash = Integer.toString(AsxGame.activePlayer.email.hashCode());
+		boolean state = false;
+		System.out.println("Attempt markUnread...");
+		String sendString = "markUnread\n"+userHash+"\n"+messageID+"\n";
+		String response = Utilities.sendServerMessage(sendString);
+		if(response.equals("200\n"))
 		{
-			connection.close();
+			System.out.println("200");
+			state = true;
 		}
-		catch (IOException e)
+		else
 		{
-			System.out.println("Exception while closing connection: " + e);
-			return false;
+			System.out.println("500: INTERNAL SERVER ERROR!");
+			state = false;
 		}
 		return state;
 	}
