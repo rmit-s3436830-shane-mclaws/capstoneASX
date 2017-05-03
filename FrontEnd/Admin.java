@@ -8,13 +8,8 @@
 
 package com.amazonaws.samples;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.Socket;
 import java.util.ArrayList;
-import java.util.zip.DeflaterOutputStream;
-import java.util.zip.InflaterInputStream;
+import java.util.Arrays;
 
 import org.json.JSONObject;
 
@@ -40,76 +35,24 @@ public class Admin
 	//I do not know if this works, I have not tested it - Shane
 	protected static boolean getUserList()
 	{
-		Socket connection = null;
 		boolean successState = false;
-		try
+		System.out.println("Attempt getUserList...");
+		String sendString = "getUser\n*";
+		String response = Utilities.sendServerMessage(sendString);
+		ArrayList<String> lines = new ArrayList<String>(Arrays.asList(response.split("\n")));
+		if(!lines.get(0).equals("500"))
 		{
-			connection = new Socket(AsxGame.connectionName, AsxGame.portNumber);
-			
-			//Input Streams
-			BufferedReader connectionRead = null;
-			String response = null;
-			
-    		//Output Streams
-			DeflaterOutputStream deflStream = null;
-			
-			try
+			for(String line:lines)
 			{
-				// call
-				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
-				System.out.println("Attempt getUserList...");
-				String sendString = "getUser\n*";
-				byte[] sendBytes = sendString.getBytes("UTF-8");
-				deflStream.write(sendBytes);
-				deflStream.finish();
-				deflStream.flush();
-				
-				while (true)
-				{
-					connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(connection.getInputStream())));
-					response = connectionRead.readLine();
-					if(response != null)
-					{
-						if(!response.equals("500"))
-						{
-							while (response != null)
-							{
-								playerList.add(response);
-								response = connectionRead.readLine();
-							}
-							successState = true;
-							break;
-						}
-						else
-						{
-							System.out.println("500: INTERNAL SERVER ERROR!");
-							successState = false;
-							break;
-						}
-					}
-				}
-				
+				playerList.add(line);
 			}
-			catch (IOException e)
-			{
-				System.out.println("Exception while reading connection response: " + e);
-			}
+			successState = true;
 		}
-		catch (IOException e)
+		else
 		{
-			System.out.println("Exception while opening connection: " + e);
+			System.out.println("500: INTERNAL SERVER ERROR!");
 			successState = false;
 		}
-		try
-		{
-			connection.close();
-		}
-		catch (IOException e)
-		{
-			System.out.println("Exception while closing connection: " + e);
-			successState = false;
-		}
-		
 		return successState;
 	}
 	
@@ -118,63 +61,25 @@ public class Admin
 	protected static void adminLoadPlayer(String user)
 	{
 		String emailHash = Integer.toString(user.hashCode());
-		Socket connection = null;
-		try
+		System.out.println("Attempt getUser...");
+		String sendString = "getUser\n"+emailHash;
+		String response = Utilities.sendServerMessage(sendString);
+		ArrayList<String> lines = new ArrayList<String>(Arrays.asList(response.split("\n")));
+		if(!lines.get(0).equals("500"))
 		{
-			connection = new Socket(AsxGame.connectionName, AsxGame.portNumber);
-			
-			//Input Streams
-			BufferedReader connectionRead = null;
-			String response = null;
-			
-    		//Output Streams
-			DeflaterOutputStream deflStream = null;
-			
-			try
+			Game.loadPlayer(lines.get(0));
+			for(String line:lines)
 			{
-				// call
-				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
-				System.out.println("Attempt getUser...");
-				String sendString = "getUser\n"+emailHash;
-				byte[] sendBytes = sendString.getBytes("UTF-8");
-				deflStream.write(sendBytes);
-				deflStream.finish();
-				deflStream.flush();
-				while (true)
+				if(!line.equals(lines.get(0)))
 				{
-					connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(connection.getInputStream())));
-					response = connectionRead.readLine();
-					System.out.println(response);
-					if(response != null)
-					{
-						if(!response.equals("500"))
-						{
-							Game.loadPlayer(response);
-							while((response = connectionRead.readLine()) != null)
-							{
-								JSONObject histLine = new JSONObject(response);
-								AsxGame.activePlayer.transHistory.add(histLine);
-							}
-							connectionRead.close();
-							break;
-						}
-						else
-						{
-							System.out.println("500: INTERNAL SERVER ERROR!");
-							break;
-						}
-					}
+					JSONObject histLine = new JSONObject(line);
+					AsxGame.activePlayer.transHistory.add(histLine);
 				}
-				
-			} 
-			catch (IOException e) 
-			{
-				System.out.println("Exception while communicating with server: " + e);
 			}
-		} 
-		catch (IOException e) 
+		}
+		else
 		{
-			System.out.println("Exception while opening connection: " + e);
+			System.out.println("500: INTERNAL SERVER ERROR!");
 		}
 		return;
 	}
@@ -267,58 +172,17 @@ public class Admin
 	protected static boolean setBuyFee(float flat, float percentage)
 	{
 		boolean successState = false;
-		Socket connection = null;
-		try
+		System.out.println("Attempt setBuy...");
+		String sendString = "setBuy\n"+flat+"\n"+percentage;
+		String response = Utilities.sendServerMessage(sendString);
+		if(response.equals("200\n"))
 		{
-			connection = new Socket(AsxGame.connectionName, AsxGame.portNumber);
-			
-			//Input Streams
-			BufferedReader connectionRead = null;
-			String response = null;
-			
-    		//Output Streams
-			DeflaterOutputStream deflStream = null;
-			
-			try
-			{
-				// call
-				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
-				System.out.println("Attempt setBuy...");
-				String sendString = "setBuy\n"+flat+"\n"+percentage;
-				byte[] sendBytes = sendString.getBytes("UTF-8");
-				deflStream.write(sendBytes);
-				deflStream.finish();
-				deflStream.flush();
-				while (true)
-				{
-					connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(connection.getInputStream())));
-					response = connectionRead.readLine();
-					System.out.println(response);
-					if(response != null)
-					{
-						if(response.equals("200"))
-						{
-							successState = true;
-							break;
-						}
-						else
-						{
-							System.out.println("500: INTERNAL SERVER ERROR!");
-							successState = false;
-							break;
-						}
-					}
-				}
-				
-			} 
-			catch (IOException e) 
-			{
-				System.out.println("Exception while communicating with server: " + e);
-			}
-		} 
-		catch (IOException e) 
+			successState = true;
+		}
+		else
 		{
-			System.out.println("Exception while opening connection: " + e);
+			System.out.println("500: INTERNAL SERVER ERROR!");
+			successState = false;
 		}
 		return successState;
 	}
@@ -326,58 +190,17 @@ public class Admin
 	protected static boolean setSellFee(float flat, float percentage)
 	{
 		boolean successState = false;
-		Socket connection = null;
-		try
+		System.out.println("Attempt setSell...");
+		String sendString = "setSell\n"+flat+"\n"+percentage;
+		String response = Utilities.sendServerMessage(sendString);
+		if(response.equals("200\n"))
 		{
-			connection = new Socket(AsxGame.connectionName, AsxGame.portNumber);
-			
-			//Input Streams
-			BufferedReader connectionRead = null;
-			String response = null;
-			
-    		//Output Streams
-			DeflaterOutputStream deflStream = null;
-			
-			try
-			{
-				// call
-				deflStream = new DeflaterOutputStream(connection.getOutputStream(), true);
-				System.out.println("Attempt setSell...");
-				String sendString = "setSell\n"+flat+"\n"+percentage;
-				byte[] sendBytes = sendString.getBytes("UTF-8");
-				deflStream.write(sendBytes);
-				deflStream.finish();
-				deflStream.flush();
-				while (true)
-				{
-					connectionRead = new BufferedReader(new InputStreamReader(new InflaterInputStream(connection.getInputStream())));
-					response = connectionRead.readLine();
-					System.out.println(response);
-					if(response != null)
-					{
-						if(response.equals("200"))
-						{
-							successState = true;
-							break;
-						}
-						else
-						{
-							System.out.println("500: INTERNAL SERVER ERROR!");
-							successState = false;
-							break;
-						}
-					}
-				}
-				
-			} 
-			catch (IOException e) 
-			{
-				System.out.println("Exception while communicating with server: " + e);
-			}
-		} 
-		catch (IOException e) 
+			successState = true;
+		}
+		else
 		{
-			System.out.println("Exception while opening connection: " + e);
+			System.out.println("500: INTERNAL SERVER ERROR!");
+			successState = false;
 		}
 		return successState;
 	}
