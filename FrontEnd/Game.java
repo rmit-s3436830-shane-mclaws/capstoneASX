@@ -141,6 +141,7 @@ public class Game
 		String pwHash = Integer.toString(password.hashCode());
 		System.out.println("Attempt registration...");
 		String sendString = "register\n" + pwHash + "\n" + fName + "\n" + sName + "\n" + uEmail;
+		System.out.println(sendString);
 		String response = Utilities.sendServerMessage(sendString);
 		if(!response.equals("500\n"))
 		{
@@ -335,7 +336,7 @@ public class Game
 		return saleFee;
 	}
 	
-	public static boolean sendMessage(String sender, String recipient, String type, String message)
+	public static boolean sendMessage(String sender, String recipient, String type, String subject, String message)
 	{
 		//convert currentPlayer email and recipient email to hash
 		boolean state = false;
@@ -350,7 +351,7 @@ public class Game
 		}		
 		String recipientHash = Integer.toString(recipient.hashCode());
 		System.out.println("Attempt sendMessage...");
-		String sendString = "sendMessage\n"+senderHash+"\n"+recipientHash+"\n"+type+"\n"+message+"\n";
+		String sendString = "sendMessage\n"+senderHash+"\n"+recipientHash+"\n"+type+"\n"+subject+"\n"+message+"\n";
 		String response = Utilities.sendServerMessage(sendString);
 		if(response.equals("200\n"))
 		{
