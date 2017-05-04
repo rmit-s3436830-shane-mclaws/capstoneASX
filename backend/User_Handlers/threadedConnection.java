@@ -289,13 +289,14 @@ public class threadedConnection implements Runnable
 					String sender = connectionRead.readLine();
 					String recipient = connectionRead.readLine();
 					String type = connectionRead.readLine();
+					String subject = connectionRead.readLine();
 					String contents = "";
 					while((line = connectionRead.readLine()) != null)
 					{
 						contents += line + "\n";
 					}
-					fileData += "Requesting: sendMessage; Sender: " + sender + "; Recipient: " + recipient + "; Type: " + type + "\nContents: " + contents + "\n";
-					if(sendMessage(sender, recipient, type, contents))
+					fileData += "Requesting: sendMessage; Sender: " + sender + "; Recipient: " + recipient + "; Type: " + type + "; Subject: " + subject + "\nContents: " + contents + "\n";
+					if(sendMessage(sender, recipient, type, subject, contents))
 					{
 						fileData += "Returning: 200\n";
 						bytes = "200".getBytes("UTF-8");
@@ -394,6 +395,22 @@ public class threadedConnection implements Runnable
 						bytes = "500".getBytes("UTF-8");
 					}
 				}
+				else if(line.equals("getID"))
+				{
+					String user = connectionRead.readLine();
+					fileData += "Requesting: " + line + "; User: " + user + "\n";
+					String ID = "";
+					if((ID = userHashToID(user, "mainThread")) != null)
+					{
+						fileData += "Returning: " + ID + "\n";
+						bytes = ID.getBytes("UTF-8");
+					}
+					else
+					{
+						fileData += "Returning: 500\n";
+						bytes = "500".getBytes("UTF-8");
+					}
+				}
 				else
 				{
 					while((line = connectionRead.readLine()) != null)
@@ -417,17 +434,23 @@ public class threadedConnection implements Runnable
 		catch (SocketException se)
 		{
 			System.out.println("[" + this.client.getRemoteSocketAddress() + "] Exception while performing socket operation: " + se);
+			se.printStackTrace();
 			fileData += "Exception while performing socket operation: " + se + "\n";
+			fileData += se.getStackTrace() + "\n";
 		}
 		catch(IOException e)
 		{
 			System.out.println("[" + this.client.getRemoteSocketAddress() + "] Exception while opening server socket: " + e);
+			e.printStackTrace();
 			fileData += "Exception while opening server socket: " + e + "\n";
+			fileData += e.getStackTrace() + "\n";
 		}
 		catch (NumberFormatException ex)
 		{
 			System.out.println("[" + this.client.getRemoteSocketAddress() + "] Exception when converting String to Int: " + ex);
+			ex.printStackTrace();
 			fileData += "Exception when converting String to Int: " + ex + "\n";
+			fileData += ex.getStackTrace() + "\n";
 		}
 		finally
 		{
@@ -441,6 +464,7 @@ public class threadedConnection implements Runnable
 			catch (IOException e)
 			{
 				System.out.println("[" + this.client.getRemoteSocketAddress() + "] Exception while closing sockets: " + e);
+				e.printStackTrace();
 				fileData += "Exception while closing sockets: " + e + "\n";
 			}
 		}
@@ -462,30 +486,35 @@ public class threadedConnection implements Runnable
 		catch (AmazonServiceException ase)
 		{
             System.out.println("Caught an AmazonServiceException");
+            ase.printStackTrace();
             fileData += originFunction + ": Caught an AmazonServiceException: " + ase + "\n";
             return false;
 		}
 		catch (AmazonClientException ace)
 		{
             System.out.println("Caught an AmazonClientException: " + ace);
+            ace.printStackTrace();
             fileData += originFunction + ": Caught an AmazonClientException: " + ace + "\n";
             return false;
 		}
 		catch (UnsupportedEncodingException e)
 		{
 			System.out.println("Caught an UnsupportedEncodingException");
+			e.printStackTrace();
 			fileData += originFunction + ": Caught an UnsupportedEncodingException: " + e + "\n";
 			return false;
 		}
 		catch (IOException e)
 		{
 			System.out.println("Exception whe trying to close stream");
+			e.printStackTrace();
 			fileData += originFunction + ": Exception whe trying to close stream: " + e + "\n";
 			return false;
 		}
 		catch (NumberFormatException ex)
 		{
 			System.out.println("Exception when converting String to Int: " + ex);
+			ex.printStackTrace();
 			fileData += originFunction + ": Exception when converting String to Int: " + ex + "\n";
 			return false;
 		}
@@ -509,30 +538,35 @@ public class threadedConnection implements Runnable
 		catch (AmazonServiceException ase)
 		{
             System.out.println("Caught an AmazonServiceException");
+            ase.printStackTrace();
             fileData += originFunction + ": Caught an AmazonServiceException: " + ase + "\n";
             return null;
 		}
 		catch (AmazonClientException ace)
 		{
             System.out.println("Caught an AmazonClientException: " + ace);
+            ace.printStackTrace();
             fileData += originFunction + ": Caught an AmazonClientException: " + ace + "\n";
             return null;
 		}
 		catch (UnsupportedEncodingException e)
 		{
 			System.out.println("Caught an UnsupportedEncodingException");
+			e.printStackTrace();
 			fileData += originFunction + ": Caught an UnsupportedEncodingException: " + e + "\n";
 			return null;
 		}
 		catch (IOException e)
 		{
 			System.out.println("Exception whe trying to close stream");
+			e.printStackTrace();
 			fileData += originFunction + ": Exception whe trying to close stream: " + e + "\n";
 			return null;
 		}
 		catch (NumberFormatException ex)
 		{
 			System.out.println("Exception when converting String to Int: " + ex);
+			ex.printStackTrace();
 			fileData += originFunction + ": Exception when converting String to Int: " + ex + "\n";
 			return null;
 		}
@@ -549,7 +583,7 @@ public class threadedConnection implements Runnable
 			return null;
 		}
 		String storedCreds;
-		if((storedCreds = readFromS3(bucket, userCreds, originFunction)) == null)
+		if((storedCreds = readFromS3(bucket, userCreds, originFunction)).equals(null))
 		{
 			return null;
 		}
@@ -570,7 +604,7 @@ public class threadedConnection implements Runnable
 			return null;
 		}
 		String storedCreds;
-		if((storedCreds = readFromS3(bucket, userCreds, "login")) == null)
+		if((storedCreds = readFromS3(bucket, userCreds, "login")).equals(null))
 		{
 			return null;
 		}
@@ -590,7 +624,7 @@ public class threadedConnection implements Runnable
 			
 			//Get User Data
 			String data;
-			if((data = readFromS3(bucket, userData, "login")) == null)
+			if((data = readFromS3(bucket, userData, "login")).equals(null))
 			{
 				return null;
 			}
@@ -598,7 +632,7 @@ public class threadedConnection implements Runnable
 			//Get User Transaction History
 			data += "transaction\n";
 			String transaction;
-			if((transaction = readFromS3(bucket, transHistory, "login")) == null)
+			if((transaction = readFromS3(bucket, transHistory, "login")).equals(null))
 			{
 				return null;
 			}
@@ -607,7 +641,7 @@ public class threadedConnection implements Runnable
 			//Get User Value History
 			data += "value\n";
 			String value;
-			if((value = readFromS3(bucket, valueHistory, "login")) == null)
+			if((value = readFromS3(bucket, valueHistory, "login")).equals(null))
 			{
 				return null;
 			}
@@ -629,7 +663,7 @@ public class threadedConnection implements Runnable
 		
 		/**Convert users emailHash to unique ID**/
 		String userID;
-		if((userID = userHashToID(emailHash, "getHistory")) == null)
+		if((userID = userHashToID(emailHash, "getHistory")).equals(null))
 		{
 			return null;
 		}
@@ -644,7 +678,7 @@ public class threadedConnection implements Runnable
 			//Get user value history
 			file = "data/"+userID+"/valueHistory.json";
 		}
-		if((data = readFromS3(bucket, file, "getHistory")) == null)
+		if((data = readFromS3(bucket, file, "getHistory")).equals(null))
 		{
 			return null;
 		}
@@ -679,8 +713,7 @@ public class threadedConnection implements Runnable
 						for(S3ObjectSummary summary : summaries)
 						{
 							String key = summary.getKey();
-							String[] keyArray = key.split("/");
-							comp = Integer.parseInt(keyArray[1].split(".")[0]);
+							comp = Integer.parseInt(key.split("[/.]")[1]);
 							if(comp > uID)
 							{
 								uID = comp;
@@ -694,8 +727,7 @@ public class threadedConnection implements Runnable
 					for(S3ObjectSummary summary : summaries)
 					{
 						String key = summary.getKey();
-						String[] keyArray = key.split("/");
-						comp = Integer.parseInt(keyArray[1]);
+						comp = Integer.parseInt(key.split("[/.]")[1]);
 						if(comp > uID)
 						{
 							uID = comp;
@@ -776,7 +808,7 @@ public class threadedConnection implements Runnable
 		/**Convert users emailHash to unique ID**/
 		/**Convert users emailHash to unique ID**/
 		String userID;
-		if((userID = userHashToID(emailHash, "getHistory")) == null)
+		if((userID = userHashToID(emailHash, "getHistory")).equals(null))
 		{
 			return false;
 		}
@@ -795,7 +827,7 @@ public class threadedConnection implements Runnable
 			String transactionHistory = "data/"+userID+"/purchaseHistory.json";
 			//Read transaction history
 			dataString = "";
-			if((dataString = readFromS3(bucket, transactionHistory, "getHistory")) == null)
+			if((dataString = readFromS3(bucket, transactionHistory, "getHistory")).equals(null))
 			{
 				return false;
 			}
@@ -820,7 +852,7 @@ public class threadedConnection implements Runnable
 		boolean written = false;
 		//Read current leaderboard
 		String leaders;
-		if((leaders = readFromS3(bucket, leaderboard, "save")) == null)
+		if((leaders = readFromS3(bucket, leaderboard, "save")).equals(null))
 		{
 			return false;
 		}
@@ -871,7 +903,7 @@ public class threadedConnection implements Runnable
 		//Connect to S3
 		String leaderboard = "leaderboard.csv";
 		String fullLeaderboard;
-		if((fullLeaderboard = readFromS3(bucket, leaderboard, "leaderboard")) == null)
+		if((fullLeaderboard = readFromS3(bucket, leaderboard, "leaderboard")).equals(null))
 		{
 			return null;
 		}
@@ -893,7 +925,7 @@ public class threadedConnection implements Runnable
 				String score = line.split(":")[1].replaceAll("'", "");
 				String userDataFile = "data/"+userID+"/data.json";
 				String userData;
-				if((userData = readFromS3(bucket, userDataFile, "leaderboard")) == null)
+				if((userData = readFromS3(bucket, userDataFile, "leaderboard")).equals(null))
 				{
 					return null;
 				}
@@ -958,7 +990,7 @@ public class threadedConnection implements Runnable
 				//Grab user JSON data
 				String userData = "data/" + iUser + "/data.json";
 				String data;
-				if((data = readFromS3(bucket, userData, "getUsers")) == null)
+				if((data = readFromS3(bucket, userData, "getUsers")).equals(null))
 				{
 					return null;
 				}
@@ -981,7 +1013,7 @@ public class threadedConnection implements Runnable
 		{		
 			/**Convert users emailHash to unique ID**/
 			String userID;
-			if((userID = userHashToID(emailHash, "getHistory")) == null)
+			if((userID = userHashToID(emailHash, "getHistory")).equals(null))
 			{
 				return null;
 			}
@@ -995,14 +1027,14 @@ public class threadedConnection implements Runnable
 			
 			//Get User Data
 			String data;
-			if((data = readFromS3(bucket, userData, "getUsers")) == null)
+			if((data = readFromS3(bucket, userData, "getUsers")).equals(null))
 			{
 				return null;
 			}
 			
 			//Get User Transaction History
 			String transData;
-			if((transData = readFromS3(bucket, transHistory, "getUsers")) == null)
+			if((transData = readFromS3(bucket, transHistory, "getUsers")).equals(null))
 			{
 				return null;
 			}
@@ -1057,7 +1089,7 @@ public class threadedConnection implements Runnable
 		{
 			//Open file, add contents to return data
 			String fullStockData;
-			if((fullStockData = readFromS3(ASXJSON, key, "stockHistory")) == null)
+			if((fullStockData = readFromS3(ASXJSON, key, "stockHistory")).equals(null))
 			{
 				return null;
 			}
@@ -1075,18 +1107,18 @@ public class threadedConnection implements Runnable
 		return dataReturn;
 	}
 	
-	private boolean sendMessage(String senderEmailHash, String recipientEmailHash, String type, String contents)
+	private boolean sendMessage(String senderEmailHash, String recipientEmailHash, String type, String subject, String contents)
 	{
 		/**Convert senders emailHash to unique ID**/
 		String senderID;
-		if((senderID = userHashToID(senderEmailHash, "getHistory")) == null)
+		if((senderID = userHashToID(senderEmailHash, "getHistory")).equals(null))
 		{
 			return false;
 		}
 		String senderData;
 		//Open senders data file and grab email field
 		String senderDataFile = "data/"+senderID+"/data.json";
-		if((senderData = readFromS3(bucket, senderDataFile, "sendMessage")) == null)
+		if((senderData = readFromS3(bucket, senderDataFile, "sendMessage")).equals(null))
 		{
 			return false;
 		}
@@ -1097,6 +1129,7 @@ public class threadedConnection implements Runnable
 		JSONObject newMail = new JSONObject();
 		newMail.put("Sender", senderEmail);
 		newMail.put("Type", type);
+		newMail.put("Subject", subject);
 		newMail.put("Contents", contents);
 		newMail.put("Date", threadedConnection.date);
 		newMail.put("Time", threadedConnection.time);
@@ -1105,7 +1138,7 @@ public class threadedConnection implements Runnable
 		
 		/**Convert recipients emailHash to unique ID**/
 		String recipientID;
-		if((recipientID = userHashToID(recipientEmailHash, "getHistory")) == null)
+		if((recipientID = userHashToID(recipientEmailHash, "getHistory")).equals(null))
 		{
 			return false;
 		}
@@ -1166,7 +1199,7 @@ public class threadedConnection implements Runnable
 	{
 		/**Convert users emailHash to unique ID**/
 		String userID;
-		if((userID = userHashToID(emailHash, "getHistory")) == null)
+		if((userID = userHashToID(emailHash, "getHistory")).equals(null))
 		{
 			return null;
 		}
@@ -1218,7 +1251,7 @@ public class threadedConnection implements Runnable
 	{
 		/**Convert users emailHash to unique ID**/
 		String userID;
-		if((userID = userHashToID(emailHash, "getHistory")) == null)
+		if((userID = userHashToID(emailHash, "getHistory")).equals(null))
 		{
 			return null;
 		}
@@ -1232,7 +1265,7 @@ public class threadedConnection implements Runnable
 			return null;
 		}
 		String mailData;
-		if((mailData = readFromS3(bucket, mailPath, "getMessage")) == null)
+		if((mailData = readFromS3(bucket, mailPath, "getMessage")).equals(null))
 		{
 			return null;
 		}
@@ -1252,7 +1285,7 @@ public class threadedConnection implements Runnable
 	{
 		/**Convert users emailHash to unique ID**/
 		String userID;
-		if((userID = userHashToID(emailHash, "getHistory")) == null)
+		if((userID = userHashToID(emailHash, "getHistory")).equals(null))
 		{
 			return false;
 		}
@@ -1274,7 +1307,7 @@ public class threadedConnection implements Runnable
 	{
 		/**Convert users emailHash to unique ID**/
 		String userID;
-		if((userID = userHashToID(emailHash, "getHistory")) == null)
+		if((userID = userHashToID(emailHash, "getHistory")).equals(null))
 		{
 			return null;
 		}
@@ -1315,7 +1348,7 @@ public class threadedConnection implements Runnable
 				/**Open mail item - if "Unread" == "true" - add mail ID to ArrayList**/
 				String mailPath = "data/" + userID + "/mailbox/" + mailId + ".json";
 				String mailData;
-				if((mailData = readFromS3(bucket, mailPath, "getUnreadMail")) == null)
+				if((mailData = readFromS3(bucket, mailPath, "getUnreadMail")).equals(null))
 				{
 					return null;
 				}
@@ -1350,7 +1383,7 @@ public class threadedConnection implements Runnable
 	{
 		/**Convert users emailHash to unique ID**/
 		String userID;
-		if((userID = userHashToID(emailHash, "getHistory")) == null)
+		if((userID = userHashToID(emailHash, "getHistory")).equals(null))
 		{
 			return false;
 		}
@@ -1364,7 +1397,7 @@ public class threadedConnection implements Runnable
 			return false;
 		}
 		String mailData;
-		if((mailData = readFromS3(bucket, mailPath, "markMailUnread")) == null)
+		if((mailData = readFromS3(bucket, mailPath, "markMailUnread")).equals(null))
 		{
 			return false;
 		}
