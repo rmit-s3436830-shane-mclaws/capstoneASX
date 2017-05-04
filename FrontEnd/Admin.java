@@ -205,7 +205,7 @@ public class Admin
 		return successState;
 	}
 	
-	protected static void messageAllUsers(String type, String message)
+	protected static void messageAllUsers(String type, String subject, String message)
 	{
 		if(playerList.isEmpty())
 		{
@@ -216,7 +216,7 @@ public class Admin
 			JSONObject playerJSON = new JSONObject(player);
 			String email = playerJSON.getString("Email");
 			System.out.println("Emailing: " + email);
-			Game.sendMessage(AsxGame.activeAdmin.email, email, type, message);
+			Game.sendMessage(AsxGame.activeAdmin.email, email, type, subject, message);
 		}
 	}
 	
