@@ -18,6 +18,7 @@ public class Player {
 	float balance;
 	ArrayList<String> shares = new ArrayList<String>();	//formatted: "asxCode:Number"
 	ArrayList<JSONObject> transHistory = new ArrayList<JSONObject>(); 	//formatted as JSON; keys:date,time,buy/sell,stock code,number,price
+	ArrayList<JSONObject> valueHistory = new ArrayList<JSONObject>();
 	float score;												
 	boolean adminRights = false;
 	float shareVal;
@@ -62,6 +63,9 @@ public class Player {
 		System.out.println("admin: " + adminRights);
 		for (int i = 0; i < transHistory.size(); i++){
 			System.out.println(transHistory.get(i).toString());
+		}
+		for (int i = 0; i < valueHistory.size(); i++){
+			System.out.println(valueHistory.get(i).toString());
 		}
 		generateDataSaveString();
 		return;

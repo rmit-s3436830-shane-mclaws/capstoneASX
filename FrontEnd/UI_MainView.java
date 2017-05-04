@@ -77,13 +77,22 @@ public class UI_MainView {
 		lblWelcomePlayer.setBounds(448, 94, 104, 16);
 		frmPortfolio.getContentPane().add(lblWelcomePlayer);*/
 		
+		
+		if(AsxGame.activePlayerLoaded)
+		{
+			balanceLabel = new JLabel("Current Balance: $" + AsxGame.activePlayer.getBalanceToString());
+			lblWelcomePlayer_1 = new JLabel("Welcome " + AsxGame.activePlayer.name);
+			
+		}
+		else if(AsxGame.activeAdminLoaded)
+		{
+			balanceLabel = new JLabel("Current Balance: $" + AsxGame.activeAdmin.getBalanceToString());
+			lblWelcomePlayer_1 = new JLabel("Welcome " + AsxGame.activeAdmin.name);
+		}
 		//balance label
-		balanceLabel = new JLabel("Current Balance: $" + AsxGame.activePlayer.getBalanceToString());
 		balanceLabel.setBounds(250, 31, 185, 16);
 		frmPortfolio.getContentPane().add(balanceLabel);
-		
 		//player name label
-		lblWelcomePlayer_1 = new JLabel("Welcome " + AsxGame.activePlayer.name);
 		lblWelcomePlayer_1.setFont(new Font("Lucida Grande", Font.BOLD, 13));
 		lblWelcomePlayer_1.setBounds(250, 10, 177, 16);
 		frmPortfolio.getContentPane().add(lblWelcomePlayer_1);
@@ -159,20 +168,41 @@ public class UI_MainView {
 			tableModel.removeRow(tableModel.getRowCount() - 1);
 		}
 		//for all owned shares
-		for (int i = 0; i < AsxGame.activePlayer.shares.size(); i++){
-			String[] row = new String[5]; 
-			String[] stringSplit = AsxGame.activePlayer.shares.get(i).split(":");
-			row[0] = stringSplit[0];
-			//this adds the name and price to the table
-			for (int j = 0; j < AsxGame.stockArray.size(); j++){
-				if (AsxGame.stockArray.get(j).code.equals(stringSplit[0])){
-					row[1] = AsxGame.stockArray.get(j).name;
-					row[3] = "$" + Float.toString(AsxGame.stockArray.get(j).askPrice);
+		if(AsxGame.activePlayerLoaded)
+		{
+			for (int i = 0; i < AsxGame.activePlayer.shares.size(); i++){
+				String[] row = new String[5]; 
+				String[] stringSplit = AsxGame.activePlayer.shares.get(i).split(":");
+				row[0] = stringSplit[0];
+				//this adds the name and price to the table
+				for (int j = 0; j < AsxGame.stockArray.size(); j++){
+					if (AsxGame.stockArray.get(j).code.equals(stringSplit[0])){
+						row[1] = AsxGame.stockArray.get(j).name;
+						row[3] = "$" + Float.toString(AsxGame.stockArray.get(j).askPrice);
+					}
 				}
+				row[2] = stringSplit[1];
+				row[4] = "Sell: " + stringSplit[0];
+				tableModel.addRow(row);
 			}
-			row[2] = stringSplit[1];
-			row[4] = "Sell: " + stringSplit[0];
-			tableModel.addRow(row);
+		}
+		else if(AsxGame.activeAdminLoaded)
+		{
+			for (int i = 0; i < AsxGame.activeAdmin.shares.size(); i++){
+				String[] row = new String[5]; 
+				String[] stringSplit = AsxGame.activeAdmin.shares.get(i).split(":");
+				row[0] = stringSplit[0];
+				//this adds the name and price to the table
+				for (int j = 0; j < AsxGame.stockArray.size(); j++){
+					if (AsxGame.stockArray.get(j).code.equals(stringSplit[0])){
+						row[1] = AsxGame.stockArray.get(j).name;
+						row[3] = "$" + Float.toString(AsxGame.stockArray.get(j).askPrice);
+					}
+				}
+				row[2] = stringSplit[1];
+				row[4] = "Sell: " + stringSplit[0];
+				tableModel.addRow(row);
+			}
 		}
 	}
 	
