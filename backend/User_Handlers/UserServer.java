@@ -14,6 +14,11 @@ import java.util.*;
 
 public class UserServer
 {
+	protected static double flatBuyFee = 50.00;
+	protected static double perBuyFee = 1.00;
+	protected static double flatSellFee = 50.00;
+	protected static double perSellFee = 0.25;
+	
 	public static void main(String args[]) throws SocketException
 	{
 		System.out.println("========================STARTING SERVER========================");
