@@ -226,10 +226,11 @@ public class Menus
 	//				Utilities.loadTempStockList();
 	//				break;
 				case 7: //Send Message
-					System.out.println("Enter recipient then message");
+					System.out.println("Enter recipient, then subject line, then message");
 					String recipient = consoleRead.next();
+					String subject = consoleRead.next();
 					String message = consoleRead.next();
-					Game.sendMessage(null, recipient, "message", message);
+					Game.sendMessage(null, recipient, "message", subject, message);
 					break;
 				case 8: //View Message
 					System.out.println("Retrieving list of messages");
@@ -251,6 +252,7 @@ public class Menus
 							System.out.println("Received: " + mailJSON.getString("Date") + "-" + mailJSON.getString("Time"));
 							System.out.println("Message from: " + mailJSON.getString("Sender"));
 							System.out.println("Message type: " + mailJSON.getString("Type"));
+							System.out.println("Message subject: " + mailJSON.getString("Subject"));
 							System.out.println("Message contents: " + mailJSON.getString("Contents"));
 						}
 					}
@@ -393,9 +395,10 @@ public class Menus
 					Admin.setSellFee(flat, per);
 					break;
 				case 12:
-					System.out.println("Enter message to send to all users");
+					System.out.println("Enter subject line then message to send to all users");
+					String subject = consoleRead.next();
 					String message = consoleRead.next();
-					Admin.messageAllUsers("message", message);
+					Admin.messageAllUsers("message", subject, message);
 					break;
 				case 0: 		//exit
 					System.exit(0);
