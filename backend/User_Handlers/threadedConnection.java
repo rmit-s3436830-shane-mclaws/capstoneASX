@@ -288,15 +288,14 @@ public class threadedConnection implements Runnable
 				{
 					String sender = connectionRead.readLine();
 					String recipient = connectionRead.readLine();
-					String type = connectionRead.readLine();
 					String subject = connectionRead.readLine();
 					String contents = "";
 					while((line = connectionRead.readLine()) != null)
 					{
 						contents += line + "\n";
 					}
-					fileData += "Requesting: sendMessage; Sender: " + sender + "; Recipient: " + recipient + "; Type: " + type + "; Subject: " + subject + "\nContents: " + contents + "\n";
-					if(sendMessage(sender, recipient, type, subject, contents))
+					fileData += "Requesting: sendMessage; Sender: " + sender + "; Recipient: " + recipient + "; Subject: " + subject + "\nContents: " + contents + "\n";
+					if(sendMessage(sender, recipient, subject, contents))
 					{
 						fileData += "Returning: 200\n";
 						bytes = "200".getBytes("UTF-8");
@@ -311,7 +310,7 @@ public class threadedConnection implements Runnable
 				{
 					String user = connectionRead.readLine();
 					fileData += "Requesting: " + line + "; User: " + user + "\n";
-					String gmlReturn = getMessageList(user);
+					String gmlReturn = getMessageList(user, "message");
 					if(gmlReturn != null)
 					{
 						if(gmlReturn.equals("0"))
@@ -419,6 +418,64 @@ public class threadedConnection implements Runnable
 					{
 						fileData += "Returning: 200\n";
 						bytes = "200".getBytes("UTF-8");
+					}
+					else
+					{
+						fileData += "Returning: 500\n";
+						bytes = "500".getBytes("UTF-8");
+					}
+				}
+				else if(line.equals("sendFunds"))
+				{
+					String sender = connectionRead.readLine();
+					String recipient = connectionRead.readLine();
+					float amount = Float.parseFloat(connectionRead.readLine());
+					fileData += "Requesting: " + line + "; Sender: " + sender + "; Recipient: " + recipient + "; Amount: " + amount + "\n";
+					if(sendFunds(sender, recipient, amount))
+					{
+						fileData += "Returning: 200\n";
+						bytes = "200".getBytes("UTF-8");
+					}
+					else
+					{
+						fileData += "Returning: 500\n";
+						bytes = "500".getBytes("UTF-8");
+					}
+				}
+				else if(line.equals("acceptFunds"))
+				{
+					String user = connectionRead.readLine();
+					String fundID = connectionRead.readLine();
+					float amount = Float.parseFloat(connectionRead.readLine());
+					fileData += "Requesting: " + line + "; User: " + user + "; Fund ID: " + fundID + "; Amount: " + amount + "\n";
+					if(acceptFunds(user, fundID, amount))
+					{
+						fileData += "Returning: 200\n";
+						bytes = "200".getBytes("UTF-8");
+					}
+					else
+					{
+						fileData += "Returning: 500\n";
+						bytes = "500".getBytes("UTF-8");
+					}
+				}
+				else if(line.equals("getFundsList"))
+				{
+					String user = connectionRead.readLine();
+					fileData += "Requesting: " + line + "; User: " + user + "\n";
+					String gmlReturn = getMessageList(user, "funds");
+					if(gmlReturn != null)
+					{
+						if(gmlReturn.equals("0"))
+						{
+							fileData += "Returning: 204\n";
+							bytes = "204".getBytes("UTF-8");
+						}
+						else
+						{
+							fileData += "Returning: " + gmlReturn + "\n";
+							bytes = gmlReturn.getBytes("UTF-8");
+						}
 					}
 					else
 					{
@@ -1122,7 +1179,7 @@ public class threadedConnection implements Runnable
 		return dataReturn;
 	}
 	
-	private boolean sendMessage(String senderEmailHash, String recipientEmailHash, String type, String subject, String contents)
+	private boolean sendMessage(String senderEmailHash, String recipientEmailHash, String subject, String contents)
 	{
 		/**Convert senders emailHash to unique ID**/
 		String senderID;
@@ -1143,7 +1200,7 @@ public class threadedConnection implements Runnable
 		/**Create JSON object to be posted in users mailbox**/
 		JSONObject newMail = new JSONObject();
 		newMail.put("Sender", senderEmail);
-		newMail.put("Type", type);
+		newMail.put("Type", "message");
 		newMail.put("Subject", subject);
 		newMail.put("Contents", contents);
 		newMail.put("Date", threadedConnection.date);
@@ -1211,7 +1268,7 @@ public class threadedConnection implements Runnable
 		return true;
 	}
 	
-	private String getMessageList(String emailHash)
+	private String getMessageList(String emailHash, String type)
 	{
 		/**Convert users emailHash to unique ID**/
 		String userID;
@@ -1234,8 +1291,18 @@ public class threadedConnection implements Runnable
 					for(S3ObjectSummary summary : summaries)
 					{
 						String key = summary.getKey();
-						num = Integer.parseInt(key.split("[/.]")[3]);
-						mail.add(num);
+						String mailData;
+						//Download mail object and check if it is actually a message
+						if((mailData = readFromS3(bucket, key, "getMessageList")).equals(null))
+						{
+							return null;
+						}
+						JSONObject mailJSON = new JSONObject(mailData);
+						if(mailJSON.getString("Type").equals(type))
+						{
+							num = Integer.parseInt(key.split("[/.]")[3]);
+							mail.add(num);
+						}
 					}
 					objectList = s3Client.listNextBatchOfObjects(objectList);
 				}while (objectList.isTruncated());
@@ -1245,8 +1312,18 @@ public class threadedConnection implements Runnable
 				for(S3ObjectSummary summary : summaries)
 				{
 					String key = summary.getKey();
-					num = Integer.parseInt(key.split("[/.]")[3]);
-					mail.add(num);
+					String mailData;
+					//Download mail object and check if it is actually a message
+					if((mailData = readFromS3(bucket, key, "getMessageList")).equals(null))
+					{
+						return null;
+					}
+					JSONObject mailJSON = new JSONObject(mailData);
+					if(mailJSON.getString("Type").equals(type))
+					{
+						num = Integer.parseInt(key.split("[/.]")[3]);
+						mail.add(num);
+					}
 				}
 			}
 			String result = "";
@@ -1323,19 +1400,26 @@ public class threadedConnection implements Runnable
 		}
 		JSONObject mailJSON = new JSONObject(mailData);
 		//If message has been moved to trash, remove message, else, move to trash
-		if(mailJSON.getString("Deleted").equals("true"))
+		if(mailJSON.getString("type").equals("message"))
 		{
-			s3Client.deleteObject(new DeleteObjectRequest(bucket, mailPath));
+			if(mailJSON.getString("Deleted").equals("true"))
+			{
+				s3Client.deleteObject(new DeleteObjectRequest(bucket, mailPath));
+			}
+			else
+			{
+				//Mark message as deleted and reupload
+				mailJSON.put("Deleted", "true");
+				mailData = mailJSON.toString();
+				if(!saveToS3(bucket, mailPath, mailData, "deleteMessage"))
+				{
+					return false;
+				}
+			}
 		}
 		else
 		{
-			//Mark message as deleted and reupload
-			mailJSON.put("Deleted", "true");
-			mailData = mailJSON.toString();
-			if(!saveToS3(bucket, mailPath, mailData, "deleteMessage"))
-			{
-				return false;
-			}
+			s3Client.deleteObject(new DeleteObjectRequest(bucket, mailPath));
 		}
 		return true;
 	}
@@ -1390,7 +1474,7 @@ public class threadedConnection implements Runnable
 					return null;
 				}
 				JSONObject mailJSON = new JSONObject(mailData);
-				if(mailJSON.getString("Unread").equals("true"))
+				if(mailJSON.getString("Type").equals("message") && mailJSON.getString("Unread").equals("true"))
 				{
 					unreadMailID.add(mailId);
 				}
@@ -1514,6 +1598,177 @@ public class threadedConnection implements Runnable
 		String creds = "creds/"+emailHash+".rec";
 		s3Client.deleteObject(new DeleteObjectRequest(bucket, creds));
 		
+		return true;
+	}
+	
+	protected boolean sendFunds(String senderEmailHash, String recipientEmailHash, float amount)
+	{
+		/**Convert senders emailHash to unique ID**/
+		String senderID;
+		if((senderID = userHashToID(senderEmailHash, "sendFunds")).equals(null))
+		{
+			return false;
+		}
+		String senderData;
+		
+		//Open senders data file and grab email field
+		String senderDataFile = "data/"+senderID+"/data.json";
+		if((senderData = readFromS3(bucket, senderDataFile, "sendFunds")).equals(null))
+		{
+			return false;
+		}
+		JSONObject senderJSON = new JSONObject(senderData);
+		String senderEmail = senderJSON.getString("Email");
+		
+		//Remove amount from senders balance
+		senderJSON.put("balance", senderJSON.getDouble("balance") - amount);
+		if(!saveToS3(bucket, senderDataFile, senderJSON.toString(), "sendFunds"))
+		{
+			return false;
+		}
+		
+		
+		/**Create JSON object to be posted in users mailbox**/
+		JSONObject newFunds = new JSONObject();
+		newFunds.put("Sender", senderEmail);
+		newFunds.put("Type", "funds");
+		newFunds.put("Amount", amount);
+		newFunds.put("Unread", "true");
+		newFunds.put("Date", threadedConnection.date);
+		newFunds.put("Time", threadedConnection.time);
+		String fundsEntry = newFunds.toString();
+		
+		/**Convert recipients emailHash to unique ID**/
+		String recipientID;
+		if((recipientID = userHashToID(recipientEmailHash, "sendFunds")).equals(null))
+		{
+			return false;
+		}
+		/***************************************************************************************/
+		
+		/**Post message to recipients mailbox folder**/
+		//Generate message number
+		ObjectListing objectList = s3Client.listObjects(bucket, "data/"+recipientID+"/mailbox/");
+		List<S3ObjectSummary> summaries = objectList.getObjectSummaries();
+		int mailID = 999; //minimum number for mailID is 1000
+		int comp;
+		if(summaries.size() != 0)
+		{
+			if(objectList.isTruncated())
+			{
+				do
+				{
+					for(S3ObjectSummary summary : summaries)
+					{
+						String key = summary.getKey();
+						comp = Integer.parseInt(key.split("[/.]")[3]);
+						if(comp > mailID)
+						{
+							mailID = comp;
+						}
+					}
+					objectList = s3Client.listNextBatchOfObjects(objectList);
+				}while (objectList.isTruncated());
+			}
+			else
+			{
+				for(S3ObjectSummary summary : summaries)
+				{
+					String key = summary.getKey();
+					comp = Integer.parseInt(key.split("[/.]")[3]);
+					if(comp > mailID)
+					{
+						mailID = comp;
+					}
+				}
+			}
+		}
+		mailID++;
+		String mailPath = "data/"+recipientID+"/mailbox/"+mailID+".json";
+		/***************************************************************************************/
+			
+		//Post funds request to User
+		if(!saveToS3(bucket, mailPath, fundsEntry, "sendFunds"))
+		{
+			return false;
+		}
+		/***************************************************************************************/
+		
+		return true;
+	}
+	
+	protected boolean acceptFunds(String user, String fundID, float amount)
+	{
+		/**Convert senders emailHash to unique ID**/
+		String recipientID;
+		if((recipientID = userHashToID(user, "acceptFunds")).equals(null))
+		{
+			return false;
+		}
+		String recipientData;
+		//Open senders data file and grab email field
+		String recipientDataFile = "data/"+recipientID+"/data.json";
+		if((recipientData = readFromS3(bucket, recipientDataFile, "acceptFunds")).equals(null))
+		{
+			return false;
+		}
+		JSONObject recipientJSON = new JSONObject(recipientData);
+		String recipientEmail = recipientJSON.getString("Email");
+		
+		//Get funds message data
+		String fundsPath = "data/"+recipientID+"/mailbox/"+fundID+".json";
+		String fundsData = "";
+		if((fundsData = readFromS3(bucket, fundsPath, "acceptFunds")).equals(null))
+		{
+			return false;
+		}
+		JSONObject fundsJSON = new JSONObject(fundsData);
+		if(fundsJSON.getDouble("Amount") < amount)
+		{
+			return false;
+		}
+		
+		//Delete the funds message
+		s3Client.deleteObject(new DeleteObjectRequest(bucket, fundsPath));
+		
+		//Add accepted amount to recipients account
+		Double recipientBalance = recipientJSON.getDouble("Balance");
+		recipientJSON.put("Balance", recipientBalance + amount);
+		recipientData = recipientJSON.toString();
+		if(!saveToS3(bucket, recipientDataFile, recipientData, "acceptFunds"))
+		{
+			return false;
+		}
+		
+		//Notifies sender of funds of the amount that was accepted.
+		double refund = fundsJSON.getDouble("Amount") - amount;
+		String refundUser = fundsJSON.getString("Sender");
+		String refundSubject = "Funds transfer " + fundID;
+		String refundMessage = "The user at " + recipientEmail + " has accpeted $" + amount + " of your funds transfer.\n$" + refund + " has been added back into your account.";
+		if(!sendMessage("admin@tradingwheels.com.au", refundUser, refundSubject, refundMessage))
+		{
+			return false;
+		}
+		String senderID;
+		if((senderID = userHashToID(refundUser, "acceptFunds")).equals(null))
+		{
+			return false;
+		}
+		//Add refunded amount to senders account
+		String senderData;
+		String senderDataFile = "data/"+senderID+"/data.json";
+		if((senderData = readFromS3(bucket, senderDataFile, "acceptFunds")).equals(null))
+		{
+			return false;
+		}
+		JSONObject senderJSON = new JSONObject(senderData);
+		Double senderBalance = senderJSON.getDouble("Balance");
+		senderJSON.put("Balance", senderBalance + refund);
+		senderData = senderJSON.toString();
+		if(!saveToS3(bucket, senderDataFile, senderData, "acceptFunds"))
+		{
+			return false;
+		}
 		return true;
 	}
 }
