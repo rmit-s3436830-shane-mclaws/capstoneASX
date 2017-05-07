@@ -479,23 +479,31 @@ public class Game
 	
 	public static boolean sendFunds(String recipient, float amount)
 	{
-		String userHash = Integer.toString(AsxGame.activePlayer.email.hashCode());
-		boolean state = false;
-		String recipientHash = Integer.toString(recipient.hashCode());
-		System.out.println("Attempt sendFunds...");
-		String sendString = "sendFunds\n"+userHash+"\n"+recipientHash+"\n"+amount+"\n";
-		String response = Utilities.sendServerMessage(sendString);
-		if(response.equals("200\n"))
+		if(AsxGame.activePlayer.balance > amount)
 		{
-			System.out.println("200");
-			state = true;
+			String userHash = Integer.toString(AsxGame.activePlayer.email.hashCode());
+			boolean state = false;
+			String recipientHash = Integer.toString(recipient.hashCode());
+			System.out.println("Attempt sendFunds...");
+			String sendString = "sendFunds\n"+userHash+"\n"+recipientHash+"\n"+amount+"\n";
+			String response = Utilities.sendServerMessage(sendString);
+			if(response.equals("200\n"))
+			{
+				System.out.println("200");
+				AsxGame.activePlayer.removeBalance(amount);
+				state = true;
+			}
+			else
+			{
+				System.out.println("500: INTERNAL SERVER ERROR!");
+				state = false;
+			}
+			return state;
 		}
 		else
 		{
-			System.out.println("500: INTERNAL SERVER ERROR!");
-			state = false;
+			return false;
 		}
-		return state;
 	}
 	
 	public static boolean acceptFunds(String fundID, float amount)
@@ -503,11 +511,12 @@ public class Game
 		String userHash = Integer.toString(AsxGame.activePlayer.email.hashCode());
 		boolean state = false;
 		System.out.println("Attempt acceptFunds...");
-		String sendString = "sendFunds\n"+userHash+"\n"+fundID+"\n"+amount+"\n";
+		String sendString = "acceptFunds\n"+userHash+"\n"+fundID+"\n"+amount+"\n";
 		String response = Utilities.sendServerMessage(sendString);
 		if(response.equals("200\n"))
 		{
 			System.out.println("200");
+			AsxGame.activePlayer.addBalance(amount);
 			state = true;
 		}
 		else
