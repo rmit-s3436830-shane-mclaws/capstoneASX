@@ -205,7 +205,7 @@ public class Admin
 		return successState;
 	}
 	
-	protected static void messageAllUsers(String type, String subject, String message)
+	protected static void messageAllUsers(String subject, String message)
 	{
 		if(playerList.isEmpty())
 		{
@@ -216,8 +216,48 @@ public class Admin
 			JSONObject playerJSON = new JSONObject(player);
 			String email = playerJSON.getString("Email");
 			System.out.println("Emailing: " + email);
-			Game.sendMessage(AsxGame.activeAdmin.email, email, type, subject, message);
+			Game.sendMessage(AsxGame.activeAdmin.email, email, subject, message);
 		}
+	}
+	
+	protected static boolean deleteUser(String user)
+	{
+		String userHash = Integer.toString(user.hashCode());
+		boolean state = false;
+		System.out.println("Attempt deleteAccount...");
+		String sendString = "deleteAccount\n"+userHash+"\n";
+		String response = Utilities.sendServerMessage(sendString);
+		if(response.equals("200\n"))
+		{
+			System.out.println("200");
+			state = true;
+		}
+		else
+		{
+			System.out.println("500: INTERNAL SERVER ERROR!");
+			state = false;
+		}
+		return state;
+	}
+	
+	protected static String getID(String user)
+	{
+		String userHash = Integer.toString(user.hashCode());
+		String state = null;
+		System.out.println("Attempt getID...");
+		String sendString = "getID\n"+userHash+"\n";
+		String response = Utilities.sendServerMessage(sendString);
+		if(!response.equals("500\n"))
+		{
+			System.out.println("200");
+			state = response;
+		}
+		else
+		{
+			System.out.println("500: INTERNAL SERVER ERROR!");
+			state = null;
+		}
+		return state;
 	}
 	
 }
