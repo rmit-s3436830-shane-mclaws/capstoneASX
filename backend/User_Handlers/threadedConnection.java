@@ -411,6 +411,21 @@ public class threadedConnection implements Runnable
 						bytes = "500".getBytes("UTF-8");
 					}
 				}
+				else if(line.equals("deleteAccount"))
+				{
+					String user = connectionRead.readLine();
+					fileData += "Requesting: " + line + "; User: " + user + "\n";
+					if(deleteAccount(user))
+					{
+						fileData += "Returning: 200\n";
+						bytes = "200".getBytes("UTF-8");
+					}
+					else
+					{
+						fileData += "Returning: 500\n";
+						bytes = "500".getBytes("UTF-8");
+					}
+				}
 				else
 				{
 					while((line = connectionRead.readLine()) != null)
@@ -808,7 +823,7 @@ public class threadedConnection implements Runnable
 		/**Convert users emailHash to unique ID**/
 		/**Convert users emailHash to unique ID**/
 		String userID;
-		if((userID = userHashToID(emailHash, "getHistory")).equals(null))
+		if((userID = userHashToID(emailHash, "save")).equals(null))
 		{
 			return false;
 		}
@@ -827,7 +842,7 @@ public class threadedConnection implements Runnable
 			String transactionHistory = "data/"+userID+"/purchaseHistory.json";
 			//Read transaction history
 			dataString = "";
-			if((dataString = readFromS3(bucket, transactionHistory, "getHistory")).equals(null))
+			if((dataString = readFromS3(bucket, transactionHistory, "save")).equals(null))
 			{
 				return false;
 			}
@@ -1013,7 +1028,7 @@ public class threadedConnection implements Runnable
 		{		
 			/**Convert users emailHash to unique ID**/
 			String userID;
-			if((userID = userHashToID(emailHash, "getHistory")).equals(null))
+			if((userID = userHashToID(emailHash, "getUsers")).equals(null))
 			{
 				return null;
 			}
@@ -1111,7 +1126,7 @@ public class threadedConnection implements Runnable
 	{
 		/**Convert senders emailHash to unique ID**/
 		String senderID;
-		if((senderID = userHashToID(senderEmailHash, "getHistory")).equals(null))
+		if((senderID = userHashToID(senderEmailHash, "sendMessage")).equals(null))
 		{
 			return false;
 		}
@@ -1134,11 +1149,12 @@ public class threadedConnection implements Runnable
 		newMail.put("Date", threadedConnection.date);
 		newMail.put("Time", threadedConnection.time);
 		newMail.put("Unread", "true");
+		newMail.put("Deleted", "false");
 		String mailEntry = newMail.toString();
 		
 		/**Convert recipients emailHash to unique ID**/
 		String recipientID;
-		if((recipientID = userHashToID(recipientEmailHash, "getHistory")).equals(null))
+		if((recipientID = userHashToID(recipientEmailHash, "sendMessage")).equals(null))
 		{
 			return false;
 		}
@@ -1199,7 +1215,7 @@ public class threadedConnection implements Runnable
 	{
 		/**Convert users emailHash to unique ID**/
 		String userID;
-		if((userID = userHashToID(emailHash, "getHistory")).equals(null))
+		if((userID = userHashToID(emailHash, "getMessageList")).equals(null))
 		{
 			return null;
 		}
@@ -1251,7 +1267,7 @@ public class threadedConnection implements Runnable
 	{
 		/**Convert users emailHash to unique ID**/
 		String userID;
-		if((userID = userHashToID(emailHash, "getHistory")).equals(null))
+		if((userID = userHashToID(emailHash, "getMessage")).equals(null))
 		{
 			return null;
 		}
@@ -1285,7 +1301,7 @@ public class threadedConnection implements Runnable
 	{
 		/**Convert users emailHash to unique ID**/
 		String userID;
-		if((userID = userHashToID(emailHash, "getHistory")).equals(null))
+		if((userID = userHashToID(emailHash, "deleteMessage")).equals(null))
 		{
 			return false;
 		}
@@ -1299,7 +1315,28 @@ public class threadedConnection implements Runnable
 			fileData += "deleteMessage: Mail item does not exist!\n";
 			return false;
 		}
-		s3Client.deleteObject(new DeleteObjectRequest(bucket, mailPath));
+		//Grab message from storage
+		String mailData;
+		if((mailData = readFromS3(bucket, mailPath, "deleteMessage")).equals(null))
+		{
+			return false;
+		}
+		JSONObject mailJSON = new JSONObject(mailData);
+		//If message has been moved to trash, remove message, else, move to trash
+		if(mailJSON.getString("Deleted").equals("true"))
+		{
+			s3Client.deleteObject(new DeleteObjectRequest(bucket, mailPath));
+		}
+		else
+		{
+			//Mark message as deleted and reupload
+			mailJSON.put("Deleted", "true");
+			mailData = mailJSON.toString();
+			if(!saveToS3(bucket, mailPath, mailData, "deleteMessage"))
+			{
+				return false;
+			}
+		}
 		return true;
 	}
 	
@@ -1307,7 +1344,7 @@ public class threadedConnection implements Runnable
 	{
 		/**Convert users emailHash to unique ID**/
 		String userID;
-		if((userID = userHashToID(emailHash, "getHistory")).equals(null))
+		if((userID = userHashToID(emailHash, "getUnreadMail")).equals(null))
 		{
 			return null;
 		}
@@ -1383,7 +1420,7 @@ public class threadedConnection implements Runnable
 	{
 		/**Convert users emailHash to unique ID**/
 		String userID;
-		if((userID = userHashToID(emailHash, "getHistory")).equals(null))
+		if((userID = userHashToID(emailHash, "markMailUnread")).equals(null))
 		{
 			return false;
 		}
@@ -1408,6 +1445,75 @@ public class threadedConnection implements Runnable
 		{
 			return false;
 		}
+		return true;
+	}
+	
+	private boolean deleteAccount(String emailHash)
+	{
+		/**Convert users emailHash to unique ID**/
+		String userID;
+		if((userID = userHashToID(emailHash, "deleteAccount")).equals(null))
+		{
+			return false;
+		}
+		
+		/**Remove user from leaderboard**/
+		String leaderboardFile = "leaderboard.csv";
+		String fullLeaderboard;
+		//retrieve leaderboard file
+		if((fullLeaderboard = readFromS3(bucket, leaderboardFile, "deleteAccount")).equals(null))
+		{
+			return false;
+		}
+		String newLeaderboard = "";
+		String leaderboardParts[] = fullLeaderboard.split("[:\n]");
+		for(int i=0; i<leaderboardParts.length; i+=2)
+		{
+			if(!leaderboardParts[i].equals(userID))
+			{
+				//Rebuild leaberboard file without the suer ID being deleted
+				newLeaderboard += leaderboardParts[i] + ":" + leaderboardParts[i+1] + "\n";
+			}
+		}
+		//Reupload updated leaderboard file
+		if(!saveToS3(bucket, leaderboardFile, newLeaderboard, "deleteAccount"))
+		{
+			return false;
+		}
+		
+		/**Delete user data files**/
+		//Generate a list of the users files
+		ObjectListing objectList = s3Client.listObjects(bucket, "data/"+userID+"/");
+		List<S3ObjectSummary> summaries = objectList.getObjectSummaries();
+		if(summaries.size() != 0)
+		{
+			//for each file, delete the S3 object
+			if(objectList.isTruncated())
+			{
+				do
+				{
+					for(S3ObjectSummary summary : summaries)
+					{
+						String key = summary.getKey();
+						s3Client.deleteObject(new DeleteObjectRequest(bucket, key));
+					}
+					objectList = s3Client.listNextBatchOfObjects(objectList);
+				}while (objectList.isTruncated());
+			}
+			else
+			{
+				for(S3ObjectSummary summary : summaries)
+				{
+					String key = summary.getKey();
+					s3Client.deleteObject(new DeleteObjectRequest(bucket, key));
+				}
+			}
+		}
+		
+		/**Delete users credentials file**/
+		String creds = "creds/"+emailHash+".rec";
+		s3Client.deleteObject(new DeleteObjectRequest(bucket, creds));
+		
 		return true;
 	}
 }
