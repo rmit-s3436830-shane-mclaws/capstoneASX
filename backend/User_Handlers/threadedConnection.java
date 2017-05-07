@@ -1331,8 +1331,16 @@ public class threadedConnection implements Runnable
 			{
 				result += id+",";
 			}
-			result = result.substring(0, result.length()-1);
-			return result;
+			if(result.length() > 0)
+			{
+				result = result.substring(0, result.length()-1);
+				return result;
+			}
+			else
+			{
+				return "0";
+			}
+			
 		}
 		else
 		{
@@ -1400,7 +1408,7 @@ public class threadedConnection implements Runnable
 		}
 		JSONObject mailJSON = new JSONObject(mailData);
 		//If message has been moved to trash, remove message, else, move to trash
-		if(mailJSON.getString("type").equals("message"))
+		if(mailJSON.getString("Type").equals("message"))
 		{
 			if(mailJSON.getString("Deleted").equals("true"))
 			{
@@ -1621,7 +1629,7 @@ public class threadedConnection implements Runnable
 		String senderEmail = senderJSON.getString("Email");
 		
 		//Remove amount from senders balance
-		senderJSON.put("balance", senderJSON.getDouble("balance") - amount);
+		senderJSON.put("Balance", Double.toString(senderJSON.getDouble("Balance") - amount));
 		if(!saveToS3(bucket, senderDataFile, senderJSON.toString(), "sendFunds"))
 		{
 			return false;
@@ -1632,7 +1640,7 @@ public class threadedConnection implements Runnable
 		JSONObject newFunds = new JSONObject();
 		newFunds.put("Sender", senderEmail);
 		newFunds.put("Type", "funds");
-		newFunds.put("Amount", amount);
+		newFunds.put("Amount", Double.toString(amount));
 		newFunds.put("Unread", "true");
 		newFunds.put("Date", threadedConnection.date);
 		newFunds.put("Time", threadedConnection.time);
@@ -1733,7 +1741,7 @@ public class threadedConnection implements Runnable
 		
 		//Add accepted amount to recipients account
 		Double recipientBalance = recipientJSON.getDouble("Balance");
-		recipientJSON.put("Balance", recipientBalance + amount);
+		recipientJSON.put("Balance", Double.toString(recipientBalance + amount));
 		recipientData = recipientJSON.toString();
 		if(!saveToS3(bucket, recipientDataFile, recipientData, "acceptFunds"))
 		{
@@ -1742,15 +1750,17 @@ public class threadedConnection implements Runnable
 		
 		//Notifies sender of funds of the amount that was accepted.
 		double refund = fundsJSON.getDouble("Amount") - amount;
+		String adminHash = Integer.toString("admin@tradingwheels.com.au".hashCode());
 		String refundUser = fundsJSON.getString("Sender");
+		String refundHash = Integer.toString(refundUser.hashCode());
 		String refundSubject = "Funds transfer " + fundID;
 		String refundMessage = "The user at " + recipientEmail + " has accpeted $" + amount + " of your funds transfer.\n$" + refund + " has been added back into your account.";
-		if(!sendMessage("admin@tradingwheels.com.au", refundUser, refundSubject, refundMessage))
+		if(!sendMessage(adminHash, refundHash, refundSubject, refundMessage))
 		{
 			return false;
 		}
 		String senderID;
-		if((senderID = userHashToID(refundUser, "acceptFunds")).equals(null))
+		if((senderID = userHashToID(refundHash, "acceptFunds")).equals(null))
 		{
 			return false;
 		}
@@ -1763,7 +1773,7 @@ public class threadedConnection implements Runnable
 		}
 		JSONObject senderJSON = new JSONObject(senderData);
 		Double senderBalance = senderJSON.getDouble("Balance");
-		senderJSON.put("Balance", senderBalance + refund);
+		senderJSON.put("Balance", Double.toString(senderBalance + refund));
 		senderData = senderJSON.toString();
 		if(!saveToS3(bucket, senderDataFile, senderData, "acceptFunds"))
 		{
