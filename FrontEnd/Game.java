@@ -12,7 +12,7 @@ package com.amazonaws.samples;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-
+import java.util.Scanner;
 
 import org.json.*;
 
@@ -121,6 +121,7 @@ public class Game
 				}
 				else if(val)
 				{
+					System.out.println(line);
 					JSONObject valLine = new JSONObject(line);
 					AsxGame.activePlayer.valueHistory.add(valLine);
 				}
@@ -336,7 +337,7 @@ public class Game
 		return saleFee;
 	}
 	
-	public static boolean sendMessage(String sender, String recipient, String type, String subject, String message)
+	public static boolean sendMessage(String sender, String recipient, String subject, String message)
 	{
 		//convert currentPlayer email and recipient email to hash
 		boolean state = false;
@@ -348,10 +349,10 @@ public class Game
 		else
 		{
 			senderHash = Integer.toString(sender.hashCode());
-		}		
+		}
 		String recipientHash = Integer.toString(recipient.hashCode());
 		System.out.println("Attempt sendMessage...");
-		String sendString = "sendMessage\n"+senderHash+"\n"+recipientHash+"\n"+type+"\n"+subject+"\n"+message+"\n";
+		String sendString = "sendMessage\n"+senderHash+"\n"+recipientHash+"\n"+subject+"\n"+message+"\n";
 		String response = Utilities.sendServerMessage(sendString);
 		if(response.equals("200\n"))
 		{
@@ -474,6 +475,117 @@ public class Game
 			state = false;
 		}
 		return state;
+	}
+	
+	public static boolean sendFunds(String recipient, float amount)
+	{
+		String userHash = Integer.toString(AsxGame.activePlayer.email.hashCode());
+		boolean state = false;
+		String recipientHash = Integer.toString(recipient.hashCode());
+		System.out.println("Attempt sendFunds...");
+		String sendString = "sendFunds\n"+userHash+"\n"+recipientHash+"\n"+amount+"\n";
+		String response = Utilities.sendServerMessage(sendString);
+		if(response.equals("200\n"))
+		{
+			System.out.println("200");
+			state = true;
+		}
+		else
+		{
+			System.out.println("500: INTERNAL SERVER ERROR!");
+			state = false;
+		}
+		return state;
+	}
+	
+	public static boolean acceptFunds(String fundID, float amount)
+	{
+		String userHash = Integer.toString(AsxGame.activePlayer.email.hashCode());
+		boolean state = false;
+		System.out.println("Attempt acceptFunds...");
+		String sendString = "sendFunds\n"+userHash+"\n"+fundID+"\n"+amount+"\n";
+		String response = Utilities.sendServerMessage(sendString);
+		if(response.equals("200\n"))
+		{
+			System.out.println("200");
+			state = true;
+		}
+		else
+		{
+			System.out.println("500: INTERNAL SERVER ERROR!");
+			state = false;
+		}
+		return state;
+	}
+	
+	public static String getFundsList()
+	{
+		//convert currentPlayer email and recipient email to hash
+		String userHash = Integer.toString(AsxGame.activePlayer.email.hashCode());
+		String messageList = "";
+		System.out.println("Attempt getFundsList...");
+		String sendString = "getFundsList\n"+userHash;
+		String response = Utilities.sendServerMessage(sendString);
+		if(!response.equals("500\n"))
+		{
+			messageList = response.toString();
+			if(response.equals("204\n"))
+			{
+				System.out.println("No pending funds trasnfers!");
+			}
+		}
+		else
+		{
+			System.out.println("500: INTERNAL SERVER ERROR!");
+			return null;
+		}
+		return messageList;
+	}
+	
+
+	public static boolean playerDeleteSelf()
+	{
+		boolean successState = false;
+		Scanner consoleRead = new Scanner(System.in);
+		String uEmail, password, conf;
+		System.out.println("Please enter username/email address: ");
+		uEmail = consoleRead.next();
+		if(!uEmail.equals(AsxGame.activePlayer.email))
+		{
+			System.out.println("Unauthorised action! Email address incorrect!");
+			consoleRead.close();
+			return false;
+		}
+		System.out.println("Please enter password: ");
+		password = consoleRead.next();
+		String emailHash = Integer.toString(uEmail.hashCode());
+		String pwHash = Integer.toString(password.hashCode());
+		System.out.println("Attempt login...");
+		String sendString = "login\n" + emailHash + "\n" + pwHash;
+		String response = Utilities.sendServerMessage(sendString);
+		ArrayList<String> lines = new ArrayList<String>(Arrays.asList(response.split("\n")));
+		if(!lines.get(0).equals("401"))
+		{
+			successState = true;
+		}
+		else
+		{
+			System.out.println("401: UNAUTHORIZED!");
+			successState = false;
+		}
+		System.out.println("Are you sure you want to delete your account?");
+		System.out.println("Enter y to continue.");
+		conf = consoleRead.next();
+		consoleRead.close();
+		if(conf.equalsIgnoreCase("y"))
+		{
+			successState = true;
+		}
+		else
+		{
+			successState = false;
+		}
+		return successState;
 	}
 }
 
