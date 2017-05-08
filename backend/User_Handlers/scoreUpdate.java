@@ -32,9 +32,9 @@ public class scoreUpdate
 		
 		credentials = new BasicAWSCredentials(scoreUpdate.AccessKey,scoreUpdate.SecretKey);
 		s3Client  = AmazonS3ClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(credentials)).withRegion(Regions.AP_SOUTHEAST_2).build();
+		
 		ObjectListing objectList = s3Client.listObjects(bucket, "data/");
 		List<S3ObjectSummary> summaries = objectList.getObjectSummaries();
-		
 		summaries.remove(0);
 		if(summaries.size() != 0)
 		{
@@ -45,7 +45,11 @@ public class scoreUpdate
 					for(S3ObjectSummary summary : summaries)
 					{
 						int ID = Integer.parseInt(summary.getKey().split("/")[1]);
-						if(users.get(users.size() - 1) != ID)
+						if(users.isEmpty())
+						{
+							users.add(ID);
+						}
+						else if(users.get(users.size() - 1) != ID)
 						{
 							users.add(ID);
 						}
@@ -58,7 +62,11 @@ public class scoreUpdate
 				for(S3ObjectSummary summary : summaries)
 				{
 					int ID = Integer.parseInt(summary.getKey().split("/")[1]);
-					if(users.get(users.size() - 1) != ID)
+					if(users.isEmpty())
+					{
+						users.add(ID);
+					}
+					else if(users.get(users.size() - 1) != ID)
 					{
 						users.add(ID);
 					}
