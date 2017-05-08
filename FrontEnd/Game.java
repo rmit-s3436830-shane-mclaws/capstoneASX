@@ -121,7 +121,6 @@ public class Game
 				}
 				else if(val)
 				{
-					System.out.println(line);
 					JSONObject valLine = new JSONObject(line);
 					AsxGame.activePlayer.valueHistory.add(valLine);
 				}
@@ -228,7 +227,7 @@ public class Game
 	{
 		AsxGame.leaderboard.clear();
 		boolean successState = false;
-		System.out.println("Attempt getStockHistory...");
+		System.out.println("Attempt leaders...");
 		String sendString = "leaders\n" + "0" + "\n" + "10"; //'0' is top position returned, '10' is number of places returned
 		String response = Utilities.sendServerMessage(sendString);
 		if(!response.equals("500\n"))
@@ -274,7 +273,7 @@ public class Game
 			successState = true;
 			for(String line:lines)
 			{
-				if(!lines.equals("200"))
+				if(!line.equals("200"))
 				{
 					JSONObject stockHis = new JSONObject(line);
 					AsxGame.requestedStockHistory.add(stockHis);
@@ -588,7 +587,19 @@ public class Game
 		consoleRead.close();
 		if(conf.equalsIgnoreCase("y"))
 		{
-			successState = true;
+			System.out.println("Attempt deleteAccount...");
+			sendString = "deleteAccount\n"+emailHash;
+			response = Utilities.sendServerMessage(sendString);
+			if(response.equals("200\n"))
+			{
+				System.out.println("User: " + uEmail + " deleted!");
+				successState = true;
+			}
+			else
+			{
+				System.out.println("500: INTERNAL SERVER ERROR!");
+				successState = false;
+			}
 		}
 		else
 		{
