@@ -21,8 +21,8 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 public class valueUpdate
 {
-	private static String AccessKey = REDACTED;
-	private static String SecretKey = REDACTED;
+	private static String AccessKey = "AKIAJREU35S4RGRV4OWQ";
+	private static String SecretKey = "7gbfzM0hX6SnP9H4agx6WV5cXrGg9lnvnWV+bNRX";
 	
 	public static void main(String args[])
 	{
@@ -45,7 +45,11 @@ public class valueUpdate
 					for(S3ObjectSummary summary : summaries)
 					{
 						int ID = Integer.parseInt(summary.getKey().split("/")[1]);
-						if(users.get(users.size() - 1) != ID)
+						if(users.isEmpty())
+						{
+							users.add(ID);
+						}
+						else if(users.get(users.size() - 1) != ID)
 						{
 							users.add(ID);
 						}
@@ -58,7 +62,11 @@ public class valueUpdate
 				for(S3ObjectSummary summary : summaries)
 				{
 					int ID = Integer.parseInt(summary.getKey().split("/")[1]);
-					if(users.get(users.size() - 1) != ID)
+					if(users.isEmpty())
+					{
+						users.add(ID);
+					}
+					else if(users.get(users.size() - 1) != ID)
 					{
 						users.add(ID);
 					}
