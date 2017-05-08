@@ -188,6 +188,8 @@ public class Menus
 			System.out.println("	11. Mark message as unread");
 			System.out.println("	12. Send funds to user");
 			System.out.println("	13. View and Accept an incoming funds transfer(s)");
+			System.out.println("	14. View history of stock");
+			System.out.println("	15. !!!Delete your account!!!");
 			System.out.println("	20. Logout (NOTE: THIS DOES NOT SAVE YOUR PLAYER CURRENTLY!");
 			System.out.println("	0. Exit");
 			
@@ -341,6 +343,21 @@ public class Menus
 						Game.acceptFunds(fundID, amount);
 					}
 					break;
+				case 14: //Get history of stock
+					System.out.println("Enter stock code");
+					String code = consoleRead.next();
+					System.out.println("Enter start date (yyyymmdd)");
+					int startDate = Integer.parseInt(consoleRead.next());
+					System.out.println("Enter end date (yyyyymmdd)");
+					int endDate = Integer.parseInt(consoleRead.next());
+					Game.getStockHistory(code, startDate, endDate);
+					System.out.println(AsxGame.requestedStockHistory.toString());
+					break;
+				case 15: //Delete self
+					Game.playerDeleteSelf();
+					AsxGame.activePlayer = null;
+					AsxGame.activePlayerLoaded = false;
+					return;
 				case 20: 		//logout
 					AsxGame.activePlayer = null;
 					AsxGame.activePlayerLoaded = false;
