@@ -9,3 +9,6 @@ Changelist:
     Updated to comply with Front-End codebase (20th April Version)
     Amazon S3 bucket connection and threading working
     Pulling and Displaying Company Codes
+11May:
+    Loading Stock Data upon login
+    Displaying Stock Data correctly
