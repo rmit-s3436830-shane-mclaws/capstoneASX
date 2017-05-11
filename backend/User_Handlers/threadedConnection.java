@@ -347,6 +347,30 @@ public class threadedConnection implements Runnable
 						bytes = "500".getBytes("UTF-8");
 					}
 				}
+				else if(line.equals("getDeleted"))
+				{
+					String user = connectionRead.readLine();
+					fileData += "Requesting: " + line + "; User: " + user + "\n";
+					String gmlReturn = getDeletedMessageList(user, "message");
+					if(gmlReturn != null)
+					{
+						if(gmlReturn.equals("0"))
+						{
+							fileData += "Returning: 204\n";
+							bytes = "204".getBytes("UTF-8");
+						}
+						else
+						{
+							fileData += "Returning: " + gmlReturn + "\n";
+							bytes = gmlReturn.getBytes("UTF-8");
+						}
+					}
+					else
+					{
+						fileData += "Returning: 500\n";
+						bytes = "500".getBytes("UTF-8");
+					}
+				}
 				else if(line.equals("deleteMessage"))
 				{
 					String user = connectionRead.readLine();
@@ -1213,7 +1237,45 @@ public class threadedConnection implements Runnable
 				return null;
 			}
 			JSONObject mailJSON = new JSONObject(mailData);
-			if(mailJSON.getString("Type").equals(type))
+			if(mailJSON.getString("Type").equals(type) && mailJSON.getString("Deleted").equals("false"))
+			{
+				result += Integer.parseInt(mail.split("[/.]")[3]) + ",";
+			}
+		}
+		if(result.length() > 0)
+		{
+			result = result.substring(0, result.length()-1);
+			return result;
+		}
+		else
+		{
+			return "0";
+		}
+	}
+	
+	private String getDeletedMessageList(String emailHash, String type)
+	{
+		/**Convert users emailHash to unique ID**/
+		String userID;
+		if((userID = userHashToID(emailHash, "getMessageList")).equals(null))
+		{
+			return null;
+		}
+		
+		//returns a list of message ID's
+		String prefix = "data/"+userID+"/mailbox/";
+		ArrayList<String> mailList = getList(bucket, prefix);
+		String result = "";
+		for(String mail:mailList)
+		{
+			String mailData;
+			//Download mail object and check if it is actually a message
+			if((mailData = readFromS3(bucket, mail, "getMessageList")).equals(null))
+			{
+				return null;
+			}
+			JSONObject mailJSON = new JSONObject(mailData);
+			if(mailJSON.getString("Type").equals(type) && mailJSON.getString("Deleted").equals("true"))
 			{
 				result += Integer.parseInt(mail.split("[/.]")[3]) + ",";
 			}
@@ -1297,8 +1359,9 @@ public class threadedConnection implements Runnable
 			}
 			else
 			{
-				//Mark message as deleted and reupload
+				//Mark message as deleted and read and reupload
 				mailJSON.put("Deleted", "true");
+				mailJSON.put("Unread", "false");
 				mailData = mailJSON.toString();
 				if(!saveToS3(bucket, mailPath, mailData, "deleteMessage"))
 				{
@@ -1556,7 +1619,15 @@ public class threadedConnection implements Runnable
 		String refundUser = fundsJSON.getString("Sender");
 		String refundHash = Integer.toString(refundUser.hashCode());
 		String refundSubject = "Funds transfer " + fundID;
-		String refundMessage = "The user at " + recipientEmail + " has accpeted $" + amount + " of your funds transfer.\n$" + refund + " has been added back into your account.";
+		String refundMessage;
+		if(amount == 0)
+		{
+			refundMessage = "The user at " + recipientEmail + " has rejected your funds transfer.\n$" + refund + " has been added back into your account.";
+		}
+		else
+		{
+			refundMessage = "The user at " + recipientEmail + " has accpeted $" + amount + " of your funds transfer.\n$" + refund + " has been added back into your account.";
+		}
 		if(!sendMessage(adminHash, refundHash, refundSubject, refundMessage))
 		{
 			return false;
