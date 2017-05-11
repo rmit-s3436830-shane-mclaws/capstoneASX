@@ -38,6 +38,7 @@ public class AsxGame
 	public static Player activeAdmin;						//holds the Player object for currently loaded admin
 	public static boolean activePlayerLoaded = false;		//state of whether or not a player is loaded
 	public static boolean activeAdminLoaded = false;		//state of whether or not an admin is loaded
+	public static Thread messageChecker;
 	
 	//leaderboard array (stored as JSON Objects)
 	//Keys: "Name" (as String), "Surname" (as String), "Score" (as String)
