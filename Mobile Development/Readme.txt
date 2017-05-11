@@ -11,4 +11,6 @@ Changelist:
     Pulling and Displaying Company Codes
 11May:
     Loading Stock Data upon login
-    Displaying Stock Data correctly
+    Displaying Stock Data correctly (in ListView)
+    Ability to filter Stock Data via attached SearchView
+    Buy/Sell Stocks
