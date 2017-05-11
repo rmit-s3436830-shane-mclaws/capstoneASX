@@ -288,15 +288,14 @@ public class threadedConnection implements Runnable
 				{
 					String sender = connectionRead.readLine();
 					String recipient = connectionRead.readLine();
-					String type = connectionRead.readLine();
 					String subject = connectionRead.readLine();
 					String contents = "";
 					while((line = connectionRead.readLine()) != null)
 					{
 						contents += line + "\n";
 					}
-					fileData += "Requesting: sendMessage; Sender: " + sender + "; Recipient: " + recipient + "; Type: " + type + "; Subject: " + subject + "\nContents: " + contents + "\n";
-					if(sendMessage(sender, recipient, type, subject, contents))
+					fileData += "Requesting: sendMessage; Sender: " + sender + "; Recipient: " + recipient + "; Subject: " + subject + "\nContents: " + contents + "\n";
+					if(sendMessage(sender, recipient, subject, contents))
 					{
 						fileData += "Returning: 200\n";
 						bytes = "200".getBytes("UTF-8");
@@ -311,7 +310,7 @@ public class threadedConnection implements Runnable
 				{
 					String user = connectionRead.readLine();
 					fileData += "Requesting: " + line + "; User: " + user + "\n";
-					String gmlReturn = getMessageList(user);
+					String gmlReturn = getMessageList(user, "message");
 					if(gmlReturn != null)
 					{
 						if(gmlReturn.equals("0"))
@@ -341,6 +340,30 @@ public class threadedConnection implements Runnable
 					{
 						fileData += "Returning: " + message + "\n";
 						bytes = message.getBytes("UTF-8");
+					}
+					else
+					{
+						fileData += "Returning: 500\n";
+						bytes = "500".getBytes("UTF-8");
+					}
+				}
+				else if(line.equals("getDeleted"))
+				{
+					String user = connectionRead.readLine();
+					fileData += "Requesting: " + line + "; User: " + user + "\n";
+					String gmlReturn = getDeletedMessageList(user, "message");
+					if(gmlReturn != null)
+					{
+						if(gmlReturn.equals("0"))
+						{
+							fileData += "Returning: 204\n";
+							bytes = "204".getBytes("UTF-8");
+						}
+						else
+						{
+							fileData += "Returning: " + gmlReturn + "\n";
+							bytes = gmlReturn.getBytes("UTF-8");
+						}
 					}
 					else
 					{
@@ -404,6 +427,79 @@ public class threadedConnection implements Runnable
 					{
 						fileData += "Returning: " + ID + "\n";
 						bytes = ID.getBytes("UTF-8");
+					}
+					else
+					{
+						fileData += "Returning: 500\n";
+						bytes = "500".getBytes("UTF-8");
+					}
+				}
+				else if(line.equals("deleteAccount"))
+				{
+					String user = connectionRead.readLine();
+					fileData += "Requesting: " + line + "; User: " + user + "\n";
+					if(deleteAccount(user))
+					{
+						fileData += "Returning: 200\n";
+						bytes = "200".getBytes("UTF-8");
+					}
+					else
+					{
+						fileData += "Returning: 500\n";
+						bytes = "500".getBytes("UTF-8");
+					}
+				}
+				else if(line.equals("sendFunds"))
+				{
+					String sender = connectionRead.readLine();
+					String recipient = connectionRead.readLine();
+					float amount = Float.parseFloat(connectionRead.readLine());
+					fileData += "Requesting: " + line + "; Sender: " + sender + "; Recipient: " + recipient + "; Amount: " + amount + "\n";
+					if(sendFunds(sender, recipient, amount))
+					{
+						fileData += "Returning: 200\n";
+						bytes = "200".getBytes("UTF-8");
+					}
+					else
+					{
+						fileData += "Returning: 500\n";
+						bytes = "500".getBytes("UTF-8");
+					}
+				}
+				else if(line.equals("acceptFunds"))
+				{
+					String user = connectionRead.readLine();
+					String fundID = connectionRead.readLine();
+					float amount = Float.parseFloat(connectionRead.readLine());
+					fileData += "Requesting: " + line + "; User: " + user + "; Fund ID: " + fundID + "; Amount: " + amount + "\n";
+					if(acceptFunds(user, fundID, amount))
+					{
+						fileData += "Returning: 200\n";
+						bytes = "200".getBytes("UTF-8");
+					}
+					else
+					{
+						fileData += "Returning: 500\n";
+						bytes = "500".getBytes("UTF-8");
+					}
+				}
+				else if(line.equals("getFundsList"))
+				{
+					String user = connectionRead.readLine();
+					fileData += "Requesting: " + line + "; User: " + user + "\n";
+					String gmlReturn = getMessageList(user, "funds");
+					if(gmlReturn != null)
+					{
+						if(gmlReturn.equals("0"))
+						{
+							fileData += "Returning: 204\n";
+							bytes = "204".getBytes("UTF-8");
+						}
+						else
+						{
+							fileData += "Returning: " + gmlReturn + "\n";
+							bytes = gmlReturn.getBytes("UTF-8");
+						}
 					}
 					else
 					{
@@ -572,6 +668,37 @@ public class threadedConnection implements Runnable
 		}
 	}
 	
+	private static ArrayList<String> getList(String bucket, String prefix)
+	{
+		ArrayList<String> returnList = new ArrayList<String>();
+		ObjectListing objectList = s3Client.listObjects(bucket, prefix);
+		List<S3ObjectSummary> summaries = objectList.getObjectSummaries();
+		if(summaries.size() != 0)
+		{
+			if(objectList.isTruncated())
+			{
+				do
+				{
+					for(S3ObjectSummary summary : summaries)
+					{
+						String key = summary.getKey();
+						returnList.add(key);
+					}
+					objectList = s3Client.listNextBatchOfObjects(objectList);
+				}while (objectList.isTruncated());
+			}
+			else
+			{
+				for(S3ObjectSummary summary : summaries)
+				{
+					String key = summary.getKey();
+					returnList.add(key);
+				}
+			}
+		}
+		return returnList;
+	}
+	
 	private static String userHashToID(String emailHash, String originFunction)
 	{
 		//Grab user record into Buffered Reader Stream
@@ -695,47 +822,22 @@ public class threadedConnection implements Runnable
 		//If user already exists, return false, otherwise create new user
 		if(!s3Client.doesObjectExist(bucket, userCreds))
 		{
-			//Get list of existing .json files
-			//create int uID = highest number.obj +1
-			//all user IDs will be 5 digits minimum
+			/**Genereate new users ID number**/
 			int uID = 9999;
 			int comp = 9999;
 			//Get list of existing users
-			ObjectListing objectList = s3Client.listObjects(bucket, "data/");
-			List<S3ObjectSummary> summaries = objectList.getObjectSummaries();
-			summaries.remove(0);
-			if(summaries.size() != 0)
+			String prefix = "data/";
+			ArrayList<String> userList = getList(bucket, prefix);
+			userList.remove(0);
+			for(String user:userList)
 			{
-				if(objectList.isTruncated())
+				comp = Integer.parseInt(user.split("[/.]")[1]);
+				if(comp > uID)
 				{
-					do
-					{
-						for(S3ObjectSummary summary : summaries)
-						{
-							String key = summary.getKey();
-							comp = Integer.parseInt(key.split("[/.]")[1]);
-							if(comp > uID)
-							{
-								uID = comp;
-							}
-						}
-						objectList = s3Client.listNextBatchOfObjects(objectList);
-					}while (objectList.isTruncated());
-				}
-				else
-				{
-					for(S3ObjectSummary summary : summaries)
-					{
-						String key = summary.getKey();
-						comp = Integer.parseInt(key.split("[/.]")[1]);
-						if(comp > uID)
-						{
-							uID = comp;
-						}
-					}
+					uID = comp;
 				}
 			}
-			//Generate new user ID
+			//Generate new unique user ID
 			uID++;
 			String userID = Integer.toString(uID);
 			
@@ -808,7 +910,7 @@ public class threadedConnection implements Runnable
 		/**Convert users emailHash to unique ID**/
 		/**Convert users emailHash to unique ID**/
 		String userID;
-		if((userID = userHashToID(emailHash, "getHistory")).equals(null))
+		if((userID = userHashToID(emailHash, "save")).equals(null))
 		{
 			return false;
 		}
@@ -827,7 +929,7 @@ public class threadedConnection implements Runnable
 			String transactionHistory = "data/"+userID+"/purchaseHistory.json";
 			//Read transaction history
 			dataString = "";
-			if((dataString = readFromS3(bucket, transactionHistory, "getHistory")).equals(null))
+			if((dataString = readFromS3(bucket, transactionHistory, "save")).equals(null))
 			{
 				return false;
 			}
@@ -947,73 +1049,43 @@ public class threadedConnection implements Runnable
 		//returns a list of all users in format of {fName,sName,email}\n{fName,sName,email}\n etc
 		if(emailHash.equals("*"))
 		{
-			List<Integer> users = new ArrayList<Integer>();
-			ObjectListing objectList = s3Client.listObjects(bucket, "data/");
-			List<S3ObjectSummary> summaries = objectList.getObjectSummaries();
-			summaries.remove(0);
-			int currID = 0;
-			//Get list of all userID's and put it into Integer List 'Users'
-			if(summaries.size() != 0)
-			{
-				if(objectList.isTruncated())
-				{
-					do
-					{
-						for(S3ObjectSummary summary : summaries)
-						{
-							currID = Integer.parseInt(summary.getKey().split("/")[1]);
-							if(users.indexOf(currID) == -1) //If element hasn't already been added to list add it to list
-							{
-								users.add(currID);
-							}
-						}
-						objectList = s3Client.listNextBatchOfObjects(objectList);
-					}while (objectList.isTruncated());
-				}
-				else
-				{
-					for(S3ObjectSummary summary : summaries)
-					{
-						currID = Integer.parseInt(summary.getKey().split("/")[1]);
-						if(users.indexOf(currID) == -1) //If element hasn't already been added to list add it to list
-						{
-							users.add(currID);
-						}
-					}
-				}
-			}
+			String prefix = "data/";
+			ArrayList<String> userFileList = getList(bucket, prefix);
+			userFileList.remove(0);
 			
-			String userList = "";
-			for(int iUser : users)
+			String userCSVList = "";
+			for(String user : userFileList)
 			{
 				//Grab users first name, last name, email, create JSON object, convert to string, append to end of return
 				//Grab user JSON data
-				String userData = "data/" + iUser + "/data.json";
-				String data;
-				if((data = readFromS3(bucket, userData, "getUsers")).equals(null))
+				if(user.split("/")[2].equals("data.json"))
 				{
-					return null;
+					String data = "";
+					if((data = readFromS3(bucket, user, "getUsers")).equals(null))
+					{
+						return null;
+					}
+					JSONObject dataJSON = new JSONObject(data);
+					
+					//Generate new JSON Object
+					JSONObject userDetails = new JSONObject();
+					
+					//Grab first name, surname, email from data
+					userDetails.put("Name",dataJSON.get("Name"));
+					userDetails.put("Surname",dataJSON.get("Surname"));
+					userDetails.put("Email",dataJSON.get("Email"));
+					
+					//Convert to string and append to end of userList
+					userCSVList += userDetails.toString() + "\n";
 				}
-				JSONObject dataJSON = new JSONObject(data);
-				
-				//Generate new JSON Object
-				JSONObject userDetails = new JSONObject();
-				
-				//Grab first name, surname, email from data
-				userDetails.put("Name",dataJSON.get("Name"));
-				userDetails.put("Surname",dataJSON.get("Surname"));
-				userDetails.put("Email",dataJSON.get("Email"));
-				
-				//Convert to string and append to end of userList
-				userList += userDetails.toString() + "\n";
 			}
-			return userList;
+			return userCSVList;
 		}
 		else //return full data + transaction history string for a single user
 		{		
 			/**Convert users emailHash to unique ID**/
 			String userID;
-			if((userID = userHashToID(emailHash, "getHistory")).equals(null))
+			if((userID = userHashToID(emailHash, "getUsers")).equals(null))
 			{
 				return null;
 			}
@@ -1049,69 +1121,38 @@ public class threadedConnection implements Runnable
 		String prefix = asxCode+"/";
 		String dataReturn = "";
 		String ASXJSON = "asx-json-host";
-		ArrayList<String> files = new ArrayList<String>();
-		ObjectListing objectList = s3Client.listObjects(ASXJSON, prefix);
-		List<S3ObjectSummary> summaries = objectList.getObjectSummaries();
-		if(summaries.size() != 0)
+		ArrayList<String> ASXfiles = getList(ASXJSON, prefix);
+		for(String asxFile:ASXfiles)
 		{
-			if(objectList.isTruncated())
+			int fileDate = Integer.parseInt(asxFile.split("[/.]")[1]);	//key should read "asx/20170214.json", fileDate should result in 20170214
+			if(fileDate >= startDate && fileDate <= endDate)
 			{
-				do
+				//Open file, add contents to return data
+				String fullStockData;
+				if((fullStockData = readFromS3(ASXJSON, asxFile, "stockHistory")).equals(null))
 				{
-					for(S3ObjectSummary summary : summaries)
-					{
-						String file = summary.getKey().split("[/.]")[1];
-						//String[] sDate = file.split(".");
-						int fileDate = Integer.parseInt(file);	//key should read "asx/20170214.json", fileDate should result in 20170214
-						if(fileDate >= startDate && fileDate <= endDate)
-						{
-							files.add(summary.getKey());
-						}
-					}
-					objectList = s3Client.listNextBatchOfObjects(objectList);
-				}while (objectList.isTruncated());
-			}
-			else
-			{
-				for(S3ObjectSummary summary : summaries)
-				{
-					String file = summary.getKey().split("[/.]")[1];
-					//String[] sDate = file.split(".");
-					int fileDate = Integer.parseInt(file);	//key should read "asx/20170214.json", fileDate should result in 20170214
-					if(fileDate >= startDate && fileDate <= endDate)
-					{
-						files.add(summary.getKey());
-					}
+					return null;
 				}
+				ArrayList<String> stockLines = new ArrayList<String>(Arrays.asList(fullStockData.split("\n")));
+				//Get last line of the stock's data
+				String lastData = stockLines.get(stockLines.size()-1);
+				String date = asxFile.split("[/.]")[1];
+				JSONObject tmp = new JSONObject(lastData);
+				JSONObject jData = new JSONObject();
+				jData.put("ASX Code",  tmp.get("ASX Code"));
+				jData.put("Date", date);
+				jData.put("Ask Price", tmp.get("Ask Price"));
+				dataReturn += jData.toString() + "\n";
 			}
-		}
-		for(String key:files) //For each file being read...
-		{
-			//Open file, add contents to return data
-			String fullStockData;
-			if((fullStockData = readFromS3(ASXJSON, key, "stockHistory")).equals(null))
-			{
-				return null;
-			}
-			ArrayList<String> stockLines = new ArrayList<String>(Arrays.asList(fullStockData.split("\n")));
-			//Get last line of the stock's data
-			String lastData = stockLines.get(stockLines.size()-1);
-			String date = key.split("[/.]")[1];
-			JSONObject tmp = new JSONObject(lastData);
-			JSONObject jData = new JSONObject();
-			jData.put("ASX Code",  tmp.get("ASX Code"));
-			jData.put("Date", date);
-			jData.put("Ask Price", tmp.get("Ask Price"));
-			dataReturn += jData.toString() + "\n";
 		}
 		return dataReturn;
 	}
 	
-	private boolean sendMessage(String senderEmailHash, String recipientEmailHash, String type, String subject, String contents)
+	private boolean sendMessage(String senderEmailHash, String recipientEmailHash, String subject, String contents)
 	{
 		/**Convert senders emailHash to unique ID**/
 		String senderID;
-		if((senderID = userHashToID(senderEmailHash, "getHistory")).equals(null))
+		if((senderID = userHashToID(senderEmailHash, "sendMessage")).equals(null))
 		{
 			return false;
 		}
@@ -1128,17 +1169,18 @@ public class threadedConnection implements Runnable
 		/**Create JSON object to be posted in users mailbox**/
 		JSONObject newMail = new JSONObject();
 		newMail.put("Sender", senderEmail);
-		newMail.put("Type", type);
+		newMail.put("Type", "message");
 		newMail.put("Subject", subject);
 		newMail.put("Contents", contents);
 		newMail.put("Date", threadedConnection.date);
 		newMail.put("Time", threadedConnection.time);
 		newMail.put("Unread", "true");
+		newMail.put("Deleted", "false");
 		String mailEntry = newMail.toString();
 		
 		/**Convert recipients emailHash to unique ID**/
 		String recipientID;
-		if((recipientID = userHashToID(recipientEmailHash, "getHistory")).equals(null))
+		if((recipientID = userHashToID(recipientEmailHash, "sendMessage")).equals(null))
 		{
 			return false;
 		}
@@ -1146,41 +1188,19 @@ public class threadedConnection implements Runnable
 			
 		/**Post message to recipients mailbox folder**/
 		//Generate message number
-		ObjectListing objectList = s3Client.listObjects(bucket, "data/"+recipientID+"/mailbox/");
-		List<S3ObjectSummary> summaries = objectList.getObjectSummaries();
+		String prefix = "data/"+recipientID+"/mailbox/";
+		ArrayList<String> mailList = getList(bucket, prefix);
 		int mailID = 999; //minimum number for mailID is 1000
 		int comp;
-		if(summaries.size() != 0)
+		for(String mail:mailList)
 		{
-			if(objectList.isTruncated())
+			comp = Integer.parseInt(mail.split("[/.]")[3]);
+			if(comp > mailID)
 			{
-				do
-				{
-					for(S3ObjectSummary summary : summaries)
-					{
-						String key = summary.getKey();
-						comp = Integer.parseInt(key.split("[/.]")[3]);
-						if(comp > mailID)
-						{
-							mailID = comp;
-						}
-					}
-					objectList = s3Client.listNextBatchOfObjects(objectList);
-				}while (objectList.isTruncated());
-			}
-			else
-			{
-				for(S3ObjectSummary summary : summaries)
-				{
-					String key = summary.getKey();
-					comp = Integer.parseInt(key.split("[/.]")[3]);
-					if(comp > mailID)
-					{
-						mailID = comp;
-					}
-				}
+				mailID = comp;
 			}
 		}
+		//Generate new unique user ID
 		mailID++;
 		String mailPath = "data/"+recipientID+"/mailbox/"+mailID+".json";
 		/***************************************************************************************/
@@ -1195,49 +1215,73 @@ public class threadedConnection implements Runnable
 		return true;
 	}
 	
-	private String getMessageList(String emailHash)
+	private String getMessageList(String emailHash, String type)
 	{
 		/**Convert users emailHash to unique ID**/
 		String userID;
-		if((userID = userHashToID(emailHash, "getHistory")).equals(null))
+		if((userID = userHashToID(emailHash, "getMessageList")).equals(null))
 		{
 			return null;
 		}
 		
 		//returns a list of message ID's
-		ObjectListing objectList = s3Client.listObjects(bucket, "data/"+userID+"/mailbox/");
-		List<S3ObjectSummary> summaries = objectList.getObjectSummaries();
-		ArrayList<Integer> mail = new ArrayList<Integer>();
-		int num = 0;
-		if(summaries.size() != 0)
+		String prefix = "data/"+userID+"/mailbox/";
+		ArrayList<String> mailList = getList(bucket, prefix);
+		String result = "";
+		for(String mail:mailList)
 		{
-			if(objectList.isTruncated())
+			String mailData;
+			//Download mail object and check if it is actually a message
+			if((mailData = readFromS3(bucket, mail, "getMessageList")).equals(null))
 			{
-				do
-				{
-					for(S3ObjectSummary summary : summaries)
-					{
-						String key = summary.getKey();
-						num = Integer.parseInt(key.split("[/.]")[3]);
-						mail.add(num);
-					}
-					objectList = s3Client.listNextBatchOfObjects(objectList);
-				}while (objectList.isTruncated());
+				return null;
 			}
-			else
+			JSONObject mailJSON = new JSONObject(mailData);
+			if(mailJSON.getString("Type").equals(type) && mailJSON.getString("Deleted").equals("false"))
 			{
-				for(S3ObjectSummary summary : summaries)
-				{
-					String key = summary.getKey();
-					num = Integer.parseInt(key.split("[/.]")[3]);
-					mail.add(num);
-				}
+				result += Integer.parseInt(mail.split("[/.]")[3]) + ",";
 			}
-			String result = "";
-			for(int id:mail)
+		}
+		if(result.length() > 0)
+		{
+			result = result.substring(0, result.length()-1);
+			return result;
+		}
+		else
+		{
+			return "0";
+		}
+	}
+	
+	private String getDeletedMessageList(String emailHash, String type)
+	{
+		/**Convert users emailHash to unique ID**/
+		String userID;
+		if((userID = userHashToID(emailHash, "getMessageList")).equals(null))
+		{
+			return null;
+		}
+		
+		//returns a list of message ID's
+		String prefix = "data/"+userID+"/mailbox/";
+		ArrayList<String> mailList = getList(bucket, prefix);
+		String result = "";
+		for(String mail:mailList)
+		{
+			String mailData;
+			//Download mail object and check if it is actually a message
+			if((mailData = readFromS3(bucket, mail, "getMessageList")).equals(null))
 			{
-				result += id+",";
+				return null;
 			}
+			JSONObject mailJSON = new JSONObject(mailData);
+			if(mailJSON.getString("Type").equals(type) && mailJSON.getString("Deleted").equals("true"))
+			{
+				result += Integer.parseInt(mail.split("[/.]")[3]) + ",";
+			}
+		}
+		if(result.length() > 0)
+		{
 			result = result.substring(0, result.length()-1);
 			return result;
 		}
@@ -1251,7 +1295,7 @@ public class threadedConnection implements Runnable
 	{
 		/**Convert users emailHash to unique ID**/
 		String userID;
-		if((userID = userHashToID(emailHash, "getHistory")).equals(null))
+		if((userID = userHashToID(emailHash, "getMessage")).equals(null))
 		{
 			return null;
 		}
@@ -1285,7 +1329,7 @@ public class threadedConnection implements Runnable
 	{
 		/**Convert users emailHash to unique ID**/
 		String userID;
-		if((userID = userHashToID(emailHash, "getHistory")).equals(null))
+		if((userID = userHashToID(emailHash, "deleteMessage")).equals(null))
 		{
 			return false;
 		}
@@ -1299,7 +1343,36 @@ public class threadedConnection implements Runnable
 			fileData += "deleteMessage: Mail item does not exist!\n";
 			return false;
 		}
-		s3Client.deleteObject(new DeleteObjectRequest(bucket, mailPath));
+		//Grab message from storage
+		String mailData;
+		if((mailData = readFromS3(bucket, mailPath, "deleteMessage")).equals(null))
+		{
+			return false;
+		}
+		JSONObject mailJSON = new JSONObject(mailData);
+		//If message has been moved to trash, remove message, else, move to trash
+		if(mailJSON.getString("Type").equals("message"))
+		{
+			if(mailJSON.getString("Deleted").equals("true"))
+			{
+				s3Client.deleteObject(new DeleteObjectRequest(bucket, mailPath));
+			}
+			else
+			{
+				//Mark message as deleted and read and reupload
+				mailJSON.put("Deleted", "true");
+				mailJSON.put("Unread", "false");
+				mailData = mailJSON.toString();
+				if(!saveToS3(bucket, mailPath, mailData, "deleteMessage"))
+				{
+					return false;
+				}
+			}
+		}
+		else
+		{
+			s3Client.deleteObject(new DeleteObjectRequest(bucket, mailPath));
+		}
 		return true;
 	}
 	
@@ -1307,73 +1380,36 @@ public class threadedConnection implements Runnable
 	{
 		/**Convert users emailHash to unique ID**/
 		String userID;
-		if((userID = userHashToID(emailHash, "getHistory")).equals(null))
+		if((userID = userHashToID(emailHash, "getUnreadMail")).equals(null))
 		{
 			return null;
 		}
 		
 		/**Get contents of unreadMail.csv for user**/
 		//returns a list of message ID's
-		ObjectListing objectList = s3Client.listObjects(bucket, "data/"+userID+"/mailbox/");
-		List<S3ObjectSummary> summaries = objectList.getObjectSummaries();
-		ArrayList<Integer> mail = new ArrayList<Integer>();
-		int num = 0;
-		if(summaries.size() != 0)
+		String prefix = "data/"+userID+"/mailbox/";
+		ArrayList<String> mailList = getList(bucket, prefix);
+		String result = "";
+		for(String mail:mailList)
 		{
-			if(objectList.isTruncated())
+			String mailData;
+			if((mailData = readFromS3(bucket, mail, "getUnreadMail")).equals(null))
 			{
-				do
-				{
-					for(S3ObjectSummary summary : summaries)
-					{
-						String key = summary.getKey();
-						num = Integer.parseInt(key.split("[/.]")[3]);
-						mail.add(num);
-					}
-					objectList = s3Client.listNextBatchOfObjects(objectList);
-				}while (objectList.isTruncated());
+				return null;
 			}
-			else
+			JSONObject mailJSON = new JSONObject(mailData);
+			if(mailJSON.getString("Type").equals("message") && mailJSON.getString("Unread").equals("true"))
 			{
-				for(S3ObjectSummary summary : summaries)
-				{
-					String key = summary.getKey();
-					num = Integer.parseInt(key.split("[/.]")[3]);
-					mail.add(num);
-				}
-			}
-			ArrayList<Integer> unreadMailID = new ArrayList<Integer>();
-			for(int mailId:mail)
-			{
-				/**Open mail item - if "Unread" == "true" - add mail ID to ArrayList**/
-				String mailPath = "data/" + userID + "/mailbox/" + mailId + ".json";
-				String mailData;
-				if((mailData = readFromS3(bucket, mailPath, "getUnreadMail")).equals(null))
-				{
-					return null;
-				}
-				JSONObject mailJSON = new JSONObject(mailData);
-				if(mailJSON.getString("Unread").equals("true"))
-				{
-					unreadMailID.add(mailId);
-				}
-			}
-			if(!unreadMailID.isEmpty()) //If list has elements in it
-			{
-				String result = "";
-				for(int id:unreadMailID)
-				{
-					result += id+",";
-				}
-				result = result.substring(0, result.length()-1);
-				return result;
-			}
-			else //If list is empty
-			{
-				return "0";
+				int id = Integer.parseInt(mail.split("[/.]")[3]);
+				result += id+",";
 			}
 		}
-		else //User has no mail
+		if(!result.equals(""))
+		{
+			result = result.substring(0, result.length()-1);
+			return result;
+		}
+		else
 		{
 			return "0";
 		}
@@ -1383,7 +1419,7 @@ public class threadedConnection implements Runnable
 	{
 		/**Convert users emailHash to unique ID**/
 		String userID;
-		if((userID = userHashToID(emailHash, "getHistory")).equals(null))
+		if((userID = userHashToID(emailHash, "markMailUnread")).equals(null))
 		{
 			return false;
 		}
@@ -1405,6 +1441,214 @@ public class threadedConnection implements Runnable
 		mailJSON.put("Unread", "true");
 		mailData = mailJSON.toString();
 		if(!saveToS3(bucket, mailPath, mailData, "markMailUnread"))
+		{
+			return false;
+		}
+		return true;
+	}
+	
+	private boolean deleteAccount(String emailHash)
+	{
+		/**Convert users emailHash to unique ID**/
+		String userID;
+		if((userID = userHashToID(emailHash, "deleteAccount")).equals(null))
+		{
+			return false;
+		}
+		
+		/**Remove user from leaderboard**/
+		String leaderboardFile = "leaderboard.csv";
+		String fullLeaderboard;
+		//retrieve leaderboard file
+		if((fullLeaderboard = readFromS3(bucket, leaderboardFile, "deleteAccount")).equals(null))
+		{
+			return false;
+		}
+		String newLeaderboard = "";
+		String leaderboardParts[] = fullLeaderboard.split("[:\n]");
+		for(int i=0; i<leaderboardParts.length; i+=2)
+		{
+			if(!leaderboardParts[i].equals(userID))
+			{
+				//Rebuild leaberboard file without the suer ID being deleted
+				newLeaderboard += leaderboardParts[i] + ":" + leaderboardParts[i+1] + "\n";
+			}
+		}
+		//Reupload updated leaderboard file
+		if(!saveToS3(bucket, leaderboardFile, newLeaderboard, "deleteAccount"))
+		{
+			return false;
+		}
+		
+		/**Delete user data files**/
+		//Generate a list of the users files
+		String prefix = "data/"+userID+"/";
+		ArrayList<String> userFiles = getList(bucket, prefix);
+		for(String file:userFiles)
+		{
+			s3Client.deleteObject(new DeleteObjectRequest(bucket, file));
+		}
+		
+		/**Delete users credentials file**/
+		String creds = "creds/"+emailHash+".rec";
+		s3Client.deleteObject(new DeleteObjectRequest(bucket, creds));
+		
+		return true;
+	}
+	
+	protected boolean sendFunds(String senderEmailHash, String recipientEmailHash, float amount)
+	{
+		/**Convert senders emailHash to unique ID**/
+		String senderID;
+		if((senderID = userHashToID(senderEmailHash, "sendFunds")).equals(null))
+		{
+			return false;
+		}
+		String senderData;
+		
+		//Open senders data file and grab email field
+		String senderDataFile = "data/"+senderID+"/data.json";
+		if((senderData = readFromS3(bucket, senderDataFile, "sendFunds")).equals(null))
+		{
+			return false;
+		}
+		JSONObject senderJSON = new JSONObject(senderData);
+		String senderEmail = senderJSON.getString("Email");
+		
+		//Remove amount from senders balance
+		senderJSON.put("Balance", Double.toString(senderJSON.getDouble("Balance") - amount));
+		if(!saveToS3(bucket, senderDataFile, senderJSON.toString(), "sendFunds"))
+		{
+			return false;
+		}
+		
+		
+		/**Create JSON object to be posted in users mailbox**/
+		JSONObject newFunds = new JSONObject();
+		newFunds.put("Sender", senderEmail);
+		newFunds.put("Type", "funds");
+		newFunds.put("Amount", Double.toString(amount));
+		newFunds.put("Unread", "true");
+		newFunds.put("Date", threadedConnection.date);
+		newFunds.put("Time", threadedConnection.time);
+		String fundsEntry = newFunds.toString();
+		
+		/**Convert recipients emailHash to unique ID**/
+		String recipientID;
+		if((recipientID = userHashToID(recipientEmailHash, "sendFunds")).equals(null))
+		{
+			return false;
+		}
+		/***************************************************************************************/
+		
+		/**Post message to recipients mailbox folder**/
+		//Generate message number
+		String prefix = "data/"+recipientID+"/mailbox/";
+		ArrayList<String> mailList = getList(bucket, prefix);
+		int mailID = 999; //minimum number for mailID is 1000
+		int comp;
+		for(String mail:mailList)
+		{
+			comp = Integer.parseInt(mail.split("[/.]")[3]);
+			if(comp > mailID)
+			{
+				mailID = comp;
+			}
+		}
+		//Generate new unique user ID
+		mailID++;
+		String mailPath = "data/"+recipientID+"/mailbox/"+mailID+".json";
+		/***************************************************************************************/
+			
+		//Post funds request to User
+		if(!saveToS3(bucket, mailPath, fundsEntry, "sendFunds"))
+		{
+			return false;
+		}
+		/***************************************************************************************/
+		
+		return true;
+	}
+	
+	protected boolean acceptFunds(String user, String fundID, float amount)
+	{
+		/**Convert senders emailHash to unique ID**/
+		String recipientID;
+		if((recipientID = userHashToID(user, "acceptFunds")).equals(null))
+		{
+			return false;
+		}
+		String recipientData;
+		//Open senders data file and grab email field
+		String recipientDataFile = "data/"+recipientID+"/data.json";
+		if((recipientData = readFromS3(bucket, recipientDataFile, "acceptFunds")).equals(null))
+		{
+			return false;
+		}
+		JSONObject recipientJSON = new JSONObject(recipientData);
+		String recipientEmail = recipientJSON.getString("Email");
+		
+		//Get funds message data
+		String fundsPath = "data/"+recipientID+"/mailbox/"+fundID+".json";
+		String fundsData = "";
+		if((fundsData = readFromS3(bucket, fundsPath, "acceptFunds")).equals(null))
+		{
+			return false;
+		}
+		JSONObject fundsJSON = new JSONObject(fundsData);
+		if(fundsJSON.getDouble("Amount") < amount)
+		{
+			return false;
+		}
+		
+		//Delete the funds message
+		s3Client.deleteObject(new DeleteObjectRequest(bucket, fundsPath));
+		
+		//Add accepted amount to recipients account
+		Double recipientBalance = recipientJSON.getDouble("Balance");
+		recipientJSON.put("Balance", Double.toString(recipientBalance + amount));
+		recipientData = recipientJSON.toString();
+		if(!saveToS3(bucket, recipientDataFile, recipientData, "acceptFunds"))
+		{
+			return false;
+		}
+		
+		//Notifies sender of funds of the amount that was accepted.
+		double refund = fundsJSON.getDouble("Amount") - amount;
+		String adminHash = Integer.toString("admin@tradingwheels.com.au".hashCode());
+		String refundUser = fundsJSON.getString("Sender");
+		String refundHash = Integer.toString(refundUser.hashCode());
+		String refundSubject = "Funds transfer " + fundID;
+		String refundMessage;
+		if(amount == 0)
+		{
+			refundMessage = "The user at " + recipientEmail + " has rejected your funds transfer.\n$" + refund + " has been added back into your account.";
+		}
+		else
+		{
+			refundMessage = "The user at " + recipientEmail + " has accpeted $" + amount + " of your funds transfer.\n$" + refund + " has been added back into your account.";
+		}
+		if(!sendMessage(adminHash, refundHash, refundSubject, refundMessage))
+		{
+			return false;
+		}
+		String senderID;
+		if((senderID = userHashToID(refundHash, "acceptFunds")).equals(null))
+		{
+			return false;
+		}
+		//Add refunded amount to senders account
+		String senderData;
+		String senderDataFile = "data/"+senderID+"/data.json";
+		if((senderData = readFromS3(bucket, senderDataFile, "acceptFunds")).equals(null))
+		{
+			return false;
+		}
+		JSONObject senderJSON = new JSONObject(senderData);
+		Double senderBalance = senderJSON.getDouble("Balance");
+		senderJSON.put("Balance", Double.toString(senderBalance + refund));
+		senderData = senderJSON.toString();
+		if(!saveToS3(bucket, senderDataFile, senderData, "acceptFunds"))
 		{
 			return false;
 		}

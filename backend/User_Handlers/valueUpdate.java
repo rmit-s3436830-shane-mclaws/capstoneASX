@@ -21,8 +21,8 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 public class valueUpdate
 {
-	private static String AccessKey = REDACTED;
-	private static String SecretKey = REDACTED;
+	private static String AccessKey = "AKIAJREU35S4RGRV4OWQ";
+	private static String SecretKey = "7gbfzM0hX6SnP9H4agx6WV5cXrGg9lnvnWV+bNRX";
 	
 	public static void main(String args[])
 	{
@@ -30,13 +30,11 @@ public class valueUpdate
 		AmazonS3 s3Client;
 		String bucket = "asx-user-store";
 		List<Integer> users = new ArrayList<Integer>();
-		int count = 0;
 		
 		credentials = new BasicAWSCredentials(valueUpdate.AccessKey,valueUpdate.SecretKey);
 		s3Client  = AmazonS3ClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(credentials)).withRegion(Regions.AP_SOUTHEAST_2).build();
 		ObjectListing objectList = s3Client.listObjects(bucket, "data/");
 		List<S3ObjectSummary> summaries = objectList.getObjectSummaries();
-		
 		summaries.remove(0);
 		if(summaries.size() != 0)
 		{
@@ -46,11 +44,15 @@ public class valueUpdate
 				{
 					for(S3ObjectSummary summary : summaries)
 					{
-						if(count % 3 == 0)
+						int ID = Integer.parseInt(summary.getKey().split("/")[1]);
+						if(users.isEmpty())
 						{
-							users.add(Integer.parseInt(summary.getKey().split("/")[1]));
+							users.add(ID);
 						}
-						count++;
+						else if(users.get(users.size() - 1) != ID)
+						{
+							users.add(ID);
+						}
 					}
 					objectList = s3Client.listNextBatchOfObjects(objectList);
 				}while (objectList.isTruncated());
@@ -59,11 +61,15 @@ public class valueUpdate
 			{
 				for(S3ObjectSummary summary : summaries)
 				{
-					if(count % 3 == 0)
+					int ID = Integer.parseInt(summary.getKey().split("/")[1]);
+					if(users.isEmpty())
 					{
-						users.add(Integer.parseInt(summary.getKey().split("/")[1]));
+						users.add(ID);
 					}
-					count++;
+					else if(users.get(users.size() - 1) != ID)
+					{
+						users.add(ID);
+					}
 				}
 			}
 		}
