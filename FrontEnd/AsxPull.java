@@ -87,13 +87,20 @@ public class AsxPull {
 				//	String exDividendDate = json.getString("Ex-Dividend Date");
 				//	String dividendPayDate = json.getString("Dividende Pay Date");
 				//	String dividendYield = json.getString("Dividende Pay Date");
-					try{
+					try
+					{
 						Stock stockToAdd = new Stock(time, name, asxCode, askPrice, bidPrice, openValue, dayHigh, dayLow);
 						AsxGame.stockArray.add(stockToAdd);
-					} catch (NumberFormatException e){
+					} 
+					catch (NumberFormatException e)
+					{
 						Utilities.asxErrorToLogFile(filePath, e.toString());
 						return false;
-					}				
+					}
+					catch (ArrayIndexOutOfBoundsException aiobe)
+					{
+						Utilities.asxErrorToLogFile(filePath, aiobe.toString());
+					}
 				} catch (JSONException e){
 					Utilities.asxErrorToLogFile(filePath, e.toString());
 					return false;
