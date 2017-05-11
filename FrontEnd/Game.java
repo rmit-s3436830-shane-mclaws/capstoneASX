@@ -151,7 +151,6 @@ public class Game
 				AsxGame.activeAdmin.messages = getMessageList();
 				AsxGame.activeAdmin.unreadMessages = getUnreadMessages();
 				AsxGame.activeAdmin.deletedMessages = getDeletedMessageList();
-				AsxGame.activeAdmin.pendingFunds = getFundsList();
 			}
 			AsxGame.messageChecker = new Thread(new messageCheck());
 			AsxGame.messageChecker.start();
