@@ -172,7 +172,6 @@ public class Menus
 	
 	protected static void mainMenu()
 	{
-		//Utilities.loadTempStockList();
 		while (true)
 		{		
 			System.out.println("\nPlease select on of the following options: \n");
@@ -182,12 +181,16 @@ public class Menus
 			System.out.println("	4. Sell stocks");
 			System.out.println("	5. Save player to server");
 			System.out.println("	6. Get Leaderboard");
-	//		System.out.println("	L. Load stock list (only a select few stocks available currently");
 			System.out.println("	7. Send Message");
 			System.out.println("	8. View a message");
 			System.out.println("	9. Delete a message");
 			System.out.println("	10. View list of unread messages");
-			System.out.println("	11. Mark message as unread");
+			System.out.println("	11. View list of deleted messages");
+			System.out.println("	12. Mark message as unread");
+			System.out.println("	13. Send funds to user");
+			System.out.println("	14. View and Accept an incoming funds transfer(s)");
+			System.out.println("	15. View history of stock");
+			System.out.println("	16. !!!Delete your account!!!");
 			System.out.println("	20. Logout (NOTE: THIS DOES NOT SAVE YOUR PLAYER CURRENTLY!");
 			System.out.println("	0. Exit");
 			
@@ -222,24 +225,20 @@ public class Menus
 						System.out.println(AsxGame.leaderboard.get(i));
 					}
 					break;
-	//			case "L":
-	//				Utilities.loadTempStockList();
-	//				break;
 				case 7: //Send Message
 					System.out.println("Enter recipient, then subject line, then message");
 					String recipient = consoleRead.next();
 					String subject = consoleRead.next();
 					String message = consoleRead.next();
-					Game.sendMessage(null, recipient, "message", subject, message);
+					Game.sendMessage(null, recipient, subject, message);
 					break;
 				case 8: //View Message
 					System.out.println("Retrieving list of messages");
-					String messageList = Game.getMessageList();
-					if(!messageList.equals("204") && messageList != null)
+					ArrayList<Integer> messageList = AsxGame.activePlayer.messages;
+					if(!messageList.get(0).equals("204") && messageList != null)
 					{
-						String messageID[] = messageList.split(",");
 						System.out.println("Messages available:");
-						for(String id:messageID)
+						for(int id:messageList)
 						{
 							System.out.println(id);
 						}
@@ -257,56 +256,121 @@ public class Menus
 						}
 					}
 					break;
-				case 9:
+				case 9: //Delete a message
 					System.out.println("Retrieving list of messages");
-					messageList = Game.getMessageList();
-					if(!messageList.equals("204") && messageList != null)
+					messageList = AsxGame.activePlayer.messages;
+					if(!messageList.get(0).equals("204") && messageList != null)
 					{
-						String messageID[] = messageList.split(",");
 						System.out.println("Messages available:");
-						for(String id:messageID)
+						for(int id:messageList)
 						{
 							System.out.println(id);
 						}
 						System.out.println("Please enter a message ID to delete...");
 						int mID = Integer.parseInt(consoleRead.next());
 						Game.deleteMessage(mID);
+						int index = AsxGame.activePlayer.messages.indexOf(mID);
+						AsxGame.activePlayer.messages.remove(index);
 						System.out.println("Message deleted");
 					}
 					break;
-				case 10:
+				case 10: //Retrieve list of unread messages
 					System.out.println("Retrieving list of unread messages");
-					messageList = Game.getUnreadMessages();
+					messageList = AsxGame.activePlayer.unreadMessages;
 					if(messageList != null)
 					{
-						String messageID[] = messageList.split(",");
 						System.out.println("Unread Messages:");
-						for(String id:messageID)
+						for(int id:messageList)
 						{
 							System.out.println(id);
 						}
 					}
 					break;
-				case 11:
+				case 11: //Retrieve list of unread messages
+					System.out.println("Retrieving list of deleted messages");
+					messageList = AsxGame.activePlayer.deletedMessages;
+					if(messageList != null)
+					{
+						System.out.println("Deleted Messages:");
+						for(int id:messageList)
+						{
+							System.out.println(id);
+						}
+					}
+					break;
+				case 12: //Mark message as unread
 					System.out.println("Retrieving list of messages");
-					messageList = Game.getMessageList();
+					messageList = AsxGame.activePlayer.messages;
 					if(!messageList.equals("204") && messageList != null)
 					{
-						String messageID[] = messageList.split(",");
 						System.out.println("Messages available:");
-						for(String id:messageID)
+						for(int id:messageList)
 						{
 							System.out.println(id);
 						}
-						System.out.println("Please enter a message ID to delete...");
+						System.out.println("Please enter a message ID to mark as unread...");
 						int mID = Integer.parseInt(consoleRead.next());
 						Game.markUnread(mID);
-						System.out.println("Message deleted");
+						AsxGame.activePlayer.unreadMessages.add(mID);
+						System.out.println("Message marked unread!");
 					}
 					break;
-				case 20: 		//logout
+				case 13: //Send funds to user
+					System.out.println("Enter username of recipient, and then amount you wish to send");
+					recipient = consoleRead.next();
+					float amount = Float.parseFloat(consoleRead.next());
+					if(Game.sendFunds(recipient, amount))
+					{
+						System.out.println("Funds sent successfully");
+					}
+					else
+					{
+						System.out.println("500: INTERNAL SERVER ERROR!");
+					}
+					break;
+				case 14: //Accept a funds transfer
+					System.out.println("Retrieving list of fund transfers");
+					ArrayList<Integer> fundsList = AsxGame.activePlayer.pendingFunds;
+					if(!fundsList.get(0).equals("204\n") && fundsList != null)
+					{
+						System.out.println("Messages available:");
+						for(int id:fundsList)
+						{
+							System.out.println(id);
+						}
+						System.out.println("Please enter a fund ID to view...");
+						String fundID = consoleRead.next();
+						int fID = Integer.parseInt(fundID);
+						String mailItem = Game.getMessage(fID);
+						if(mailItem != null)
+						{
+							JSONObject mailJSON = new JSONObject(mailItem);
+							System.out.println("Received: " + mailJSON.getString("Date") + "-" + mailJSON.getString("Time"));
+							System.out.println("Message from: " + mailJSON.getString("Sender"));
+							System.out.println("Amount sent: " + mailJSON.getString("Amount"));
+						}
+						System.out.println("Enter the amount you wish to accept.");
+						amount = Float.parseFloat(consoleRead.next());
+						Game.acceptFunds(fundID, amount);
+					}
+					break;
+				case 15: //Get history of stock
+					System.out.println("Enter stock code");
+					String code = consoleRead.next();
+					System.out.println("Enter start date (yyyymmdd)");
+					int startDate = Integer.parseInt(consoleRead.next());
+					System.out.println("Enter end date (yyyyymmdd)");
+					int endDate = Integer.parseInt(consoleRead.next());
+					Game.getStockHistory(code, startDate, endDate);
+					System.out.println(AsxGame.requestedStockHistory.toString());
+					break;
+				case 16: //Delete self
+					Game.playerDeleteSelf();
 					AsxGame.activePlayer = null;
 					AsxGame.activePlayerLoaded = false;
+					return;
+				case 20: 		//logout
+					Game.logout();
 					return;					
 				case 0: 		//exit
 					System.exit(0);
@@ -332,6 +396,8 @@ public class Menus
 			System.out.println("	10. Set brokers fee on purchases");
 			System.out.println("	11. Set brokers fee on sales");
 			System.out.println("	12. Message all users");
+			System.out.println("	13. Delete a user");
+			System.out.println("	14. Convert user email to ID");
 			System.out.println("	0. Exit");
 			
 			input = consoleRead.next();
@@ -377,11 +443,8 @@ public class Menus
 					Admin.adminUnloadPlayer();
 					break;
 				case 9: 		//logout
-					AsxGame.activeAdminLoaded = false;
-					AsxGame.activeAdmin = null;
-					AsxGame.activePlayer = null;
-					AsxGame.activePlayerLoaded = false;
-					break;
+					Game.logout();
+					return;
 				case 10: 		//set buy fees
 					System.out.println("Enter flat fee then percentage fee");
 					float flat = Float.parseFloat(consoleRead.next());
@@ -394,11 +457,45 @@ public class Menus
 					per = Float.parseFloat(consoleRead.next());
 					Admin.setSellFee(flat, per);
 					break;
-				case 12:
+				case 12: //Message all users
 					System.out.println("Enter subject line then message to send to all users");
 					String subject = consoleRead.next();
 					String message = consoleRead.next();
-					Admin.messageAllUsers("message", subject, message);
+					Admin.messageAllUsers(subject, message);
+					break;
+				case 13: //Delete a user
+					System.out.println("Enter the user name of the user you want to delete");
+					String user = consoleRead.next();
+					System.out.println("Please re-enter the username to confirm");
+					String userConfirm = consoleRead.next();
+					if(user.equals(userConfirm))
+					{
+						if(!Admin.deleteUser(user))
+						{
+							System.out.println("Server Error!");
+						}
+						else
+						{
+							System.out.println(user + " deleted!");
+						}
+					}
+					else
+					{
+						System.out.println("Usernames don't match!");
+					}
+					break;
+				case 14: //Get user ID from email
+					System.out.println("Enter the username you want to convert to ID number.");
+					user =  consoleRead.next();
+					String response = "";
+					if((response = Admin.getID(user)) != null)
+					{
+						System.out.println(user + " -> " + response);
+					}
+					else
+					{
+						System.out.println("Server Error!");
+					}
 					break;
 				case 0: 		//exit
 					System.exit(0);
