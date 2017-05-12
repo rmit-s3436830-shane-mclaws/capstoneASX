@@ -8,15 +8,14 @@
 
 package com.amazonaws.samples;
 
-import java.awt.EventQueue;
 import java.io.IOException;
-
 import java.util.ArrayList;
-
 import org.json.JSONObject;
 
-public class AsxGame
-{
+import javafx.application.Application;
+import javafx.stage.Stage;
+
+public class AsxGame extends Application{
 
 	//network connectivity constants
 	//Make these not plain text somehow, even just remove them from the version that gets uploaded to github
@@ -43,18 +42,45 @@ public class AsxGame
 	//Keys: "Name" (as String), "Surname" (as String), "Score" (as String)
 	public static ArrayList<JSONObject> leaderboard = new ArrayList<JSONObject>();
 	
-	//windows defined here
-	public static UI_LogIn loginWindow = new UI_LogIn();
-	public static UI_SignUp signUpWindow = new UI_SignUp();
-	public static UI_MainView mainWindow;
-	public static UI_SellWindow sellWindow;
-	public static UI_BuyWindow buyWindow;
-	public static UI_ViewStocks stockWindow;
-	public static UI_Leaderboard leadersWindow;
-	public static UI_ViewTransHist transHistWindow;
-			
-	public static void main(String[] args)
-	{		
+	//UI Stuff defined here
+	public static Stage mainStage;
+	public static UI_Login UI_loginScene = new UI_Login();
+	public static UI_Register UI_RegisterScene = new UI_Register();
+	public static UI_MainScene UI_MainScene;
+	
+	//Threads defined here
+	public static Thread loadASXdata = new Thread(new LoadASXData());
+	
+	@Override
+	public void stop() {
+		System.exit(0);
+	}
+	
+	@Override
+	public void start(Stage primaryStage) throws Exception {
+		mainStage = primaryStage;
+		mainStage.setTitle("ASX Trading Wheels");
+		mainStage.setResizable(false);
+		mainStage.setScene(UI_loginScene.scene);
+		
+		// add css to scenes
+		UI_loginScene.scene.getStylesheets().add(
+				getClass().getResource("UI_LoginStyle.css").toExternalForm());
+		UI_RegisterScene.scene.getStylesheets().add(
+				getClass().getResource("UI_RegisterStyle.css").toExternalForm());
+		
+		//initialise Other Bits
+		UI_Portfolio.initPortfolioTable();
+		UI_HistoryWindow.initHistoryTable();
+		
+		mainStage.show();
+		
+	}
+				
+	public static void main(String[] args){		
+		
+
+		
 		System.out.println(
 				"Welcome to Programming Project 1 - Stock Market game \"Trading Wheels\"\n\n"
 				
@@ -68,49 +94,28 @@ public class AsxGame
 		
 		//starts the loading of ASX Data from S3 bucket
 		System.out.println("Stocklist Length: " + stockList.length);
-		Thread loadASXdata = new Thread(new LoadASXData());
+		
 		loadASXdata.start();
 		
 		//starts User Interface
-		EventQueue.invokeLater(new Runnable()
-		{
-			public void run()
-			{
-				try
-				{
-					loginWindow.frmLogin.setVisible(true);
-				}
-				catch (Exception e)
-				{
-					e.printStackTrace();
-				}
-			}
-		});
-
+		launch(args);
+		
 		//Command Line stuff
-		try
-		{
+		try{
 			System.in.read();
-		}
-		catch(IOException e)
-		{
+		} catch(IOException e) {
 			e.printStackTrace();
 		}
-		while (true)
-		{
-			if(activeAdminLoaded == true)
-			{
+		
+		while (true){
+			if (activePlayerLoaded == false){
+				Menus.menuLogin();
+			} else if (activeAdminLoaded == true){
 				System.out.println("Admin loaded");
 				Menus.adminMenu();
-			}
-			else if(activePlayerLoaded == true)
-			{
+			} else {
 				System.out.println("Player loaded");
 				Menus.mainMenu();
-			}
-			else
-			{
-				Menus.menuLogin();
 			}
 		}
 	}

@@ -259,6 +259,15 @@ public class Game
 		return -1;
 	}
 	
+	public static String getStockName(String asxCode){
+		for (int i = 0; i < AsxGame.stockArray.size(); i++){
+			if (AsxGame.stockArray.get(i).code.equals(asxCode)){
+				return AsxGame.stockArray.get(i).name;
+			}
+		}
+		return null;
+	}
+	
 	public static boolean getStockHistory(String asxCode, int startDate, int endDate) //int date = 20170214 -- 14th Feb 2017
 	{
 		AsxGame.requestedStockCode = asxCode;
@@ -273,8 +282,9 @@ public class Game
 			successState = true;
 			for(String line:lines)
 			{
-				if(!lines.equals("200"))
+				if(!line.equals("200"))
 				{
+					System.out.println(line);
 					JSONObject stockHis = new JSONObject(line);
 					AsxGame.requestedStockHistory.add(stockHis);
 				}

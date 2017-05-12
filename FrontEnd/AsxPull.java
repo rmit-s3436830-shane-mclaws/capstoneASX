@@ -27,6 +27,8 @@ import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 
+import javafx.application.Platform;
+
 public class AsxPull {
 	final static String bucket = "asx-json-host";
 	final static AWSCredentials credentials = new BasicAWSCredentials(AsxGame.accessKey,AsxGame.secretAccessKey);
@@ -146,9 +148,13 @@ public class AsxPull {
 				Float percentage = 
 						((float)AsxGame.stockArray.size()/ (float)AsxGame.stockList.length) * 100;
 				AsxGame.loadCompletePercent = Math.round(percentage);
-				if (AsxGame.mainWindow != null){
-					AsxGame.mainWindow.updateTitle();
-				}
+				Platform.runLater(new Runnable() {
+					@Override
+					public void run(){
+						AsxGame.mainStage.setTitle(
+								"ASX \"Trading Wheels\" - Download in progress: " + AsxGame.loadCompletePercent + "%");
+					}
+				});	
 			}
 		}
 		return false;
