@@ -1,0 +1,58 @@
+
+#menuBar{
+	-fx-background-color: lightgray;
+}
+
+#mainBorderPane{
+	-fx-background-color: radial-gradient(radius 100%, lightgrey, lightblue); 
+}
+
+#valueBox{
+	-fx-font-size: 16pt;
+	-fx-font-weight: bold;
+}
+
+#nameBox{
+	-fx-font-size: 16pt;
+	-fx-font-weight: bold;
+}
+
+#header {
+	-fx-font-family: fantasy;
+	-fx-font-size: 24pt;
+	-fx-font-weight: bold;
+	-fx-text-fill: mediumblue;
+	-fx-stroke: black;
+	-fx-stroke-width: 1;
+	-fx-effect: dropshadow( gaussian , darkgray , 0,0,2,2 );
+}
+
+#buttonLabel{
+	-fx-font-size: 16pt;
+	-fx-font-weight: bold;
+	-fx-text-fill: white;
+	-fx-alignment: center;
+}
+
+#portfolioHeader{
+	-fx-font-family: fantasy;
+	-fx-font-size: 20pt;
+	-fx-font-weight: bold;
+	-fx-text-fill: red;
+	-fx-stroke: black;
+	-fx-stroke-width: 1;
+	-fx-effect: dropshadow( gaussian , darkgray , 0,0,2,2 );
+}
+
+#pleaseWaitText{
+	-fx-font-family: fantasy;
+	-fx-font-size: 16pt;
+	-fx-font-weight: bold;
+	-fx-text-fill: limegreen;
+	-fx-stroke: black;
+	-fx-stroke-width: 1;
+}
+	
+#overlayBackground{
+	-fx-background-color: rgba(0,0,0,0.75);
+}

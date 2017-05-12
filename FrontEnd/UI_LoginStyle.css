@@ -1,0 +1,24 @@
+/* JavaFX CSS - Leave this comment until you have at least create one rule which uses -fx-Property */
+
+#header {
+	-fx-font-family: fantasy;
+	-fx-font-size: 24pt;
+	-fx-font-weight: bold;
+	-fx-text-fill: mediumblue;
+	-fx-stroke: black;
+	-fx-stroke-width: 1;
+	-fx-effect: dropshadow( gaussian , darkgray , 0,0,2,2 );
+}
+
+#registerLabel {
+	-fx-font-size: 12pt;
+	-fx-font-weight: bold;
+}
+
+#regBtnBox {
+	-fx-background-color: white;
+}
+
+#border{
+		-fx-background-color: radial-gradient(radius 100%, lightgrey, lightblue); 
+}
