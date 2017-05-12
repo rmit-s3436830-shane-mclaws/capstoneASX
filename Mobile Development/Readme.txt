@@ -14,3 +14,7 @@ Changelist:
     Displaying Stock Data correctly (in ListView)
     Ability to filter Stock Data via attached SearchView
     Buy/Sell Stocks
+12May:
+    Variable Brokers Fee
+    Correct Score Calculation
+    Show Leaderboard
