@@ -6,6 +6,8 @@
 
 package com.amazonaws.samples;
 
+import javafx.application.Platform;
+
 public class LoadASXData implements Runnable{
 
 	public void run(){
@@ -59,12 +61,24 @@ public class LoadASXData implements Runnable{
 		
 		//ignore these, they are for UI usage, will likely disappear once, JavaFX implemented
 		AsxGame.asxLoadComplete = true;
-		AsxGame.loginWindow.checkLoadState();
-		AsxGame.signUpWindow.checkLoadState();
-		AsxGame.stockWindow = new UI_ViewStocks();
-		if (AsxGame.mainWindow != null){
-			AsxGame.mainWindow.updateTableData();
-			AsxGame.mainWindow.updateTitle();
+		if (AsxGame.showUI){
+			Platform.runLater(new Runnable() {
+				@Override
+				public void run(){
+					if (!AsxGame.asxLoadComplete) {
+						AsxGame.mainStage.setTitle("ASX \"Trading Wheels\" - " + AsxGame.loadCompletePercent);
+					} else {
+						// update UI stuff after download completes
+						AsxGame.mainStage.setTitle("ASX \"Trading Wheels\"");
+						
+						UI_BrowseStockWindow.initBrowseStockWindow();
+						if (UI_MainScene.browseWindowVisible){
+							UI_MainScene.homeScreenStack.getChildren().remove(1);
+							UI_BrowseStockWindow.makeBrowseStockWindow();
+						}
+					}
+				}
+			});
 		}
 	}
 	

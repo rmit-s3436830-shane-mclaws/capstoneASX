@@ -152,7 +152,7 @@ public class Game
 				AsxGame.activeAdmin.unreadMessages = getUnreadMessages();
 				AsxGame.activeAdmin.deletedMessages = getDeletedMessageList();
 			}
-			AsxGame.messageChecker = new Thread(new messageCheck());
+			AsxGame.messageChecker = new Thread(new MessageCheck());
 			AsxGame.messageChecker.start();
 			successState = true;
 		}
@@ -296,6 +296,15 @@ public class Game
 			}
 		}
 		return -1;
+	}
+	
+	public static String getStockName(String asxCode){
+		for (int i = 0; i < AsxGame.stockArray.size(); i++){
+			if (AsxGame.stockArray.get(i).code.equals(asxCode)){
+				return AsxGame.stockArray.get(i).name;
+			}
+		}
+		return null;
 	}
 	
 	public static boolean getStockHistory(String asxCode, int startDate, int endDate) //int date = 20170214 -- 14th Feb 2017
