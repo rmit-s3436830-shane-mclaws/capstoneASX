@@ -21,8 +21,8 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 public class valueUpdate
 {
-	private static String AccessKey = REDACTED;
-	private static String SecretKey = REDACTED;
+	private static String AccessKey = creds.accessKey;
+	private static String SecretKey = creds.secretAccessKey;
 	
 	public static void main(String args[])
 	{
