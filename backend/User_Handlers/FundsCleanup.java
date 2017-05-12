@@ -23,8 +23,8 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 public class FundsCleanup
 {
-	private static String AccessKey = REDACTED;
-	private static String SecretKey = REDACTED;
+	private static String AccessKey = creds.accessKey;
+	private static String SecretKey = creds.secretAccessKey;
 	private static String bucket = "asx-user-store";
 	private static AWSCredentials credentials;
 	private static AmazonS3 s3Client;
