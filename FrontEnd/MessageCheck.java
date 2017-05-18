@@ -2,6 +2,8 @@ package com.amazonaws.samples;
 
 import java.util.ArrayList;
 
+import javafx.application.Platform;
+
 public class MessageCheck implements Runnable
 {
 	public void run()
@@ -30,6 +32,12 @@ public class MessageCheck implements Runnable
 			{
 				return;
 			}
+			Platform.runLater(new Runnable() {
+				@Override
+				public void run(){
+					UI_MainScene.updateUnreadMessages();
+				}
+			});
 		}
 		while(AsxGame.activeAdminLoaded)
 		{

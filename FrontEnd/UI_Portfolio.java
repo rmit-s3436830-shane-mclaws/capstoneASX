@@ -58,6 +58,7 @@ public class UI_Portfolio {
 		tableBox.setMaxWidth(642);
 		portfolioBorder = new BorderPane();
 		portfolioBorder.setCenter(tableBox);
+		portfolioBorder.setId("portfolioBorder");
 		
 				
 		tableBox.setAlignment(Pos.CENTER);
@@ -104,6 +105,10 @@ public class UI_Portfolio {
 		String stockCode;
 		String[] shareSplit;
 		int numberOwned;
+		
+		while (tableList.size() != 0){
+			tableList.remove(0);
+		}
 		
 		for(int i = 0; i < AsxGame.activePlayer.shares.size(); i++){
 			shareSplit = AsxGame.activePlayer.shares.get(i).split(":");

@@ -11,6 +11,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 
 public class UI_Login{
@@ -22,7 +23,8 @@ public class UI_Login{
 	
 	GridPane gridpane = new GridPane();
 	BorderPane border = new BorderPane(gridpane);
-	public Scene scene = new Scene(border, 600, 400);
+	StackPane loginStackPane = new StackPane();
+	public Scene scene = new Scene(loginStackPane, 600, 400);
 	
 	public UI_Login(){
 	//	gridpane.setGridLinesVisible(true);
@@ -83,6 +85,8 @@ public class UI_Login{
 		gridpane.add(logBtnBox, 0, 5);
 		
 		gridpane.add(regBtnBox, 0, 8);
+		
+		loginStackPane.getChildren().add(border);
 				
 	}
 	

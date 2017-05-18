@@ -4,12 +4,15 @@ import javafx.beans.property.SimpleFloatProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
@@ -22,14 +25,19 @@ public class UI_BrowseStockWindow {
 	static HBox tableBox = new HBox(table);
 	public static boolean initComplete = false;
 	
+	static TextField searchField = new TextField();
+	
 	static String code;
 	static String name;
 	static float price;
 	
 	@SuppressWarnings("unchecked")
 	public static void initBrowseStockWindow(){
-		if (tableList.size() != 0){
-			tableList.removeAll();
+		while (tableList.size() != 0){
+			tableList.remove(0);
+		}
+		while (table.getColumns().size() != 0){
+			table.getColumns().remove(0);
 		}
 		TableColumn<MarketTableRow, String> codeCol = 
 				new TableColumn<MarketTableRow, String>("Code");
@@ -66,7 +74,32 @@ public class UI_BrowseStockWindow {
 			return row;
 		});
 		
-		table.setItems(tableList);
+		FilteredList<MarketTableRow> filteredList = new FilteredList<>(tableList, p -> true);
+		
+		searchField.textProperty().addListener((observable, oldValue, newValue) -> {
+			filteredList.setPredicate(MarketTableRow -> {
+				// If filter text is empty, display all persons.
+                if (newValue == null || newValue.isEmpty()) {
+                    return true;
+                }
+
+                // Compare stock code and stock name of every row with filter text.
+                String lowerCaseFilter = newValue.toLowerCase();
+
+                if (MarketTableRow.getStockCode().toLowerCase().contains(lowerCaseFilter)) {
+                    return true; // Filter matches stockCode.
+                } else if (MarketTableRow.getStockName().toLowerCase().contains(lowerCaseFilter)) {
+                    return true; // Filter matches stock name.
+                }
+                return false; // Does not match.
+			});
+		});
+		
+		SortedList<MarketTableRow> sortedList = new SortedList<>(filteredList);
+		
+		sortedList.comparatorProperty().bind(table.comparatorProperty());
+		
+		table.setItems(sortedList);
 		initComplete = true;
 	}
 
@@ -88,6 +121,11 @@ public class UI_BrowseStockWindow {
 				UI_MainScene.homeScreenStack.getChildren().add(pleaseWaitGrid);
 			} else {*/
 				GridPane stockListOptionsGrid = new GridPane();
+				BorderPane stockListCenterBorder = new BorderPane();
+				
+				
+				searchField.setPromptText("Search by stock name or code");
+				
 				Button viewStockButton = new Button("View Selected Stock");
 				viewStockButton.setMinSize(50, 50);
 				viewStockButton.setOnAction(e-> viewStockButtonClicked(e));
@@ -104,7 +142,10 @@ public class UI_BrowseStockWindow {
 				stockListBorder.setId("overlayBackground");
 				
 				tableBox.setPadding(new Insets(10,10,10,10));
-				stockListBorder.setCenter(tableBox);
+				
+				stockListCenterBorder.setTop(searchField);
+				stockListCenterBorder.setCenter(tableBox);
+				stockListBorder.setCenter(stockListCenterBorder);
 						
 				UI_MainScene.homeScreenStack.getChildren().add(stockListBorder);
 			}
@@ -116,9 +157,10 @@ public class UI_BrowseStockWindow {
 	}
 	
 	private static void backButtonClicked(ActionEvent e){
-		UI_MainScene.homeScreenStack.getChildren().remove(1);
-		UI_MainScene.browseWindowVisible = false;
-		UI_MainScene.menuInboxRect.setStyle("-fx-fill:black;");
+		int stackSize = UI_MainScene.homeScreenStack.getChildren().size();
+		UI_MainScene.homeScreenStack.getChildren().remove(stackSize -1);
+		UI_MainScene.browseWindowVis = false;
+		UI_MainScene.menuBrowseRect.setStyle("-fx-fill:black;");
 	}
 	
 	public static class MarketTableRow{

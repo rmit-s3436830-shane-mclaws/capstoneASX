@@ -34,6 +34,13 @@
 	-fx-alignment: center;
 }
 
+#unreadMsgLabel{
+	-fx-font-size: 12pt;
+	-fx-font-weight: bold;
+	-fx-text-fill: white;
+	-fx-alignment: center;
+}
+
 #portfolioHeader{
 	-fx-font-family: fantasy;
 	-fx-font-size: 20pt;
@@ -50,6 +57,22 @@
 	-fx-font-weight: bold;
 	-fx-text-fill: limegreen;
 	-fx-stroke: black;
+	-fx-stroke-width: 1;
+}
+
+#stockDetailText{
+	-fx-font-family: fantasy;
+	-fx-font-size: 16pt;
+	-fx-stroke: white;
+	-fx-text-fill: white;
+	-fx-stroke-width: 1;
+}
+
+#inboxMessageText{
+	-fx-font-family: fantasy;
+	-fx-font-size: 16pt;
+	-fx-stroke: white;
+	-fx-text-fill: white;
 	-fx-stroke-width: 1;
 }
 	
