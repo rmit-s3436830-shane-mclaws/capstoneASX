@@ -555,19 +555,22 @@ public class Game
 			if(response.equals("0\n"))
 			{
 				messageList = null;
+			} else {
+				messageList = response;
 			}
-			messageList = response;
 		}
 		else
 		{
 			System.out.println("500: INTERNAL SERVER ERROR!");
 			return null;
 		}
-		String[] sList = messageList.split("[,\n]");
 		ArrayList<Integer> list = new ArrayList<Integer>();
-		for(String s:sList)
-		{
-			list.add(Integer.parseInt(s));
+		if (messageList != null){
+			String[] sList = messageList.split("[,\n]");
+			for(String s:sList)
+			{
+				list.add(Integer.parseInt(s));
+			}
 		}
 		return list;
 	}

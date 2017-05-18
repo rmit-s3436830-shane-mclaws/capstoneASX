@@ -77,21 +77,22 @@ public class AsxPull {
 					//String lastTradePrice = json.getString("Last Trade Price");
 					//String lastTradeTime = json.getString("Last Trade Time");
 					//String change = json.getString("Change");
-					//String changePercent = json.getString("Change(%");
+					String changePercent = json.getString("Change(%)");
 					String openValue = json.getString("Opening Value");
 					String dayHigh = json.getString("Day High");
 					String dayLow = json.getString("Day Low");
 				//	String prevClose = json.getString("Previous Close");
 				//	String lastYearRange = json.getString("52 Week Range");
-				//	String lastYearHigh = json.getString("52 Week High");
-				//	String lastYearLow = json.getString("52 Week Low");
+					String lastYearHigh = json.getString("52 Week High");
+					String lastYearLow = json.getString("52 Week Low");
 				//	String dividendShane = json.getString("Dividend/Share");
 				//	String exDividendDate = json.getString("Ex-Dividend Date");
 				//	String dividendPayDate = json.getString("Dividende Pay Date");
 				//	String dividendYield = json.getString("Dividende Pay Date");
 					try
 					{
-						Stock stockToAdd = new Stock(time, name, asxCode, askPrice, bidPrice, openValue, dayHigh, dayLow);
+						Stock stockToAdd = new Stock(time, name, asxCode, askPrice, bidPrice, openValue,
+								dayHigh, dayLow, changePercent, lastYearHigh, lastYearLow);
 						AsxGame.stockArray.add(stockToAdd);
 					} 
 					catch (NumberFormatException e)

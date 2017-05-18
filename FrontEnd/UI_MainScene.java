@@ -15,14 +15,17 @@ import javafx.scene.shape.Rectangle;
 public class UI_MainScene {
 	/* Menu Bar Variables */
 	VBox menuBar;
-	public static Rectangle menuBrowseRect, menuHistRect;
-	public static Rectangle menuInboxRect;
-	public static Rectangle menuAccountRect;
-	public static Rectangle menuLogoutRect;
+	public static Rectangle menuBrowseRect, menuHistRect
+							, menuInboxRect, menuLeaderRect, menuLogoutRect;
+
+	public static boolean browseWindowVis = false;
+	public static boolean histWindowVis = false;
+	public static boolean inboxWindowVis = false;
+	public static boolean leaderWindowVis = false;
 	
-	public static boolean browseWindowVisible = false;
-	public static boolean histWindowVisible = false;
-	public static boolean stockDetailWindowVisible = false;
+	public static boolean unreadMessages = false;
+	
+	static StackPane inboxStack;
 	
 	/* Top Bar Variables */
 	BorderPane topBarBorder = new BorderPane();
@@ -66,7 +69,7 @@ public class UI_MainScene {
 		browseStack.setOnMouseEntered(new EventHandler<MouseEvent>() {
 			@Override
 			public void handle(MouseEvent e){
-				if (!browseWindowVisible){
+				if (!browseWindowVis){
 					menuBrowseRect.setStyle("-fx-fill:darkgray;");
 				}				
 			}
@@ -74,7 +77,7 @@ public class UI_MainScene {
 		browseStack.setOnMouseExited(new EventHandler<MouseEvent>() {
 			@Override
 			public void handle(MouseEvent e){
-				if (!browseWindowVisible){
+				if (!browseWindowVis){
 					menuBrowseRect.setStyle("-fx-fill:black;");
 				}
 			}
@@ -82,15 +85,14 @@ public class UI_MainScene {
 		browseStack.setOnMouseClicked(new EventHandler<MouseEvent>(){
 			@Override
 			public void handle(MouseEvent e){
-				if (!browseWindowVisible){
+				if (!browseWindowVis){
 					closeOpenWindows();
 					UI_BrowseStockWindow.makeBrowseStockWindow();
 					menuBrowseRect.setStyle("-fx-fill:darkblue;");
-					browseWindowVisible = true;
+					browseWindowVis = true;
 				} else {
-					homeScreenStack.getChildren().remove(1);
+					closeOpenWindows();
 					menuBrowseRect.setStyle("-fx-fill:darkgray;");
-					browseWindowVisible = false;
 				}
 			}
 		});
@@ -112,7 +114,7 @@ public class UI_MainScene {
 		histStack.setOnMouseEntered(new EventHandler<MouseEvent>() {
 			@Override
 			public void handle(MouseEvent e){
-				if (!histWindowVisible){
+				if (!histWindowVis){
 					menuHistRect.setStyle("-fx-fill:darkgray;");
 				}
 			}
@@ -120,7 +122,7 @@ public class UI_MainScene {
 		histStack.setOnMouseExited(new EventHandler<MouseEvent>() {
 			@Override
 			public void handle(MouseEvent e){
-				if (!histWindowVisible){
+				if (!histWindowVis){
 					menuHistRect.setStyle("-fx-fill:black;");
 				}
 			}
@@ -128,20 +130,61 @@ public class UI_MainScene {
 		histStack.setOnMouseClicked(new EventHandler<MouseEvent>(){
 			@Override
 			public void handle(MouseEvent e){
-				if (!histWindowVisible){
+				if (!histWindowVis){
 					closeOpenWindows();
 					UI_HistoryWindow.makeHistoryWindow();
 					menuHistRect.setStyle("-fx-fill:darkblue;");
-					histWindowVisible = true;
+					histWindowVis = true;
 				} else {
-					homeScreenStack.getChildren().remove(1);
+					closeOpenWindows();
 					menuHistRect.setStyle("-fx-fill:darkgray;");
-					histWindowVisible = false;
 				}
 			}
 		});
 		
-		StackPane inboxStack = new StackPane();
+		StackPane leaderboardStack = new StackPane();
+		menuLeaderRect = new Rectangle();
+		menuLeaderRect.setHeight(100.0f);
+		menuLeaderRect.setWidth(100.0f);
+		menuLeaderRect.setArcHeight(10.0);
+		menuLeaderRect.setArcWidth(10.0);
+		VBox leaderLabelVBox = new VBox();
+		leaderLabelVBox.setAlignment(Pos.CENTER);
+		Label leaderButtonLabel1 = new Label("Leader-");
+		leaderButtonLabel1.setId("buttonLabel");
+		Label leaderButtonLabel2 = new Label("board");
+		leaderButtonLabel2.setId("buttonLabel");
+		leaderLabelVBox.getChildren().addAll(leaderButtonLabel1, leaderButtonLabel2);
+		leaderboardStack.getChildren().addAll(menuLeaderRect, leaderLabelVBox);
+		leaderboardStack.setOnMouseEntered(new EventHandler<MouseEvent>() {
+			@Override
+			public void handle(MouseEvent e){
+				menuLeaderRect.setStyle("-fx-fill:darkgray;");
+			}
+		});
+		leaderboardStack.setOnMouseExited(new EventHandler<MouseEvent>() {
+			@Override
+			public void handle(MouseEvent e){
+				menuLeaderRect.setStyle("-fx-fill:black;");
+			}
+		});
+		leaderboardStack.setOnMouseClicked(new EventHandler<MouseEvent>(){
+			@Override
+			public void handle(MouseEvent e){
+				if (!leaderWindowVis){
+					closeOpenWindows();
+					UI_Leaderboard.makeLeaderBoardWindow();
+					menuLeaderRect.setStyle("-fx-fill:darkblue;");
+					leaderWindowVis = true;
+				} else {
+					closeOpenWindows();
+					menuLeaderRect.setStyle("-fx-fill:darkgray;");
+				}
+			}
+		});
+		
+		
+		inboxStack = new StackPane();
 		menuInboxRect = new Rectangle();
 		menuInboxRect.setWidth(100.0f);
 		menuInboxRect.setHeight(100.0f);
@@ -165,33 +208,21 @@ public class UI_MainScene {
 				menuInboxRect.setStyle("-fx-fill:black;");
 			}
 		});
-		
-		StackPane accountStack = new StackPane();
-		menuAccountRect = new Rectangle();
-		menuAccountRect.setHeight(100.0f);
-		menuAccountRect.setWidth(100.0f);
-		menuAccountRect.setArcHeight(10.0);
-		menuAccountRect.setArcWidth(10.0);
-		VBox accountLabelVBox = new VBox();
-		accountLabelVBox.setAlignment(Pos.CENTER);
-		Label accountButtonLabelMy = new Label("My");
-		accountButtonLabelMy.setId("buttonLabel");
-		Label accountButtonLabelAccount = new Label("Account");
-		accountButtonLabelAccount.setId("buttonLabel");
-		accountLabelVBox.getChildren().addAll(accountButtonLabelMy, accountButtonLabelAccount);
-		accountStack.getChildren().addAll(menuAccountRect, accountLabelVBox);
-		accountStack.setOnMouseEntered(new EventHandler<MouseEvent>() {
+		inboxStack.setOnMouseClicked(new EventHandler<MouseEvent>(){
 			@Override
 			public void handle(MouseEvent e){
-				menuAccountRect.setStyle("-fx-fill:darkgray;");
+				if (!inboxWindowVis){
+					closeOpenWindows();
+					UI_Mailbox.makeInbowWindow();
+					menuInboxRect.setStyle("-fx-fill:darkblue;");
+					inboxWindowVis = true;
+				} else {
+					closeOpenWindows();
+					menuInboxRect.setStyle("-fx-fill:darkgray;");
+				}
 			}
 		});
-		accountStack.setOnMouseExited(new EventHandler<MouseEvent>() {
-			@Override
-			public void handle(MouseEvent e){
-				menuAccountRect.setStyle("-fx-fill:black;");
-			}
-		});
+		updateUnreadMessages();
 		
 		StackPane logoutStack = new StackPane();
 		menuLogoutRect = new Rectangle();
@@ -228,8 +259,8 @@ public class UI_MainScene {
 			}
 		});
 		
-		menuBar.getChildren().addAll(browseStack, histStack, inboxStack
-										, accountStack, logoutStack);
+		menuBar.getChildren().addAll(browseStack, histStack, leaderboardStack
+										, inboxStack, logoutStack);
 		
 		menuBar.setAlignment(Pos.TOP_CENTER);
 		menuBar.setSpacing(37);
@@ -305,15 +336,18 @@ public class UI_MainScene {
 	}
 	
 	private void closeOpenWindows(){
-		if (browseWindowVisible){
+		while (homeScreenStack.getChildren().size() != 1){
 			homeScreenStack.getChildren().remove(1);
 			menuBrowseRect.setStyle("-fx-fill:black;");
-			browseWindowVisible = false;
-		}
-		if (histWindowVisible){
-			homeScreenStack.getChildren().remove(1);
 			menuHistRect.setStyle("-fx-fill:black;");
-			histWindowVisible = false;
+			menuInboxRect.setStyle("-fx-fill:black;");
+			menuLeaderRect.setStyle("-fx-fill:black;");
+			menuLogoutRect.setStyle("-fx-fill:black;");
+			
+			browseWindowVis = false;
+			histWindowVis = false;
+			inboxWindowVis = false;
+			leaderWindowVis = false;
 		}
 	}
 	
@@ -328,4 +362,30 @@ public class UI_MainScene {
 		totalNumber.setText("$" + Float.toString(AsxGame.activePlayer.totalValue));
 	}
 
+	public static void updateUnreadMessages(){
+		if (unreadMessages == true){
+			inboxStack.getChildren().remove(inboxStack.getChildren().size() -1 );
+			unreadMessages = false;
+		}
+		if (AsxGame.activePlayer.unreadMessages.size() > 0){
+			StackPane unreadMsgNotice = new StackPane();
+			unreadMsgNotice.setAlignment(Pos.TOP_RIGHT);
+			Rectangle unreadMsgRect = new Rectangle();
+			unreadMsgRect.setWidth(20.0f);
+			unreadMsgRect.setHeight(20.0f);
+			unreadMsgRect.setArcHeight(10.0);
+			unreadMsgRect.setArcWidth(10.0);
+			unreadMsgRect.setStyle("-fx-fill:red");
+			unreadMsgNotice.getChildren().add(unreadMsgRect);
+			
+			Label unreadMsgLabel = new Label(Integer.toString(AsxGame.activePlayer.unreadMessages.size()));
+			unreadMsgLabel.setAlignment(Pos.CENTER);
+			unreadMsgLabel.setId("unreadMsgLabel");
+			unreadMsgNotice.getChildren().add(unreadMsgLabel);
+			
+			inboxStack.getChildren().add(unreadMsgNotice);
+			unreadMessages = true;
+			
+		}
+	}
 }

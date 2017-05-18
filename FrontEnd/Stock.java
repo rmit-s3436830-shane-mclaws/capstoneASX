@@ -26,7 +26,8 @@ public class Stock {
 	float prevClose;
 	
 	public Stock (String timeIn, String nameIn, String codeIn, String askPriceIn, String bidPriceIn,
-					String openingValueIn, String dayHighIn, String dayLowIn){
+					String openingValueIn, String dayHighIn, String dayLowIn, String changePercentIn,
+					String yearHighIn, String yearLowIn){
 		String[] timeParts = timeIn.split(":");
 		this.time = Integer.parseInt(timeParts[0] + timeParts[1]);
 		this.name = nameIn;
@@ -41,6 +42,9 @@ public class Stock {
 			this.dayHigh = Float.parseFloat(dayHighIn);
 		if (!dayLowIn.equals("N/A"))
 			this.dayLow = Float.parseFloat(dayLowIn);
+		this.changePercent = changePercentIn;
+		this.pastYearHigh = yearHighIn;
+		this.pastYearLow = yearLowIn;
 	}
 	
 	public void printStock(){

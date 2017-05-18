@@ -105,16 +105,18 @@ public class UI_HistoryWindow {
 	}
 	
 	private static void backButtonClicked(ActionEvent e){
-		UI_MainScene.homeScreenStack.getChildren().remove(1);
+		int stackSize = UI_MainScene.homeScreenStack.getChildren().size();
+		UI_MainScene.homeScreenStack.getChildren().remove(stackSize -1);
 		UI_MainScene.menuHistRect.setStyle("-fx-fill:black;");
-		UI_MainScene.histWindowVisible = false;
 	}
 	
 	public static void updateHistoryTable(){
-		if (tableList.size() > 0){
-			tableList.removeAll();
+		System.out.println("updateHistoryTableCalled");
+		while (tableList.size() != 0){
+			tableList.remove(0);
 		}
-		for (int i = 0; i < AsxGame.activePlayer.transHistory.size(); i++){
+		for (int i = AsxGame.activePlayer.transHistory.size() -1; i >= 0; i--){
+			System.out.println(AsxGame.activePlayer.transHistory.get(i).toString());
 			tableList.add(new HistoryTableRow(AsxGame.activePlayer.transHistory.get(i)));
 		}
 	}
@@ -148,7 +150,7 @@ public class UI_HistoryWindow {
 			date.set(in);
 		}
 		
-		public String time(){
+		public String getTime(){
 			return time.get();
 		}
 		

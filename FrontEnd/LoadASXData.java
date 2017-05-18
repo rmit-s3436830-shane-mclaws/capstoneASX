@@ -72,10 +72,11 @@ public class LoadASXData implements Runnable{
 						AsxGame.mainStage.setTitle("ASX \"Trading Wheels\"");
 						
 						UI_BrowseStockWindow.initBrowseStockWindow();
-						if (UI_MainScene.browseWindowVisible){
+						if (UI_MainScene.browseWindowVis){
 							UI_MainScene.homeScreenStack.getChildren().remove(1);
 							UI_BrowseStockWindow.makeBrowseStockWindow();
 						}
+						UI_Portfolio.updatePortfolioTable();
 					}
 				}
 			});
