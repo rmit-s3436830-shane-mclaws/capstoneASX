@@ -402,6 +402,22 @@ public class threadedConnection implements Runnable
 						bytes = "500".getBytes("UTF-8");
 					}
 				}
+				else if(line.equals("markRead"))
+				{
+					String user = connectionRead.readLine();
+					int mailID = Integer.parseInt(connectionRead.readLine());
+					fileData += "Requesting: " + line + "; User: " + user + "; mailID: " + mailID +"\n";
+					if(markMailRead(user, mailID))
+					{
+						fileData += "Returning: 200\n";
+						bytes = "200".getBytes("UTF-8");
+					}
+					else
+					{
+						fileData += "Returning: 500\n";
+						bytes = "500".getBytes("UTF-8");
+					}
+				}
 				else if(line.equals("markUnread"))
 				{
 					String user = connectionRead.readLine();
@@ -1313,14 +1329,6 @@ public class threadedConnection implements Runnable
 		{
 			return null;
 		}
-		JSONObject mailJSON = new JSONObject(mailData);
-		mailJSON.put("Unread", "false");
-		mailData = mailJSON.toString();
-		if(!saveToS3(bucket, mailPath, mailData, "getMessage"))
-		{
-			return null;
-		}
-		
 		/**Return Mail Item**/
 		return mailData;	
 	}
@@ -1441,6 +1449,38 @@ public class threadedConnection implements Runnable
 		mailJSON.put("Unread", "true");
 		mailData = mailJSON.toString();
 		if(!saveToS3(bucket, mailPath, mailData, "markMailUnread"))
+		{
+			return false;
+		}
+		return true;
+	}
+	
+	private boolean markMailRead(String emailHash, int mailId)
+	{
+		/**Convert users emailHash to unique ID**/
+		String userID;
+		if((userID = userHashToID(emailHash, "markMailUnread")).equals(null))
+		{
+			return false;
+		}
+		
+		/**Mark mail item as unread and reupload**/
+		String mailPath = "data/" + userID + "/mailbox/" + mailId + ".json";
+		if(!s3Client.doesObjectExist(bucket, mailPath))
+		{
+			System.out.println("Mail item does not exist!");
+			fileData += "markMailRead: Mail item does not exist!\n";
+			return false;
+		}
+		String mailData;
+		if((mailData = readFromS3(bucket, mailPath, "markMailRead")).equals(null))
+		{
+			return false;
+		}
+		JSONObject mailJSON = new JSONObject(mailData);
+		mailJSON.put("Unread", "false");
+		mailData = mailJSON.toString();
+		if(!saveToS3(bucket, mailPath, mailData, "markMailRead"))
 		{
 			return false;
 		}
