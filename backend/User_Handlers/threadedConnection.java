@@ -1253,9 +1253,16 @@ public class threadedConnection implements Runnable
 				return null;
 			}
 			JSONObject mailJSON = new JSONObject(mailData);
-			if(mailJSON.getString("Type").equals(type) && mailJSON.getString("Deleted").equals("false"))
+			if(mailJSON.getString("Type").equals(type))
 			{
-				result += Integer.parseInt(mail.split("[/.]")[3]) + ",";
+				if(type.equals("message") && mailJSON.getString("Deleted").equals("false"))
+				{
+					result += Integer.parseInt(mail.split("[/.]")[3]) + ",";
+				}
+				else if(type.equals("funds"))
+				{
+					result += Integer.parseInt(mail.split("[/.]")[3]) + ",";
+				}
 			}
 		}
 		if(result.length() > 0)
