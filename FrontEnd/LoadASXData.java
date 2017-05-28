@@ -76,7 +76,9 @@ public class LoadASXData implements Runnable{
 							UI_MainScene.homeScreenStack.getChildren().remove(1);
 							UI_BrowseStockWindow.makeBrowseStockWindow();
 						}
-						UI_Portfolio.updatePortfolioTable();
+						if (AsxGame.UI_MainScene != null){
+							UI_Portfolio.updatePortfolioTable();
+						}
 					}
 				}
 			});

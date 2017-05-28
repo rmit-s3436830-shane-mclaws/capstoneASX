@@ -10,6 +10,10 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.chart.CategoryAxis;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -23,6 +27,12 @@ public class UI_HistoryWindow {
 	
 	private final static TableView<HistoryTableRow> table = new TableView<>();
 	private static ObservableList<HistoryTableRow> tableList = FXCollections.observableArrayList();
+	
+	static CategoryAxis xAxis = new CategoryAxis();
+	static NumberAxis yAxis  = new NumberAxis();
+	final static LineChart<String,Number> lineChart = new LineChart<String,Number>(xAxis, yAxis);
+	static XYChart.Series<String, Number> series = new XYChart.Series<>();
+	static boolean seriesAdded = false;
 	
 	@SuppressWarnings("unchecked")
 	public static void initHistoryTable(){
@@ -87,8 +97,56 @@ public class UI_HistoryWindow {
 		GridPane histOptionsGrid = new GridPane();
 		histOptionsGrid.setAlignment(Pos.CENTER);
 		
-		HBox tableBox = new HBox(table);
+		HBox tableBox = new HBox();
 		tableBox.setPadding(new Insets(10,10,10,10));
+		
+		/* GRAPH STARTS HERE */
+		
+		xAxis.setLabel("Date");
+		yAxis.setLabel("Player Value");
+		lineChart.setTitle("Player Value History");
+		series.setName("Player Value");
+		
+		int loopEndPoint = series.getData().size();
+		for (int i = 0; i < loopEndPoint; i++){
+			series.getData().remove(0);
+		}
+		
+		for (int i = 0; i < AsxGame.activePlayer.valueHistory.size(); i++){
+			String date = AsxGame.activePlayer.valueHistory.get(i).getString("Date");
+			double price = AsxGame.activePlayer.valueHistory.get(i).getDouble("Value");
+			series.getData().add(new XYChart.Data<>(date, price));
+		}
+		
+		double upperBound = AsxGame.activePlayer.valueHistory.get(0).getDouble("Value");
+		double lowerBound = AsxGame.activePlayer.valueHistory.get(0).getDouble("Value");
+		double value;
+		for (int i = 0; i < AsxGame.activePlayer.valueHistory.size(); i++){
+			value = AsxGame.activePlayer.valueHistory.get(i).getDouble("Value");
+			if (value > upperBound){
+				upperBound = value;
+			}
+			if (value < lowerBound){
+				lowerBound = value;
+			}
+		}
+		double graphUpperBound = upperBound + (upperBound - lowerBound) * 0.2;
+		double graphLowerBound = lowerBound - (upperBound - lowerBound) * 0.2;
+		System.out.println("Upper: " + upperBound + ", Lower: " + lowerBound);
+		
+		yAxis.setAutoRanging(false);
+		yAxis.setUpperBound(graphUpperBound);
+		yAxis.setLowerBound(graphLowerBound);
+		yAxis.setTickUnit(10000);
+		if (!seriesAdded){
+			lineChart.getData().add(series);
+			seriesAdded = true;
+		}	
+		
+		/* GRAPH ENDS HERE */
+		
+		tableBox.getChildren().addAll(lineChart, table);
+		
 		histBorder.setCenter(tableBox);
 		
 		Button backButton = new Button("Back");

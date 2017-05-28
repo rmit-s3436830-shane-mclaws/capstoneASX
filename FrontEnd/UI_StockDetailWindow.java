@@ -242,6 +242,7 @@ public class UI_StockDetailWindow {
 				if (newShareCount > 0){
 					sellField.setDisable(false);
 				}
+				AsxGame.UI_MainScene.updateTopBar();
 			}
 			
 			
@@ -258,6 +259,7 @@ public class UI_StockDetailWindow {
 		}
 		if (sellFieldInt > 0){
 			Game.sellStocks(requestedStock.code, sellFieldInt);
+			AsxGame.UI_MainScene.updateTopBar();
 			stocksOwnedLabel.setText("You own: " + AsxGame.activePlayer
 					.getShareCount(requestedStock.code));
 		}

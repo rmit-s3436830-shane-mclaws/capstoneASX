@@ -42,7 +42,7 @@ public class UI_Mailbox {
 	
 	
 	@SuppressWarnings("unchecked")
-	public static void makeInbowWindow(){
+	public static void makeInboxWindow(){
 		
 		while (tableList.size() != 0){
 			tableList.remove(0);
@@ -86,30 +86,63 @@ public class UI_Mailbox {
 		
 		table.getColumns().addAll(idCol, dateCol, timeCol, senderCol, typeCol, subjectCol);
 		
-		
-		for (int i = 0; i < AsxGame.activePlayer.messages.size(); i++){
-			String message = Game.getMessage(AsxGame.activePlayer.messages.get(i));
-			if (message != null){
-				JSONObject json = new JSONObject(message);
-				json.put("ID", AsxGame.activePlayer.messages.get(i));
-				fullMessageList.add(json);
-				System.out.println(json.toString());
+		if (AsxGame.activeAdminLoaded){
+			for (int i = 0; i < AsxGame.activeAdmin.messages.size(); i++){
+				String message = Game.getMessage(AsxGame.activeAdmin.messages.get(i));
+				if (message != null){
+					JSONObject json = new JSONObject(message);
+					json.put("ID", AsxGame.activeAdmin.messages.get(i));
+					fullMessageList.add(json);
+					System.out.println(json.toString());
+				}
+			}
+		} else {
+			for (int i = 0; i < AsxGame.activePlayer.messages.size(); i++){
+				String message = Game.getMessage(AsxGame.activePlayer.messages.get(i));
+				if (message != null){
+					JSONObject json = new JSONObject(message);
+					json.put("ID", AsxGame.activePlayer.messages.get(i));
+					fullMessageList.add(json);
+					System.out.println(json.toString());
+				}
+			}
+			for (int i = 0; i < AsxGame.activePlayer.pendingFunds.size(); i++){
+				String message = Game.getMessage(AsxGame.activePlayer.pendingFunds.get(i));
+				if (message != null){
+					JSONObject json = new JSONObject(message);
+					json.put("ID", AsxGame.activePlayer.messages.get(i));
+					fullMessageList.add(json);
+					System.out.println(json.toString());
+				}
 			}
 		}
 		
+		
 		for (int i = fullMessageList.size() - 1; i >=0; i--){
-			int id = fullMessageList.get(i).getInt("ID");
-			String date = fullMessageList.get(i).getString("Date");
-			String time = fullMessageList.get(i).getString("Time");
-			String sender = fullMessageList.get(i).getString("Sender");
 			String type = fullMessageList.get(i).getString("Type");
-			String subject = fullMessageList.get(i).getString("Subject");
-			String unreadString = fullMessageList.get(i).getString("Unread");
-			boolean read = true;
-			if (unreadString.equals("true")){
-				read = false;
+			String unreadString;
+			if (!type.equals("funds")){
+				int id = fullMessageList.get(i).getInt("ID");
+				String date = fullMessageList.get(i).getString("Date");
+				String time = fullMessageList.get(i).getString("Time");
+				String sender = fullMessageList.get(i).getString("Sender");
+				String subject = fullMessageList.get(i).getString("Subject");
+				unreadString = fullMessageList.get(i).getString("Unread");
+				boolean read = true;
+				if (unreadString.equals("true")){
+					read = false;
+				}
+				tableList.add(new InboxTableRow(id, sender, date, time, type, subject, read));
+			} else {
+				int id = fullMessageList.get(i).getInt("ID");
+				String date = fullMessageList.get(i).getString("Date");
+				String time = fullMessageList.get(i).getString("Time");
+				String sender = fullMessageList.get(i).getString("Sender");
+				boolean read = false;
+				tableList.add(new InboxTableRow(id, sender, date, time, type, "Fund Transfer", read));
 			}
-			tableList.add(new InboxTableRow(id, sender, date, time, type, subject, read));
+			
+			
 		}
 		
 		table.setRowFactory( tv -> new TableRow<InboxTableRow>() {
@@ -122,6 +155,11 @@ public class UI_Mailbox {
 			}
 		});
 		
+		TextField acceptFundsField = new TextField();
+		acceptFundsField.setPromptText("Amount to accept");
+		Button acceptFundsButton = new Button("Accept Funds");
+		acceptFundsButton.setOnAction(null);
+		
 		table.setRowFactory( tv -> {
 			TableRow<InboxTableRow> row = new TableRow<>();
 			row.setOnMouseClicked(event -> {
@@ -131,8 +169,19 @@ public class UI_Mailbox {
 					int id = rowData.getMsgID();
 					for (int i = 0; i < fullMessageList.size(); i++){
 						if (fullMessageList.get(i).getInt("ID") == id){
-							subjectText.setText(fullMessageList.get(i).getString("Subject"));
-							messageText.setText(fullMessageList.get(i).getString("Contents"));
+							if (!fullMessageList.get(i).getString("Type").equals("funds")){
+								subjectText.setText(fullMessageList.get(i).getString("Subject"));
+								messageText.setText(fullMessageList.get(i).getString("Contents"));
+								inboxMessageBox.getChildren().remove(acceptFundsButton);
+								inboxMessageBox.getChildren().remove(acceptFundsField);
+							} else {
+								subjectText.setText("Fund Transfer from: " + fullMessageList.get(i).getString("Sender"));
+								messageText.setText(fullMessageList.get(i).getString("Sender") + 
+										" has sent you $" + fullMessageList.get(i).getDouble("Amount"));
+								inboxMessageBox.getChildren().add(acceptFundsField);
+								inboxMessageBox.getChildren().add(acceptFundsButton);
+							}
+							
 						}
 					}
 					inboxBorder.setCenter(inboxMessageBox);
