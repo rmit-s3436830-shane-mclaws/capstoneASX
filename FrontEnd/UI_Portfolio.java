@@ -13,8 +13,10 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
@@ -52,12 +54,11 @@ public class UI_Portfolio {
 		table.getColumns().addAll(asxCodeColumn, stockNameColumn, priceColumn, numOwnedColumn);
 	}
 	
-	public static void makePortfolioTable(){
+	public static void makePortfolioView(){
 		table.setEditable(true);
-		VBox tableBox = new VBox(table);
+		VBox tableBox = new VBox();
 		tableBox.setMaxWidth(642);
 		portfolioBorder = new BorderPane();
-		portfolioBorder.setCenter(tableBox);
 		portfolioBorder.setId("portfolioBorder");
 		
 				
@@ -88,17 +89,26 @@ public class UI_Portfolio {
 		updatePortfolioTable();
 		
 		table.setItems(tableList);
-				
-		VBox portfolioOptionsBox = new VBox();
-		portfolioOptionsBox.setAlignment(Pos.CENTER);
-		portfolioOptionsBox.setPadding(new Insets(0,50,0,30));
 		
-		Button portfolioSellButton = new Button("Sell selected stocks");
-		portfolioSellButton.setMinSize(50, 50);
-		portfolioSellButton.setOnAction(e-> portfolioSellClicked(e));
-		portfolioOptionsBox.getChildren().add(portfolioSellButton);
-		
-		portfolioBorder.setRight(portfolioOptionsBox);
+		if (AsxGame.activeAdminLoaded){
+			makeAdminPlayerView();
+		} else {
+			
+			tableBox.getChildren().add(table);
+			
+			portfolioBorder.setCenter(tableBox);
+			
+			VBox portfolioOptionsBox = new VBox();
+			portfolioOptionsBox.setAlignment(Pos.CENTER);
+			portfolioOptionsBox.setPadding(new Insets(0,50,0,30));
+			
+			Button portfolioSellButton = new Button("Sell selected stocks");
+			portfolioSellButton.setMinSize(50, 50);
+			portfolioSellButton.setOnAction(e-> portfolioSellClicked(e));
+			portfolioOptionsBox.getChildren().add(portfolioSellButton);
+			
+			portfolioBorder.setRight(portfolioOptionsBox);
+		}		
 	}
 	
 	public static void updatePortfolioTable(){
@@ -121,6 +131,40 @@ public class UI_Portfolio {
 			System.out.println(tableList.get(i).getTableNumber());
 			System.out.println("row added " + stockCode + " "  + numberOwned);
 		}
+	}
+	
+	public static void makeAdminPlayerView(){
+		GridPane adminOptionsGrid = new GridPane();
+		
+		TextField changeBalanceField = new TextField();
+		changeBalanceField.setPromptText("Change PLayer Balance");
+		Button changeBalanceButton = new Button("Change Balance");
+		changeBalanceButton.setOnAction(null);						//NEEDS SETTING
+		adminOptionsGrid.add(changeBalanceField, 0, 0);
+		adminOptionsGrid.add(changeBalanceButton, 1, 0);
+		
+		TextField stockChangeCodeField = new TextField();
+		stockChangeCodeField.setPromptText("Stock Code");
+		TextField stockChangeNumField = new TextField();
+		stockChangeNumField.setPromptText("Number");
+		Button addStockButton = new Button("Add Stock to player");
+		addStockButton.setOnAction(null); 							//NEEDS SETTING
+		Button removeStockButton = new Button("Remove Stock from Player");
+		removeStockButton.setOnAction(null); 						//NEEDS SETTING
+		adminOptionsGrid.add(stockChangeCodeField, 0, 1);
+		adminOptionsGrid.add(stockChangeNumField, 0, 2);
+		adminOptionsGrid.add(addStockButton, 1, 1);
+		adminOptionsGrid.add(removeStockButton, 1, 2);
+		
+		Button unloadPlayerButton = new Button("Unload PLayer");
+		unloadPlayerButton.setOnAction(null);
+		adminOptionsGrid.add(unloadPlayerButton, 0, 3, 2, 1);
+		
+		Button deletePlayerButton = new Button("Delete Player");
+		deletePlayerButton.setOnAction(null);
+		adminOptionsGrid.add(deletePlayerButton, 0, 4, 2, 1);
+		
+		portfolioBorder.setLeft(adminOptionsGrid);
 	}
 	
 	public static void clearTable(){

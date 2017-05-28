@@ -94,13 +94,12 @@ public class UI_Login{
 		String userName = usernameField.getText();
 		String password = pwField.getText();
 		if (Game.login(userName, password)){
-			AsxGame.UI_MainScene = new UI_MainScene();
-			AsxGame.mainStage.setScene(AsxGame.UI_MainScene.scene);
-			AsxGame.UI_MainScene.scene.getStylesheets().add(
-					AsxGame.class.getResource("UI_MainStyle.css").toExternalForm());
-			AsxGame.mainStage.centerOnScreen();
+				AsxGame.UI_MainScene = new UI_MainScene();
+				AsxGame.mainStage.setScene(AsxGame.UI_MainScene.scene);
+				AsxGame.UI_MainScene.scene.getStylesheets().add(
+				AsxGame.class.getResource("UI_MainStyle.css").toExternalForm());
+				AsxGame.mainStage.centerOnScreen();
 		}
-		
 	}
 	
 	void registerLabelClicked(MouseEvent e){

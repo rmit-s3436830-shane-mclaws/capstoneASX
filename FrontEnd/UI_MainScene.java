@@ -46,7 +46,12 @@ public class UI_MainScene {
 		insetBorderPane.setCenter(homeScreenStack);
 		makeMenuBar();
 		makeTopBar();
-		makeCenterView();
+		if (AsxGame.activeAdminLoaded){
+			homeScreenStack.setAlignment(Pos.CENTER);
+			UI_Admin.makePlayersTable();
+		} else {
+			makeCenterView();
+		}
 	}
 	
 	private void makeMenuBar(){
@@ -213,7 +218,7 @@ public class UI_MainScene {
 			public void handle(MouseEvent e){
 				if (!inboxWindowVis){
 					closeOpenWindows();
-					UI_Mailbox.makeInbowWindow();
+					UI_Mailbox.makeInboxWindow();
 					menuInboxRect.setStyle("-fx-fill:darkblue;");
 					inboxWindowVis = true;
 				} else {
@@ -254,6 +259,8 @@ public class UI_MainScene {
 				UI_Portfolio.clearTable();
 				AsxGame.activePlayer = null;
 				AsxGame.activePlayerLoaded = false;
+				AsxGame.activeAdmin = null;
+				AsxGame.activeAdminLoaded = false;
 				AsxGame.mainStage.setScene(AsxGame.UI_loginScene.scene);
 				AsxGame.UI_MainScene = null;
 			}
@@ -282,9 +289,15 @@ public class UI_MainScene {
 		shareText = new Label("SHARE VALUE:");
 		totalText = new Label("TOTAL VALUE:");
 		
-		balNumber = new Label("$" + AsxGame.activePlayer.getBalanceToString());
-		shareNumber = new Label("$" + Float.toString(AsxGame.activePlayer.shareVal));
-		totalNumber = new Label("$" + Float.toString(AsxGame.activePlayer.totalValue));
+		balNumber = new Label();
+		shareNumber = new Label();
+		totalNumber = new Label();
+		
+		if (AsxGame.activePlayerLoaded){
+			balNumber.setText("$" + AsxGame.activePlayer.getBalanceToString());
+			shareNumber.setText("$" + Float.toString(AsxGame.activePlayer.shareVal));
+			totalNumber.setText("$" + Float.toString(AsxGame.activePlayer.totalValue));
+		}		
 		
 		valueBox.add(balText, 0, 0);
 		valueBox.add(balNumber, 1, 0);
@@ -317,9 +330,16 @@ public class UI_MainScene {
 		/* start name box building */
 		nameBox = new VBox();
 		
-		nameLabel = new Label(AsxGame.activePlayer.name + " " + AsxGame.activePlayer.surname);
-		emailLabel = new Label(AsxGame.activePlayer.email);
-		friendCodeLabel = new Label("Friend Code: TEMPCODE");
+		if (AsxGame.activePlayerLoaded){
+			nameLabel = new Label(AsxGame.activePlayer.name + " " + AsxGame.activePlayer.surname);
+			emailLabel = new Label(AsxGame.activePlayer.email);
+			friendCodeLabel = new Label("Friend Code: TEMPCODE");
+		} else {
+			nameLabel = new Label(AsxGame.activeAdmin.name + " " + AsxGame.activeAdmin.surname);
+			emailLabel = new Label(AsxGame.activeAdmin.email);
+			friendCodeLabel = new Label("Friend Code: TEMPCODE");
+		}
+		
 		
 		nameBox.getChildren().addAll(nameLabel, emailLabel, friendCodeLabel);
 		nameBox.setId("nameBox");
@@ -353,13 +373,15 @@ public class UI_MainScene {
 	
 	private void makeCenterView(){
 		homeScreenStack.setAlignment(Pos.CENTER);
-		UI_Portfolio.makePortfolioTable();	
+		UI_Portfolio.makePortfolioView();	
 	}
-
+	
 	public void updateTopBar(){
-		balNumber.setText("$" + AsxGame.activePlayer.getBalanceToString());
-		shareNumber.setText("$" + Float.toString(AsxGame.activePlayer.shareVal));
-		totalNumber.setText("$" + Float.toString(AsxGame.activePlayer.totalValue));
+		if (AsxGame.activePlayerLoaded){
+			balNumber.setText("$" + AsxGame.activePlayer.getBalanceToString());
+			shareNumber.setText("$" + Float.toString(AsxGame.activePlayer.shareVal));
+			totalNumber.setText("$" + Float.toString(AsxGame.activePlayer.totalValue));
+		}
 	}
 
 	public static void updateUnreadMessages(){
@@ -367,25 +389,47 @@ public class UI_MainScene {
 			inboxStack.getChildren().remove(inboxStack.getChildren().size() -1 );
 			unreadMessages = false;
 		}
-		if (AsxGame.activePlayer.unreadMessages.size() > 0){
-			StackPane unreadMsgNotice = new StackPane();
-			unreadMsgNotice.setAlignment(Pos.TOP_RIGHT);
-			Rectangle unreadMsgRect = new Rectangle();
-			unreadMsgRect.setWidth(20.0f);
-			unreadMsgRect.setHeight(20.0f);
-			unreadMsgRect.setArcHeight(10.0);
-			unreadMsgRect.setArcWidth(10.0);
-			unreadMsgRect.setStyle("-fx-fill:red");
-			unreadMsgNotice.getChildren().add(unreadMsgRect);
-			
-			Label unreadMsgLabel = new Label(Integer.toString(AsxGame.activePlayer.unreadMessages.size()));
-			unreadMsgLabel.setAlignment(Pos.CENTER);
-			unreadMsgLabel.setId("unreadMsgLabel");
-			unreadMsgNotice.getChildren().add(unreadMsgLabel);
-			
-			inboxStack.getChildren().add(unreadMsgNotice);
-			unreadMessages = true;
-			
+		if (AsxGame.activePlayerLoaded){
+			if (AsxGame.activePlayer.unreadMessages.size() > 0){
+				StackPane unreadMsgNotice = new StackPane();
+				unreadMsgNotice.setAlignment(Pos.TOP_RIGHT);
+				Rectangle unreadMsgRect = new Rectangle();
+				unreadMsgRect.setWidth(20.0f);
+				unreadMsgRect.setHeight(20.0f);
+				unreadMsgRect.setArcHeight(10.0);
+				unreadMsgRect.setArcWidth(10.0);
+				unreadMsgRect.setStyle("-fx-fill:red");
+				unreadMsgNotice.getChildren().add(unreadMsgRect);
+				
+				Label unreadMsgLabel = new Label(Integer.toString(AsxGame.activePlayer.unreadMessages.size()));
+				unreadMsgLabel.setAlignment(Pos.CENTER);
+				unreadMsgLabel.setId("unreadMsgLabel");
+				unreadMsgNotice.getChildren().add(unreadMsgLabel);
+				
+				inboxStack.getChildren().add(unreadMsgNotice);
+				unreadMessages = true;	
+			}
+		} else {
+			if (AsxGame.activeAdmin.unreadMessages.size() > 0){
+				StackPane unreadMsgNotice = new StackPane();
+				unreadMsgNotice.setAlignment(Pos.TOP_RIGHT);
+				Rectangle unreadMsgRect = new Rectangle();
+				unreadMsgRect.setWidth(20.0f);
+				unreadMsgRect.setHeight(20.0f);
+				unreadMsgRect.setArcHeight(10.0);
+				unreadMsgRect.setArcWidth(10.0);
+				unreadMsgRect.setStyle("-fx-fill:red");
+				unreadMsgNotice.getChildren().add(unreadMsgRect);
+				
+				Label unreadMsgLabel = new Label(Integer.toString(AsxGame.activeAdmin.unreadMessages.size()));
+				unreadMsgLabel.setAlignment(Pos.CENTER);
+				unreadMsgLabel.setId("unreadMsgLabel");
+				unreadMsgNotice.getChildren().add(unreadMsgLabel);
+				
+				inboxStack.getChildren().add(unreadMsgNotice);
+				unreadMessages = true;	
+			}
 		}
+		
 	}
 }
