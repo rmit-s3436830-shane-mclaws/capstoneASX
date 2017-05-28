@@ -1,6 +1,9 @@
 # capstoneASX
 Capstone project for RMIT
 
+Repository Link:
+https://github.com/rmit-s3436830-shane-mclaws/capstoneASX
+
 A Project by:
   Shane McLaws (s3436830)
   Callum Pullyblank (s3378543)
