@@ -135,7 +135,7 @@ public class downloader implements Runnable
 		{
 			//Get data file from yahoo finance using predefine tags to retrieve data points needed
 			String tags = "nabl1t1c1p2ohgpwkjdqr1y";
-			String dataURL = "http://finance.yahoo.com/d/quotes.csv?s=" + code + ".AX&f=" + tags;
+			String dataURL = "https://download.finance.yahoo.com/d/quotes.csv?s=" + code + ".AX&f=" + tags;
 			URL url = new URL(dataURL);
 			fileReader = new BufferedReader(new InputStreamReader(url.openStream()));
 			data = fileReader.readLine();
