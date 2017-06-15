@@ -14,8 +14,11 @@ Documentation and source code for all aspects of the project are
  maintained within thier respective folders within this repository.
 
 Runnable .JAR file of application can be found here:
-https://drive.google.com/file/d/0B4Cf2U-ZmwklY3luUnQxUWFCblk/view?usp=sharing
-  
- Please ensure that you are running Java Runtime Environment 
+https://drive.google.com/file/d/0B4Cf2U-ZmwklcF9oWDB6ZkRRclE/view?usp=sharing
+
+APK file for Mobile App can be found here:
+https://github.com/rmit-s3436830-shane-mclaws/capstoneASX/blob/master/Mobile%20Development/TradingWheels.apk
+
+Please ensure that you are running Java Runtime Environment 
   Version 1.8 or above, or some aspects of the program may not
   work as intended
