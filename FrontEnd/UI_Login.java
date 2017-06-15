@@ -16,10 +16,11 @@ import javafx.scene.paint.Color;
 
 public class UI_Login{
 	
-	Label header, userLabel, passLabel, warningLabel, registerLabel;
+	Label header, userLabel, passLabel, warningLabel, registerLabel, loginProgressLabel;
 	Button loginButton;	
 	PasswordField pwField = new PasswordField();
 	TextField usernameField = new TextField();
+	HBox loginProgressBox;
 	
 	GridPane gridpane = new GridPane();
 	BorderPane border = new BorderPane(gridpane);
@@ -28,6 +29,14 @@ public class UI_Login{
 	
 	public UI_Login(){
 	//	gridpane.setGridLinesVisible(true);
+		
+		loginProgressBox = new HBox();
+		loginProgressBox.setAlignment(Pos.CENTER);
+		loginProgressBox.setId("loginProgressBox");
+		loginProgressLabel = new Label("Logging In!");
+		loginProgressLabel.setId("loginProgressLabel");
+		loginProgressBox.getChildren().add(loginProgressLabel);
+		
 		
 		border.setId("border");
 		
@@ -91,14 +100,23 @@ public class UI_Login{
 	}
 	
 	void loginButtonClicked(ActionEvent e){
-		String userName = usernameField.getText();
+		String userName = usernameField.getText().toLowerCase();
 		String password = pwField.getText();
+		loginStackPane.getChildren().add(loginProgressBox);
 		if (Game.login(userName, password)){
 				AsxGame.UI_MainScene = new UI_MainScene();
 				AsxGame.mainStage.setScene(AsxGame.UI_MainScene.scene);
 				AsxGame.UI_MainScene.scene.getStylesheets().add(
 				AsxGame.class.getResource("UI_MainStyle.css").toExternalForm());
 				AsxGame.mainStage.centerOnScreen();
+				loginStackPane.getChildren().remove(1);
+		} else {
+			if (AsxGame.loadCompletePercent == 0){
+				warningLabel.setText("Check Internet Connection!");
+			} else {
+				warningLabel.setText("Invalid Login Credentials!");
+			}
+			loginStackPane.getChildren().remove(1);
 		}
 	}
 	

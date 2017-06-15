@@ -12,13 +12,16 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
+import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 
@@ -36,10 +39,13 @@ public class UI_Mailbox {
 	static Text subjectText = new Text();
 	static Text messageText = new Text();
 	
+	static int selectedFundsID = 0;
+	
 	static TextField toField = new TextField();
 	static TextField subjectField = new TextField();
-	static TextField bodyField = new TextField();
+	static TextArea bodyField = new TextArea();
 	
+	static boolean makeComplete = false;
 	
 	@SuppressWarnings("unchecked")
 	public static void makeInboxWindow(){
@@ -158,7 +164,10 @@ public class UI_Mailbox {
 		TextField acceptFundsField = new TextField();
 		acceptFundsField.setPromptText("Amount to accept");
 		Button acceptFundsButton = new Button("Accept Funds");
-		acceptFundsButton.setOnAction(null);
+		acceptFundsButton.setOnAction(event -> {
+			Game.acceptFunds(Integer.toString(selectedFundsID), Float.parseFloat(acceptFundsField.getText()));
+			Game.deleteMessage(selectedFundsID);
+		});
 		
 		table.setRowFactory( tv -> {
 			TableRow<InboxTableRow> row = new TableRow<>();
@@ -175,13 +184,13 @@ public class UI_Mailbox {
 								inboxMessageBox.getChildren().remove(acceptFundsButton);
 								inboxMessageBox.getChildren().remove(acceptFundsField);
 							} else {
+								selectedFundsID = id;
 								subjectText.setText("Fund Transfer from: " + fullMessageList.get(i).getString("Sender"));
 								messageText.setText(fullMessageList.get(i).getString("Sender") + 
 										" has sent you $" + fullMessageList.get(i).getDouble("Amount"));
 								inboxMessageBox.getChildren().add(acceptFundsField);
 								inboxMessageBox.getChildren().add(acceptFundsButton);
 							}
-							
 						}
 					}
 					inboxBorder.setCenter(inboxMessageBox);
@@ -220,38 +229,52 @@ public class UI_Mailbox {
 		SortedList<InboxTableRow> sortedList = new SortedList<>(filteredList);
 		sortedList.comparatorProperty().bind(table.comparatorProperty());
 		
-		table.setItems(sortedList);
-		
-		VBox inboxListVBox = new VBox();
-		
-		inboxListVBox.getChildren().addAll(searchField, table);
-		
-		inboxBorder.setLeft(inboxListVBox);
-		
-		
-		subjectText.setId("inboxMessageText");
-		messageText.setId("inboxMessageText");
-		inboxMessageBox.getChildren().addAll(subjectText, messageText);
-		
-		inboxBorder.setCenter(inboxMessageBox);
-		
-		VBox inboxRightBox = new VBox();
-		
-		Button newMessageButton = new Button("Compose Message");
-		newMessageButton.setMinSize(50, 50);
-		newMessageButton.setOnAction(e -> makeNewMessageWindow(e));
-		
-		Button backButton = new Button("Back");
-		backButton.setMinSize(50, 50);
-		backButton.setOnAction(e-> backButtonClicked(e));
-		
-		inboxRightBox.getChildren().addAll(newMessageButton, backButton);
-		
-		inboxBorder.setRight(inboxRightBox);
-		
-		inboxBorder.setId("overlayBackground");
+		if (makeComplete == false){
+			table.setItems(sortedList);
+			table.setPadding(new Insets(10,10,10,10));
+			
+			VBox inboxListVBox = new VBox();
+			
+			inboxListVBox.getChildren().addAll(searchField, table);
+			
+			inboxBorder.setLeft(inboxListVBox);
+			
+			HBox subjectBox = new HBox();
+			subjectBox.setPadding(new Insets(10,0,10,0));
+			subjectBox.getChildren().add(subjectText);
+			subjectText.setId("inboxMessageSubject");
+			messageText.setId("inboxMessageText");
+			messageText.wrappingWidthProperty().bind(inboxMessageBox.widthProperty());
+			inboxMessageBox.setPadding(new Insets(10, 20, 10, 20));
+			if (inboxMessageBox.getChildren().size() == 0){
+				inboxMessageBox.getChildren().addAll(subjectBox, messageText);
+			}
+					
+			inboxBorder.setCenter(inboxMessageBox);
+			
+			VBox inboxRightBox = new VBox();
+			
+			Button newMessageButton = new Button("Compose Message");
+			newMessageButton.setMinSize(50, 50);
+			newMessageButton.setOnAction(e -> makeNewMessageWindow(e));
+			
+			Button sendFundsButton = new Button("Send Funds");
+			sendFundsButton.setMinSize(50, 50);
+			newMessageButton.setOnAction(e -> makeSendFundsWindow(e));
+			
+			Button backButton = new Button("Back");
+			backButton.setMinSize(50, 50);
+			backButton.setOnAction(e-> backButtonClicked(e));
+			
+			inboxRightBox.getChildren().addAll(newMessageButton, backButton);
+			
+			inboxBorder.setRight(inboxRightBox);
+			
+			inboxBorder.setId("overlayBackground");
+		}
 		
 		UI_MainScene.homeScreenStack.getChildren().add(inboxBorder);
+		makeComplete = true;
 	}
 	
 	private static void makeNewMessageWindow(ActionEvent e){
@@ -271,9 +294,24 @@ public class UI_Mailbox {
 		
 	}
 	
+	private static void makeSendFundsWindow(ActionEvent e){
+		VBox newMessageBox = new VBox();
+		
+		toField.setPromptText("Recipient");
+		bodyField.setPromptText("Amount to send");
+		bodyField.setMinHeight(200);
+		
+		Button sendFundsButton = new Button("Send");
+		sendFundsButton.setOnAction(f -> sendFunds(f));
+		
+		newMessageBox.getChildren().addAll(toField, bodyField, sendFundsButton);
+		
+		inboxBorder.setCenter(newMessageBox);
+	}
+	
 	private static void sendMessage(ActionEvent e){
 		String sender = AsxGame.activePlayer.email;
-		String recipient = toField.getText();
+		String recipient = toField.getText().toLowerCase();
 		String subject = subjectField.getText();
 		String body = bodyField.getText();
 		
@@ -285,6 +323,20 @@ public class UI_Mailbox {
 			toField.setText("Message not sent, sorry!");
 		}
 		
+	}
+	
+	
+	private static void sendFunds(ActionEvent e){
+		String recipient = toField.getText().toLowerCase();
+		Float amount = Float.parseFloat(bodyField.getText());
+		
+		if(Game.sendFunds(recipient, amount)){
+			toField.setText("");
+			subjectField.setText("");
+			bodyField.setText("");
+		} else {
+			toField.setText("Message not sent, sorry!");
+		}
 	}
 	
 	private static void backButtonClicked(ActionEvent e){

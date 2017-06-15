@@ -1,5 +1,8 @@
 package com.amazonaws.samples;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -9,13 +12,17 @@ import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 
 public class UI_Register {
 	
-	Label header, pwWarning, fnLabel, lnLabel, emailLabel, pwLabel, confLabel;
+	Label header, pwWarning, emailWarning, fnLabel, lnLabel, emailLabel, pwLabel, confLabel;
 	Button register, back;
 	TextField email, fnField, lnField;
 	PasswordField pwField, confirmPwField;
+	
+	static final Pattern emailRegex = 
+			Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
 	
 	GridPane gridpane = new GridPane();
 	BorderPane border = new BorderPane(gridpane);
@@ -61,6 +68,20 @@ public class UI_Register {
 		email = new TextField();
 		email.setPromptText("Email Address");
 		gridpane.add(email, 1, 2);
+		email.focusedProperty().addListener(new ChangeListener<Boolean>() {
+			@Override
+			public void changed(ObservableValue<? extends Boolean> observable, 
+					Boolean oldValue, Boolean newValue){
+				if (newValue == false){
+					Matcher matcher = emailRegex.matcher(email.getText());
+					if (matcher.find() == false) {
+						emailWarning.setText("Please enter a valid email address!");
+					} else {
+						emailWarning.setText("");
+					}
+				}
+			}
+		});		
 		
 		pwLabel = new Label("Password:");
 		pwLabel.setId("descLabel");
@@ -74,20 +95,26 @@ public class UI_Register {
 					Boolean oldValue, Boolean newValue){
 				if (newValue == false){
 					if(pwField.getText().length() < 6){
-						register.setDisable(false);
-						pwWarning.setText("Password must contain at least 6 characters");
+						pwWarning.setText("Password must contain at least 6 characters!");
 					} else {
 						if (pwField.getText().equals(confirmPwField.getText())){
-							register.setDisable(false);
 							pwWarning.setText("");
 						} else if (confirmPwField.getText().equals("")){
-							register.setDisable(true);
 							pwWarning.setText("");
 						} else {
-							register.setDisable(true);
-							pwWarning.setText("Passwords do not match");
+							pwWarning.setText("Passwords do not match!");
 						}
 						
+					}
+					if ((pwField.getText().length() >= 6) && 
+							confirmPwField.getText().length() >= 6){
+						if (pwWarning.getText().length() == 0){
+							register.setDisable(false);
+						} else {
+							register.setDisable(true);
+						}
+					} else {
+						register.setDisable(true);
 					}
 				}
 			}
@@ -110,27 +137,36 @@ public class UI_Register {
 						pwWarning.setText("Password must contain at least 6 characters");
 					} else {
 						if (pwField.getText().equals(confirmPwField.getText())){
-							register.setDisable(false);
 							pwWarning.setText("");
 						} else if (pwField.getText().equals("")){
-							register.setDisable(true);
 							pwWarning.setText("");
 						} else {
-							register.setDisable(true);
 							pwWarning.setText("Passwords do not match");
 						}
-						
+					}
+					if ((pwField.getText().length() >= 6) && 
+							confirmPwField.getText().length() >= 6){
+						if (pwWarning.getText().length() == 0){
+							register.setDisable(false);
+						} else {
+							register.setDisable(true);
+						}
+					} else {
+						register.setDisable(true);
 					}
 				}
 			}
 		});
 		gridpane.add(confirmPwField, 1, 4);
 		
-		HBox warnBox = new HBox();
+		VBox warnBox = new VBox();
+		emailWarning = new Label();
+		emailWarning.setAlignment(Pos.CENTER);
+		emailWarning.setId("warningLabel");
 		pwWarning = new Label();
 		pwWarning.setAlignment(Pos.CENTER);
 		pwWarning.setId("warningLabel");
-		warnBox.getChildren().add(pwWarning);
+		warnBox.getChildren().addAll(emailWarning, pwWarning);
 		warnBox.setAlignment(Pos.CENTER);
 		gridpane.add(warnBox, 0, 5, 2, 1);
 		
@@ -162,14 +198,15 @@ public class UI_Register {
 	
 	void registerButtonClicked(ActionEvent e){
 		if (Game.registerPlayer(fnField.getText(), lnField.getText(), 
-				email.getText(), pwField.getText())){
+				email.getText().toLowerCase(), pwField.getText())){
 			AsxGame.UI_MainScene = new UI_MainScene();
 			AsxGame.mainStage.setScene(AsxGame.UI_MainScene.scene);
 			AsxGame.UI_MainScene.scene.getStylesheets().add(
 					AsxGame.class.getResource("UI_MainStyle.css").toExternalForm());
 			AsxGame.mainStage.centerOnScreen();
 		} else {
-			pwWarning.setText("Username unavailable!");
+			pwWarning.setText("Error creating your account\n"
+					+ "Please try another email address or check your internet connection");
 		}
 	}	
 }

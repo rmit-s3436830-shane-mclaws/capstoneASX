@@ -70,12 +70,33 @@
 
 #inboxMessageText{
 	-fx-font-family: fantasy;
-	-fx-font-size: 16pt;
+	-fx-font-size: 14pt;
 	-fx-stroke: white;
 	-fx-text-fill: white;
-	-fx-stroke-width: 1;
+}
+
+#inboxMessageSubject{
+	-fx-font-family: fantasy;
+	-fx-font-size: 20pt;
+	-fx-stroke: white;
+	-fx-text-fill: white;
 }
 	
 #overlayBackground{
 	-fx-background-color: rgba(0,0,0,0.75);
+}
+
+.chart-title{
+	-fx-text-fill: rgb(255,255,255);
+	-fx-font-size: 2.0em;
+}
+
+.axis{
+	-fx-text-fill: rgb(255,255,255); 
+	-fx-tick-label-fill: rgb(255,255,255);
+	-fx-font-family: Tahoma;
+}
+
+.axis-label {
+     -fx-text-fill: rgb(255,255,255); 
 }
