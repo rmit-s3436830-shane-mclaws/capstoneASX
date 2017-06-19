@@ -1,0 +1,30 @@
+Contributions:
+(See Trello Board for higher detail)
+
+Callum:
+  Back End AWS & S3 Setup & Moderation
+  Back End Functionality
+  Front End Functionality
+  UI - Desktop Development
+  Technical Documentation
+  Security Assessment
+
+Shane:
+  Scrum Master responsibilities
+  Front End Functionality
+  UI - Desktop Development
+  UI Conversion (From Swing to JavaFX)
+ 
+
+Sonia:
+  Initial Storyboarding & Design
+  UI - Initial Swing Development
+  Documentation Website
+  User Manual
+
+Zac:
+  Product Owner & Presenter responsibilities
+  UI - Mobile Development
+  User Stories
+  Meeting Minutes
+  Product/Sprint Backlog (Trello) management
