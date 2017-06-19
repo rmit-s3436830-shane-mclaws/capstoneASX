@@ -22,6 +22,7 @@ https://drive.google.com/file/d/0B4Cf2U-ZmwklcF9oWDB6ZkRRclE/view?usp=sharing
   all functionality.
 
 APK file for Mobile App can be found here (Android only):
+https://github.com/rmit-s3436830-shane-mclaws/capstoneASX/raw/master/Mobile%20Development/TradingWheels.apk
 https://github.com/rmit-s3436830-shane-mclaws/capstoneASX/blob/master/Mobile%20Development/TradingWheels.apk
 
 Please ensure that you are running Java Runtime Environment 
